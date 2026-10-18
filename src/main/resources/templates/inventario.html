@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario | Préstamo de Equipos UPIICSA</title>
+
+    <link rel="stylesheet" href="/estilos.css">
+    <script src="/inventario.js" defer></script>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- Menú lateral -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">U</div>
+                <div>
+                    <h2>UPIICSA</h2>
+                    <p>Control de equipos</p>
+                </div>
+            </div>
+
+            <p class="menu-label">MENÚ PRINCIPAL</p>
+
+            <nav class="menu">
+                <a href="/" class="menu-item">
+                    <span>⌂</span>
+                    Inicio
+                </a>
+
+                <a href="/inventario" class="menu-item active">
+                    <span>▦</span>
+                    Inventario
+                </a>
+
+                <a href="/prestamos" class="menu-item">
+                    <span>⇄</span>
+                    Préstamos y devoluciones
+                </a>
+
+                <a href="/personas" class="menu-item">
+                    <span>♙</span>
+                    Personas
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="footer-icon">i</div>
+                <div>
+                    <strong>Sistema de préstamos</strong>
+                    <p>UPIICSA · IPN</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Contenido principal -->
+        <main class="main-content">
+
+            <header class="topbar">
+                <div>
+                    <p class="breadcrumb">Sistema / Inventario</p>
+                    <h1>Inventario de equipos</h1>
+                </div>
+
+                <div class="user-profile">
+                    <div class="user-avatar">A</div>
+                    <div>
+                        <strong>Administrador</strong>
+                        <p>Control de inventario</p>
+                    </div>
+                </div>
+            </header>
+
+            <section class="welcome">
+                <div>
+                    <p class="eyebrow">GESTIÓN DE ACTIVOS</p>
+                    <h2>Inventario general</h2>
+                    <p>
+                        Consulta y administra los artículos disponibles
+                        para préstamo dentro de UPIICSA.
+                    </p>
+                </div>
+
+                <div class="welcome-icon">▤</div>
+            </section>
+
+            <!-- Indicadores -->
+            <section class="stats-grid">
+                <article class="stat-card">
+                    <div class="stat-icon blue">▦</div>
+                    <div>
+                        <p>Total de artículos</p>
+                        <h3 id="totalEquipos">0</h3>
+                    </div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-icon green">✓</div>
+                    <div>
+                        <p>Disponibles</p>
+                        <h3 id="equiposDisponibles">0</h3>
+                    </div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-icon orange">⇄</div>
+                    <div>
+                        <p>Prestados</p>
+                        <h3 id="equiposPrestados">0</h3>
+                    </div>
+                </article>
+            </section>
+
+            <!-- Tabla de inventario -->
+            <section class="inventory-panel">
+
+                <div class="panel-header">
+                    <div>
+                        <h2>Todos los artículos</h2>
+                        <p>Consulta los registros del inventario.</p>
+                    </div>
+
+                    <button class="btn-primary" id="btnNuevoEquipo">
+                        <span>+</span> Registrar artículo
+                    </button>
+                </div>
+
+                <div class="filters">
+                    <div class="search-box">
+                        <span>⌕</span>
+                        <input
+                            type="search"
+                            id="buscarEquipo"
+                            placeholder="Buscar por nombre, tipo o número de serie..."
+                        >
+                    </div>
+
+                    <select id="filtroTipo" aria-label="Filtrar por tipo">
+                        <option value="">Todos los tipos</option>
+                    </select>
+
+                    <select id="filtroEstado" aria-label="Filtrar por estado">
+                        <option value="">Todos los estados</option>
+                        <option value="Disponible">Disponible</option>
+                        <option value="Prestado">Prestado</option>
+                        <option value="Mantenimiento">Mantenimiento</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Artículo</th>
+                                <th>Tipo</th>
+                                <th>Número de serie</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tablaEquipos">
+                            <tr>
+                                <td colspan="5" class="table-message">
+                                    Cargando artículos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <p id="contadorEquipos">Cargando registros...</p>
+                    <span>Inventario UPIICSA</span>
+                </div>
+
+            </section>
+
+            <footer class="page-footer">
+                Sistema de préstamo de equipos · UPIICSA · IPN
+            </footer>
+
+        </main>
+    </div>
+
+    <!-- Ventana para registrar un artículo -->
+    <div class="modal" id="modalEquipo" hidden>
+        <div class="modal-backdrop" id="cerrarModalFondo"></div>
+
+        <section
+            class="modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tituloModal"
+        >
+            <div class="modal-header">
+                <div>
+                    <h2 id="tituloModal">Registrar artículo</h2>
+                    <p>Completa los datos del artículo.</p>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    id="cerrarModal"
+                    aria-label="Cerrar ventana"
+                >×</button>
+            </div>
+
+            <form id="formEquipo">
+                <label for="nombre">Nombre del artículo *</label>
+                <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    placeholder="Ej. Cable HDMI de 2 metros"
+                    required
+                    maxlength="100"
+                >
+
+                <label for="tipo">Tipo de artículo *</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="">Selecciona un tipo</option>
+                    <option value="Cómputo">Cómputo</option>
+                    <option value="Cable">Cable</option>
+                    <option value="Proyección">Proyección</option>
+                    <option value="Accesorio">Accesorio</option>
+                    <option value="Audio y video">Audio y video</option>
+                    <option value="Otro">Otro</option>
+                </select>
+
+                <label for="descripcion">Descripción</label>
+                <textarea
+                    id="descripcion"
+                    name="descripcion"
+                    placeholder="Características del artículo"
+                    rows="3"
+                    maxlength="500"
+                ></textarea>
+
+                <label for="numeroSerie">Número de serie o identificador</label>
+                <input
+                    type="text"
+                    id="numeroSerie"
+                    name="numeroSerie"
+                    placeholder="Ej. UPIICSA-CAB-001"
+                    maxlength="100"
+                >
+
+                <label for="estado">Estado inicial *</label>
+                <select id="estado" name="estado" required>
+                    <option value="Disponible">Disponible</option>
+                    <option value="Mantenimiento">Mantenimiento</option>
+                </select>
+
+                <p id="mensajeFormulario" class="form-message" role="status"></p>
+
+                <div class="modal-actions">
+                    <button
+                        type="button"
+                        class="btn-secondary"
+                        id="cancelarEquipo"
+                    >Cancelar</button>
+
+                    <button type="submit" class="btn-primary" id="guardarEquipo">
+                        Guardar artículo
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+</body>
+</html>
