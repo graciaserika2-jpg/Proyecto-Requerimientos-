@@ -191,6 +191,8 @@ La primera vez puede tardar algunos minutos porque se descargarán las dependenc
 
 Cuando aparezca un mensaje que indique que la aplicación inició correctamente, estará lista para utilizarse.
 
+Para terminar la ejecución de spring boot presionar Ctrl + C. Si no termina por copleto darle Enter y marcar S para terminar el trabajo por lotes
+
 ### Paso 2. Abrir la página de inventario
 
 Abre Google Chrome u otro navegador y escribe esta dirección:

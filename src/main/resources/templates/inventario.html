@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -131,11 +131,8 @@
                 <div class="filters">
                     <div class="search-box">
                         <span>⌕</span>
-                        <input
-                            type="search"
-                            id="buscarEquipo"
-                            placeholder="Buscar por nombre, tipo o número de serie..."
-                        >
+                        <input type="search" id="buscarEquipo"
+                            placeholder="Buscar por nombre, tipo o número de serie...">
                     </div>
 
                     <select id="filtroTipo" aria-label="Filtrar por tipo">
@@ -191,65 +188,39 @@
     <div class="modal" id="modalEquipo" hidden>
         <div class="modal-backdrop" id="cerrarModalFondo"></div>
 
-        <section
-            class="modal-content"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="tituloModal"
-        >
+        <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tituloModal">
             <div class="modal-header">
                 <div>
                     <h2 id="tituloModal">Registrar artículo</h2>
                     <p>Completa los datos del artículo.</p>
                 </div>
 
-                <button
-                    type="button"
-                    class="btn-close"
-                    id="cerrarModal"
-                    aria-label="Cerrar ventana"
-                >×</button>
+                <button type="button" class="btn-close" id="cerrarModal" aria-label="Cerrar ventana">×</button>
             </div>
 
             <form id="formEquipo">
                 <label for="nombre">Nombre del artículo *</label>
-                <input
-                    type="text"
-                    id="nombre"
-                    name="nombre"
-                    placeholder="Ej. Cable HDMI de 2 metros"
-                    required
-                    maxlength="100"
-                >
+                <input type="text" id="nombre" name="nombre" placeholder="Ej. Cable HDMI de 2 metros" required
+                    maxlength="100">
 
                 <label for="tipo">Tipo de artículo *</label>
                 <select id="tipo" name="tipo" required>
                     <option value="">Selecciona un tipo</option>
                     <option value="Cómputo">Cómputo</option>
-                    <option value="Cable">Cable</option>
                     <option value="Proyección">Proyección</option>
-                    <option value="Accesorio">Accesorio</option>
-                    <option value="Audio y video">Audio y video</option>
-                    <option value="Otro">Otro</option>
+                    <option value="Audio">Audio</option>
+                    <option value="Cableado">Cableado</option>
+                    <option value="Accesorios">Accesorios</option>
                 </select>
 
-                <label for="descripcion">Descripción</label>
-                <textarea
-                    id="descripcion"
-                    name="descripcion"
-                    placeholder="Características del artículo"
-                    rows="3"
-                    maxlength="500"
-                ></textarea>
+
+                <label for="descripcion">Descripción (opcional)</label>
+                <textarea id="descripcion" name="descripcion" placeholder="Características del artículo" rows="3"
+                    maxlength="500"></textarea>
 
                 <label for="numeroSerie">Número de serie o identificador</label>
-                <input
-                    type="text"
-                    id="numeroSerie"
-                    name="numeroSerie"
-                    placeholder="Ej. UPIICSA-CAB-001"
-                    maxlength="100"
-                >
+                <input type="text" id="numeroSerie" name="numeroSerie" placeholder="Ej. UPIICSA-CAB-001"
+                    maxlength="100">
 
                 <label for="estado">Estado inicial *</label>
                 <select id="estado" name="estado" required>
@@ -260,11 +231,7 @@
                 <p id="mensajeFormulario" class="form-message" role="status"></p>
 
                 <div class="modal-actions">
-                    <button
-                        type="button"
-                        class="btn-secondary"
-                        id="cancelarEquipo"
-                    >Cancelar</button>
+                    <button type="button" class="btn-secondary" id="cancelarEquipo">Cancelar</button>
 
                     <button type="submit" class="btn-primary" id="guardarEquipo">
                         Guardar artículo
@@ -275,4 +242,5 @@
     </div>
 
 </body>
+
 </html>

@@ -429,9 +429,22 @@ formEquipo.addEventListener("submit", async (evento) => {
 
         if (!respuesta.ok) {
             const detalle = await respuesta.text();
-            throw new Error(
-                detalle || `Error del servidor: ${respuesta.status}`
-            );
+
+            let mensajeError = `Error del servidor: ${respuesta.status}`;
+
+            try {
+                const datosError = JSON.parse(detalle);
+
+                mensajeError = datosError.error
+                    || datosError.message
+                    || mensajeError;
+            } catch {
+                if (detalle) {
+                    mensajeError = detalle;
+                }
+            }
+
+            throw new Error(mensajeError);
         }
 
         mensajeFormulario.textContent = editando
@@ -455,9 +468,10 @@ formEquipo.addEventListener("submit", async (evento) => {
     } catch (error) {
         console.error("Error al guardar el artículo:", error);
 
-        mensajeFormulario.textContent = editando
-            ? "No se pudo actualizar el artículo. Inténtalo de nuevo."
-            : "No se pudo guardar el artículo. Inténtalo de nuevo.";
+        mensajeFormulario.textContent = error.message
+            || (editando
+                ? "No se pudo actualizar el artículo. Inténtalo de nuevo."
+                : "No se pudo guardar el artículo. Inténtalo de nuevo.");
 
         mensajeFormulario.className = "form-message error";
 
