@@ -3,11 +3,13 @@ package com.proyectoRequerimientos.prestamo_equipos.service;
 
 import com.proyectoRequerimientos.prestamo_equipos.model.Equipo;
 import com.proyectoRequerimientos.prestamo_equipos.repository.EquipoRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Set;
 import java.util.Locale;
+import java.util.Set;
 
 @Service
 public class EquipoService {
@@ -33,7 +35,7 @@ public class EquipoService {
     }
 
     public List<Equipo> listarEquipos() {
-        return equipoRepository.findAll();
+        return equipoRepository.findByActivoTrueOrActivoIsNull();
     }
 
     public Equipo guardarEquipo(Equipo equipo) {
@@ -45,22 +47,43 @@ public class EquipoService {
             );
         }
 
+        equipo.setActivo(true);
         return equipoRepository.save(equipo);
     }
 
     public Equipo actualizarEquipo(Long id, Equipo equipo) {
-        Equipo existente = equipoRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Artículo no encontrado"));
+        Equipo existente = buscarActivo(id);
 
         validarEquipo(equipo);
 
+        if (!existente.getTipo().equals(equipo.getTipo())) {
+            throw new IllegalArgumentException(
+                    "No se puede cambiar el tipo de un artículo existente. "
+                    + "Si el registro es incorrecto, debe corregirse "
+                    + "mediante un procedimiento controlado."
+            );
+        }
+
+        // El módulo de inventario no puede asignar el estado Prestado.
+        if ("Prestado".equals(equipo.getEstado())) {
+            throw new IllegalArgumentException(
+                    "El estado Prestado debe gestionarse desde Préstamos."
+            );
+        }
+
+        // Si ya está prestado, no permitimos modificarlo desde Inventario.
+        if ("Prestado".equals(existente.getEstado())) {
+            throw new IllegalArgumentException(
+                    "No se puede editar un artículo prestado desde Inventario."
+            );
+        }
+
         existente.setNombre(equipo.getNombre());
-        existente.setTipo(equipo.getTipo());
         existente.setDescripcion(equipo.getDescripcion());
         existente.setNumeroSerie(equipo.getNumeroSerie());
         existente.setEstado(equipo.getEstado());
 
+        // Se conserva el tipo original y la marca de actividad.
         return equipoRepository.save(existente);
     }
 
@@ -134,10 +157,18 @@ public class EquipoService {
     }
 
     public void eliminarEquipo(Long id) {
-        Equipo existente = equipoRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Artículo no encontrado"));
+        Equipo existente = buscarActivo(id);
+        existente.setActivo(false);
+        equipoRepository.save(existente);
+    }
 
-        equipoRepository.delete(existente);
+    private Equipo buscarActivo(Long id) {
+        return equipoRepository.findById(id)
+                .filter(equipo ->
+                        !Boolean.FALSE.equals(equipo.getActivo()))
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Artículo no encontrado"
+                ));
     }
 }

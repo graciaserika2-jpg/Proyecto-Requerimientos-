@@ -1,3 +1,4 @@
+
 package com.proyectoRequerimientos.prestamo_equipos.model;
 
 import jakarta.persistence.Entity;
@@ -17,6 +18,9 @@ public class Equipo {
     private String descripcion;
     private String numeroSerie;
     private String estado;
+
+    // Los artículos nuevos están activos por defecto.
+    private Boolean activo = true;
 
     public Equipo() {
     }
@@ -67,5 +71,13 @@ public class Equipo {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
     }
 }
