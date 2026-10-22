@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio | Préstamo de equipos</title>
+    <link rel="stylesheet" href="/estilos.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Préstamo de equipos</h2>
+        <nav>
+            <a href="/inicio" class="active">Inicio</a>
+            <a href="/inventario">Inventario</a>
+            <a href="/prestamos">Préstamos y devoluciones</a>
+            <a href="/personas">Personas</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header>
+            <h1>Panel principal</h1>
+            <p>Bienvenido al sistema de préstamo de equipos de UPIICSA.</p>
+        </header>
+
+        <section class="card">
+            <h2>Resumen del sistema</h2>
+            <p>Consulta rápidamente el estado actual del inventario y los préstamos.</p>
+
+            <div class="resumen-grid">
+                <article class="resumen-item">
+                    <h3>Equipos registrados</h3>
+                    <p id="totalEquipos">—</p>
+                </article>
+
+                <article class="resumen-item">
+                    <h3>Equipos disponibles</h3>
+                    <p id="equiposDisponibles">—</p>
+                </article>
+
+                <article class="resumen-item">
+                    <h3>Préstamos activos</h3>
+                    <p id="prestamosActivos">—</p>
+                </article>
+
+                <article class="resumen-item">
+                    <h3>Personas registradas</h3>
+                    <p id="totalPersonas">—</p>
+                </article>
+            </div>
+
+            <p id="mensajeInicio" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="card">
+            <h2>Accesos rápidos</h2>
+            <p>Selecciona el módulo que deseas utilizar.</p>
+
+            <div class="accesos-grid">
+                <a class="acceso-item" href="/inventario">
+                    <h3>Inventario</h3>
+                    <p>Registrar y consultar equipos.</p>
+                </a>
+
+                <a class="acceso-item" href="/prestamos">
+                    <h3>Préstamos y devoluciones</h3>
+                    <p>Prestar equipos y registrar devoluciones.</p>
+                </a>
+
+                <a class="acceso-item" href="/personas">
+                    <h3>Personas</h3>
+                    <p>Registrar alumnos y profesores.</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <script src="/inicio.js"></script>
+</body>
+</html>

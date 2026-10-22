@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personas | Préstamo de equipos</title>
+    <link rel="stylesheet" href="/estilos.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Préstamo de equipos</h2>
+        <nav>
+            <a href="/inicio">Inicio</a>
+            <a href="/inventario">Inventario</a>
+            <a href="/prestamos">Préstamos y devoluciones</a>
+            <a href="/personas" class="active">Personas</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header>
+            <h1>Personas</h1>
+            <p>Administra los alumnos y profesores que pueden solicitar equipos.</p>
+        </header>
+
+        <section class="card">
+            <h2>Registrar persona</h2>
+
+            <form id="formPersona">
+                <label for="nombre">Nombre completo</label>
+                <input id="nombre" name="nombre" required maxlength="150"
+                       placeholder="Nombre y apellidos">
+
+                <label for="tipo">Tipo de persona</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="">Selecciona una opción</option>
+                    <option value="Alumno">Alumno</option>
+                    <option value="Profesor">Profesor</option>
+                </select>
+
+                <label for="identificador">Matrícula o identificador institucional</label>
+                <input id="identificador" name="identificador" required maxlength="80"
+                       placeholder="Matrícula o identificador">
+
+                <button type="submit">Registrar persona</button>
+                <p id="mensaje" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Personas registradas</h2>
+            <input id="buscarPersona" type="search"
+                   placeholder="Buscar por nombre o matrícula">
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Identificador</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaPersonas">
+                        <tr><td colspan="4">Cargando personas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="/personas.js"></script>
+</body>
+</html>
