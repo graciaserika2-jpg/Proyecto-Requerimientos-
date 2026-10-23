@@ -29,8 +29,14 @@
 
             <form id="formPersona">
                 <label for="nombre">Nombre completo</label>
-                <input id="nombre" name="nombre" required maxlength="150"
-                       placeholder="Nombre y apellidos">
+                <input
+                    id="nombre"
+                    name="nombre"
+                    type="text"
+                    required
+                    maxlength="150"
+                    autocomplete="name"
+                    placeholder="Nombre y apellidos">
 
                 <label for="tipo">Tipo de persona</label>
                 <select id="tipo" name="tipo" required>
@@ -39,19 +45,40 @@
                     <option value="Profesor">Profesor</option>
                 </select>
 
-                <label for="identificador">Matrícula o identificador institucional</label>
-                <input id="identificador" name="identificador" required maxlength="80"
-                       placeholder="Matrícula o identificador">
+                <label id="etiquetaIdentificador" for="identificador">
+                    Boleta o identificador institucional
+                </label>
 
-                <button type="submit">Registrar persona</button>
+                <input
+                    id="identificador"
+                    name="identificador"
+                    type="text"
+                    required
+                    maxlength="80"
+                    autocomplete="off"
+                    placeholder="Selecciona primero el tipo de persona"
+                    disabled>
+
+                <small id="ayudaIdentificador">
+                    Selecciona si registrarás un alumno o un profesor.
+                </small>
+
+                <button id="botonRegistrar" type="submit">
+                    Registrar persona
+                </button>
+
                 <p id="mensaje" role="status" aria-live="polite"></p>
             </form>
         </section>
 
         <section class="card">
             <h2>Personas registradas</h2>
-            <input id="buscarPersona" type="search"
-                   placeholder="Buscar por nombre o matrícula">
+
+            <input
+                id="buscarPersona"
+                type="search"
+                placeholder="Buscar por nombre o identificador"
+                aria-label="Buscar personas">
 
             <div class="table-container">
                 <table>
@@ -64,7 +91,9 @@
                         </tr>
                     </thead>
                     <tbody id="tablaPersonas">
-                        <tr><td colspan="4">Cargando personas...</td></tr>
+                        <tr>
+                            <td colspan="4">Cargando personas...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

@@ -1234,3 +1234,81 @@ td button {
         padding: 18px;
     }
 }
+
+/* ===== Administración de encargados ===== */
+
+.contenedor {
+    width: min(1000px, 92%);
+    margin: 40px auto;
+}
+
+.contenedor h1 {
+    margin-bottom: 10px;
+}
+
+.tarjeta {
+    background: #ffffff;
+    padding: 24px;
+    margin: 24px 0;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+#formularioEncargado {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 500px;
+}
+
+#formularioEncargado input {
+    padding: 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+#formularioEncargado button,
+#btnActualizar {
+    padding: 11px 18px;
+    border: none;
+    border-radius: 6px;
+    background-color: #1d4ed8;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+#formularioEncargado button:hover,
+#btnActualizar:hover {
+    background-color: #1e40af;
+}
+
+.tabla-contenedor {
+    overflow-x: auto;
+    margin-top: 16px;
+}
+
+.tabla-contenedor table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla-contenedor th,
+.tabla-contenedor td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+}
+
+.tabla-contenedor th {
+    background-color: #f1f5f9;
+}
+
+.contenedor a {
+    color: #1d4ed8;
+}
+
+#mensaje {
+    margin-top: 12px;
+}

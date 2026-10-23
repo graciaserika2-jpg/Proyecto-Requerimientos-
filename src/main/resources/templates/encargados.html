@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Administración de encargados</title>
+
+    <link rel="stylesheet" th:href="@{/estilos.css}">
+
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+</head>
+<body>
+    <main class="contenedor">
+        <h1>Administración de encargados</h1>
+
+        <p>Registra y consulta las cuentas del personal que administra los préstamos.</p>
+
+        <section class="tarjeta">
+            <h2>Registrar encargado</h2>
+
+            <form id="formularioEncargado">
+                <label for="nombre">Nombre completo</label>
+                <input
+                    id="nombre"
+                    name="nombre"
+                    type="text"
+                    maxlength="120"
+                    required
+                >
+
+                <label for="usuario">Nombre de usuario</label>
+                <input
+                    id="usuario"
+                    name="usuario"
+                    type="text"
+                    maxlength="80"
+                    required
+                >
+
+                <label for="password">Contraseña temporal</label>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    minlength="8"
+                    required
+                >
+
+                <small>La contraseña debe tener al menos 8 caracteres.</small>
+
+                <button type="submit">Crear cuenta</button>
+            </form>
+
+            <p id="mensaje" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Encargados registrados</h2>
+
+            <button type="button" id="btnActualizar">
+                Actualizar lista
+            </button>
+
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaEncargados"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <p><a th:href="@{/inicio}">Volver al inicio</a></p>
+
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Cerrar sesión</button>
+        </form>
+    </main>
+
+    <script th:src="@{/encargados.js}"></script>
+</body>
+</html>

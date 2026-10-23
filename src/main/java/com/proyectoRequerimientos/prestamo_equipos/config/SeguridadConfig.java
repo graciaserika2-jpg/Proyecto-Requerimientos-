@@ -1,4 +1,3 @@
-
 package com.proyectoRequerimientos.prestamo_equipos.config;
 
 import org.springframework.context.annotation.Bean;
@@ -26,18 +25,15 @@ public class SeguridadConfig {
             EncargadoRepository repository) {
 
         return usuario -> repository
-            .findByUsuarioIgnoreCase(usuario)
-            .filter(empleado -> empleado.isActivo())
-            .map(empleado -> User
-                .withUsername(empleado.getUsuario())
-                .password(empleado.getPasswordHash())
-                .roles(empleado.getRol())
-                .build())
-            .orElseThrow(() ->
-                new UsernameNotFoundException(
-                    "Cuenta no encontrada o inactiva"
-                )
-            );
+                .findByUsuarioIgnoreCase(usuario)
+                .filter(empleado -> empleado.isActivo())
+                .map(empleado -> User
+                        .withUsername(empleado.getUsuario())
+                        .password(empleado.getPasswordHash())
+                        .roles(empleado.getRol())
+                        .build())
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "Cuenta no encontrada o inactiva"));
     }
 
     @Bean
@@ -47,7 +43,7 @@ public class SeguridadConfig {
         http
             .authorizeHttpRequests(auth -> auth
 
-                // Inicio de sesión y archivos públicos
+                // Inicio de sesión y recursos públicos
                 .requestMatchers(
                     "/login",
                     "/estilos.css",
@@ -55,21 +51,31 @@ public class SeguridadConfig {
                     "/favicon.ico"
                 ).permitAll()
 
-                // Solo el administrador gestionará cuentas de empleados
-                .requestMatchers("/api/encargados/**")
-                .hasRole("ADMIN")
-
-                // Operaciones del personal autorizado
+                // Solo ADMIN puede administrar cuentas de encargados
                 .requestMatchers(
-                    "/api/equipos/**",
-                    "/api/personas/**",
-                    "/api/prestamos/**",
+                    "/encargados",
+                    "/encargados/**",
+                    "/api/encargados",
+                    "/api/encargados/**"
+                ).hasRole("ADMIN")
+
+                // Operaciones del personal
+                .requestMatchers(
                     "/inventario",
+                    "/inventario/**",
                     "/personas",
-                    "/prestamos"
+                    "/personas/**",
+                    "/prestamos",
+                    "/prestamos/**",
+                    "/api/equipos",
+                    "/api/equipos/**",
+                    "/api/personas",
+                    "/api/personas/**",
+                    "/api/prestamos",
+                    "/api/prestamos/**"
                 ).hasAnyRole("ADMIN", "ENCARGADO")
 
-                // El inicio y las demás páginas requieren autenticación
+                // Todas las demás rutas requieren autenticación
                 .anyRequest().authenticated()
             )
 

@@ -31,4 +31,10 @@ public class PaginaController {
     public String mostrarPrestamos() {
         return "prestamos";
     }
+
+    @GetMapping("/encargados")
+    public String mostrarEncargados() {
+        return "encargados";
+    }
+
 }

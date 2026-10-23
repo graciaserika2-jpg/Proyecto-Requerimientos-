@@ -1,81 +1,91 @@
-
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Inicio | Préstamo de equipos</title>
-    <link rel="stylesheet" href="/estilos.css">
+
+    <link rel="stylesheet" th:href="@{/estilos.css}">
 </head>
+
 <body>
     <aside class="sidebar">
         <h2>Préstamo de equipos</h2>
+
         <nav>
-            <a href="/inicio" class="active">Inicio</a>
-            <a href="/inventario">Inventario</a>
-            <a href="/prestamos">Préstamos y devoluciones</a>
-            <a href="/personas">Personas</a>
+            <a th:href="@{/inicio}" class="active">Inicio</a>
+            <a th:href="@{/inventario}">Inventario</a>
+            <a th:href="@{/prestamos}">Préstamos y devoluciones</a>
+            <a th:href="@{/personas}">Personas</a>
+            <a th:href="@{/encargados}">Administrar encargados</a>
         </nav>
     </aside>
 
     <main class="main-content">
-        <header>
+        <<header>
             <h1>Panel principal</h1>
             <p>Bienvenido al sistema de préstamo de equipos de UPIICSA.</p>
-        </header>
 
-        <section class="card">
-            <h2>Resumen del sistema</h2>
-            <p>Consulta rápidamente el estado actual del inventario y los préstamos.</p>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit">Cerrar sesión</button>
+            </form>
+            </header>
 
-            <div class="resumen-grid">
-                <article class="resumen-item">
-                    <h3>Equipos registrados</h3>
-                    <p id="totalEquipos">—</p>
-                </article>
+            <section class="card">
+                <h2>Resumen del sistema</h2>
+                <p>Consulta rápidamente el estado actual del inventario y los préstamos.</p>
 
-                <article class="resumen-item">
-                    <h3>Equipos disponibles</h3>
-                    <p id="equiposDisponibles">—</p>
-                </article>
+                <div class="resumen-grid">
+                    <article class="resumen-item">
+                        <h3>Equipos registrados</h3>
+                        <p id="totalEquipos">—</p>
+                    </article>
 
-                <article class="resumen-item">
-                    <h3>Préstamos activos</h3>
-                    <p id="prestamosActivos">—</p>
-                </article>
+                    <article class="resumen-item">
+                        <h3>Equipos disponibles</h3>
+                        <p id="equiposDisponibles">—</p>
+                    </article>
 
-                <article class="resumen-item">
-                    <h3>Personas registradas</h3>
-                    <p id="totalPersonas">—</p>
-                </article>
-            </div>
+                    <article class="resumen-item">
+                        <h3>Préstamos activos</h3>
+                        <p id="prestamosActivos">—</p>
+                    </article>
 
-            <p id="mensajeInicio" role="status" aria-live="polite"></p>
-        </section>
+                    <article class="resumen-item">
+                        <h3>Personas registradas</h3>
+                        <p id="totalPersonas">—</p>
+                    </article>
+                </div>
 
-        <section class="card">
-            <h2>Accesos rápidos</h2>
-            <p>Selecciona el módulo que deseas utilizar.</p>
+                <p id="mensajeInicio" role="status" aria-live="polite"></p>
+            </section>
 
-            <div class="accesos-grid">
-                <a class="acceso-item" href="/inventario">
-                    <h3>Inventario</h3>
-                    <p>Registrar y consultar equipos.</p>
-                </a>
+            <section class="card">
+                <h2>Accesos rápidos</h2>
+                <p>Selecciona el módulo que deseas utilizar.</p>
 
-                <a class="acceso-item" href="/prestamos">
-                    <h3>Préstamos y devoluciones</h3>
-                    <p>Prestar equipos y registrar devoluciones.</p>
-                </a>
+                <div class="accesos-grid">
+                    <a class="acceso-item" th:href="@{/inventario}">
+                        <h3>Inventario</h3>
+                        <p>Registrar y consultar equipos.</p>
+                    </a>
 
-                <a class="acceso-item" href="/personas">
-                    <h3>Personas</h3>
-                    <p>Registrar alumnos y profesores.</p>
-                </a>
-            </div>
-        </section>
+                    <a class="acceso-item" th:href="@{/prestamos}">
+                        <h3>Préstamos y devoluciones</h3>
+                        <p>Prestar equipos y registrar devoluciones.</p>
+                    </a>
+
+                    <a class="acceso-item" th:href="@{/personas}">
+                        <h3>Personas</h3>
+                        <p>Registrar alumnos y profesores.</p>
+                    </a>
+                </div>
+            </section>
     </main>
 
-    <script src="/inicio.js"></script>
+    <script th:src="@{/inicio.js}"></script>
 </body>
+
 </html>
