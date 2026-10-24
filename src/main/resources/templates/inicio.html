@@ -1,89 +1,140 @@
-<!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
 
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Inicio | Préstamo de equipos</title>
-
+    <title>Inicio | Préstamo de equipos UPIICSA</title>
     <link rel="stylesheet" th:href="@{/estilos.css}">
 </head>
 
 <body>
-    <aside class="sidebar">
-        <h2>Préstamo de equipos</h2>
+    <div class="app">
 
-        <nav>
-            <a th:href="@{/inicio}" class="active">Inicio</a>
-            <a th:href="@{/inventario}">Inventario</a>
-            <a th:href="@{/prestamos}">Préstamos y devoluciones</a>
-            <a th:href="@{/personas}">Personas</a>
-            <a th:href="@{/encargados}">Administrar encargados</a>
-        </nav>
-    </aside>
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">U</div>
+                <div>
+                    <h2>Préstamo de equipos</h2>
+                    <p>UPIICSA · IPN</p>
+                </div>
+            </div>
 
-    <main class="main-content">
-        <<header>
-            <h1>Panel principal</h1>
-            <p>Bienvenido al sistema de préstamo de equipos de UPIICSA.</p>
+            <p class="menu-label">MENÚ PRINCIPAL</p>
 
-            <form th:action="@{/logout}" method="post">
-                <button type="submit">Cerrar sesión</button>
-            </form>
+            <nav class="menu">
+                <a th:href="@{/inicio}" class="menu-item active">
+                    <span>⌂</span>
+                    <span>Inicio</span>
+                </a>
+
+                <a th:href="@{/inventario}" class="menu-item">
+                    <span>▦</span>
+                    <span>Inventario</span>
+                </a>
+
+                <a th:href="@{/prestamos}" class="menu-item">
+                    <span>⇄</span>
+                    <span>Préstamos y devoluciones</span>
+                </a>
+
+                <a th:href="@{/personas}" class="menu-item">
+                    <span>♙</span>
+                    <span>Personas</span>
+                </a>
+
+                <a th:href="@{/encargados}" class="menu-item"
+                   sec:authorize="hasRole('ADMIN')">
+                    <span>⚙</span>
+                    <span>Administrar encargados</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+                <div class="topbar-heading">
+                    <p class="breadcrumb">Sistema / Inicio</p>
+                    <h1>Panel principal</h1>
+                    <p class="topbar-description">
+                        Resumen general del sistema de préstamo de equipos.
+                    </p>
+                </div>
+
+                <form th:action="@{/logout}" method="post" class="logout-form">
+                    <button type="submit" class="btn-logout">
+                        <span aria-hidden="true">⇥</span>
+                        Cerrar sesión
+                    </button>
+                </form>
             </header>
 
-            <section class="card">
-                <h2>Resumen del sistema</h2>
-                <p>Consulta rápidamente el estado actual del inventario y los préstamos.</p>
+            <section class="welcome">
+                <div class="welcome-content">
+                    <p class="eyebrow">SISTEMA DE GESTIÓN</p>
+                    <h2>Bienvenido al panel principal</h2>
+                    <p>
+                        Administra el inventario, consulta los préstamos
+                        y lleva el control de los equipos de UPIICSA.
+                    </p>
+                </div>
+            </section>
+
+            <section class="dashboard-section">
+                <div class="section-heading">
+                    <div>
+                        <h2>Resumen del sistema</h2>
+                        <p>Consulta el estado actual de los registros.</p>
+                    </div>
+                </div>
 
                 <div class="resumen-grid">
                     <article class="resumen-item">
-                        <h3>Equipos registrados</h3>
-                        <p id="totalEquipos">—</p>
+                        <div class="resumen-icon resumen-icon-blue">▦</div>
+                        <div class="resumen-data">
+                            <h3>Equipos registrados</h3>
+                            <p id="totalEquipos">—</p>
+                        </div>
                     </article>
 
                     <article class="resumen-item">
-                        <h3>Equipos disponibles</h3>
-                        <p id="equiposDisponibles">—</p>
+                        <div class="resumen-icon resumen-icon-green">✓</div>
+                        <div class="resumen-data">
+                            <h3>Equipos disponibles</h3>
+                            <p id="equiposDisponibles">—</p>
+                        </div>
                     </article>
 
                     <article class="resumen-item">
-                        <h3>Préstamos activos</h3>
-                        <p id="prestamosActivos">—</p>
+                        <div class="resumen-icon resumen-icon-orange">⇄</div>
+                        <div class="resumen-data">
+                            <h3>Préstamos activos</h3>
+                            <p id="prestamosActivos">—</p>
+                        </div>
                     </article>
 
                     <article class="resumen-item">
-                        <h3>Personas registradas</h3>
-                        <p id="totalPersonas">—</p>
+                        <div class="resumen-icon resumen-icon-purple">♙</div>
+                        <div class="resumen-data">
+                            <h3>Personas registradas</h3>
+                            <p id="totalPersonas">—</p>
+                        </div>
                     </article>
                 </div>
 
-                <p id="mensajeInicio" role="status" aria-live="polite"></p>
+                <p id="mensajeInicio" class="dashboard-message"
+                   role="status" aria-live="polite"></p>
             </section>
 
-            <section class="card">
-                <h2>Accesos rápidos</h2>
-                <p>Selecciona el módulo que deseas utilizar.</p>
+            <footer class="page-footer">
+                Sistema de préstamo de equipos · UPIICSA · IPN
+            </footer>
 
-                <div class="accesos-grid">
-                    <a class="acceso-item" th:href="@{/inventario}">
-                        <h3>Inventario</h3>
-                        <p>Registrar y consultar equipos.</p>
-                    </a>
-
-                    <a class="acceso-item" th:href="@{/prestamos}">
-                        <h3>Préstamos y devoluciones</h3>
-                        <p>Prestar equipos y registrar devoluciones.</p>
-                    </a>
-
-                    <a class="acceso-item" th:href="@{/personas}">
-                        <h3>Personas</h3>
-                        <p>Registrar alumnos y profesores.</p>
-                    </a>
-                </div>
-            </section>
-    </main>
+        </main>
+    </div>
 
     <script th:src="@{/inicio.js}"></script>
 </body>

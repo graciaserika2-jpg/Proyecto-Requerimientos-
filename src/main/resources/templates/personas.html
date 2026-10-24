@@ -1,12 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>Personas | Préstamo de equipos</title>
     <link rel="stylesheet" href="/estilos.css">
 </head>
+
 <body>
     <aside class="sidebar">
         <h2>Préstamo de equipos</h2>
@@ -29,13 +32,7 @@
 
             <form id="formPersona">
                 <label for="nombre">Nombre completo</label>
-                <input
-                    id="nombre"
-                    name="nombre"
-                    type="text"
-                    required
-                    maxlength="150"
-                    autocomplete="name"
+                <input id="nombre" name="nombre" type="text" required maxlength="150" autocomplete="name"
                     placeholder="Nombre y apellidos">
 
                 <label for="tipo">Tipo de persona</label>
@@ -49,15 +46,8 @@
                     Boleta o identificador institucional
                 </label>
 
-                <input
-                    id="identificador"
-                    name="identificador"
-                    type="text"
-                    required
-                    maxlength="80"
-                    autocomplete="off"
-                    placeholder="Selecciona primero el tipo de persona"
-                    disabled>
+                <input id="identificador" name="identificador" type="text" required maxlength="80" autocomplete="off"
+                    placeholder="Selecciona primero el tipo de persona" disabled>
 
                 <small id="ayudaIdentificador">
                     Selecciona si registrarás un alumno o un profesor.
@@ -74,10 +64,7 @@
         <section class="card">
             <h2>Personas registradas</h2>
 
-            <input
-                id="buscarPersona"
-                type="search"
-                placeholder="Buscar por nombre o identificador"
+            <input id="buscarPersona" type="search" placeholder="Buscar por nombre o identificador"
                 aria-label="Buscar personas">
 
             <div class="table-container">
@@ -102,4 +89,5 @@
 
     <script src="/personas.js"></script>
 </body>
+
 </html>

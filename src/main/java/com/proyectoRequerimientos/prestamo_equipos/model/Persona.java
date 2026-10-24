@@ -45,7 +45,7 @@ public class Persona {
 
         String tipoNormalizado = tipo.trim();
 
-        if (tipoNormalizado.equalsIgnoreCase("Estudiante")) {
+        if (tipoNormalizado.equalsIgnoreCase("Alumno")) {
             if (!identificador.matches("[0-9]{10}")) {
                 throw new IllegalArgumentException(
                         "La boleta del estudiante debe contener exactamente 10 dígitos, sin letras, espacios ni símbolos.");
@@ -57,7 +57,7 @@ public class Persona {
             }
         } else {
             throw new IllegalArgumentException(
-                    "El tipo de persona debe ser Estudiante o Profesor.");
+                    "El tipo de persona debe ser Alumno o Profesor.");
         }
 
         nombre = nombre.trim();

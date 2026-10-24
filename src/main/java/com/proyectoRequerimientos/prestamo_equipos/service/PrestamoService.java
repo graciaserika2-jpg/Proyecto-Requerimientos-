@@ -7,6 +7,7 @@ import com.proyectoRequerimientos.prestamo_equipos.model.Persona;
 import com.proyectoRequerimientos.prestamo_equipos.model.Prestamo;
 import com.proyectoRequerimientos.prestamo_equipos.repository.EquipoRepository;
 import com.proyectoRequerimientos.prestamo_equipos.repository.PrestamoRepository;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +15,17 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
 public class PrestamoService {
+
+    private static final LocalTime HORA_APERTURA =
+            LocalTime.of(8, 0);
+
+    private static final LocalTime HORA_CIERRE =
+            LocalTime.of(20, 0);
 
     private final PrestamoRepository prestamoRepository;
     private final EquipoRepository equipoRepository;
@@ -27,37 +35,52 @@ public class PrestamoService {
             PrestamoRepository prestamoRepository,
             EquipoRepository equipoRepository,
             PersonaService personaService) {
+
         this.prestamoRepository = prestamoRepository;
         this.equipoRepository = equipoRepository;
         this.personaService = personaService;
     }
 
+    private void validarHorarioPrestamo() {
+        LocalTime horaActual = LocalTime.now();
+
+        if (horaActual.isBefore(HORA_APERTURA)
+                || !horaActual.isBefore(HORA_CIERRE)) {
+
+            throw new IllegalArgumentException(
+                    "Solo se pueden registrar préstamos "
+                    + "entre las 08:00 y las 20:00");
+        }
+    }
+
     public List<Prestamo> listarPrestamos() {
-        return prestamoRepository.findAllByOrderByFechaPrestamoDesc();
+        return prestamoRepository
+                .findAllByOrderByFechaPrestamoDesc();
     }
 
     @Transactional
-    public Prestamo crearPrestamo(CrearPrestamoRequest solicitud) {
+    public Prestamo crearPrestamo(
+            CrearPrestamoRequest solicitud) {
+
         if (solicitud == null
                 || solicitud.personaId() == null
-                || solicitud.equipoId() == null
-                || solicitud.fechaDevolucionPrevista() == null) {
+                || solicitud.equipoId() == null) {
+
             throw new IllegalArgumentException(
-                    "Persona, artículo y fecha prevista son obligatorios");
+                    "La persona y el artículo son obligatorios");
         }
 
-        if (solicitud.fechaDevolucionPrevista().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException(
-                    "La fecha prevista no puede estar en el pasado");
-        }
+        validarHorarioPrestamo();
 
         Persona persona = personaService.buscarActiva(
                 solicitud.personaId());
 
-        Equipo equipo = equipoRepository.findById(solicitud.equipoId())
+        Equipo equipo = equipoRepository
+                .findById(solicitud.equipoId())
                 .filter(e -> !Boolean.FALSE.equals(e.getActivo()))
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Artículo no encontrado"));
+                        HttpStatus.NOT_FOUND,
+                        "Artículo no encontrado"));
 
         if (!"Disponible".equals(equipo.getEstado())) {
             throw new IllegalArgumentException(
@@ -66,6 +89,7 @@ public class PrestamoService {
 
         if (prestamoRepository.existsByEquipo_IdAndEstado(
                 equipo.getId(), "Activo")) {
+
             throw new IllegalArgumentException(
                     "El artículo ya tiene un préstamo activo");
         }
@@ -73,16 +97,22 @@ public class PrestamoService {
         if ("Alumno".equals(persona.getTipo())
                 && prestamoRepository.existsByPersona_IdAndEstado(
                         persona.getId(), "Activo")) {
+
             throw new IllegalArgumentException(
                     "El alumno ya tiene un préstamo activo");
         }
 
+        LocalDateTime ahora = LocalDateTime.now();
+
         Prestamo prestamo = new Prestamo();
         prestamo.setPersona(persona);
         prestamo.setEquipo(equipo);
-        prestamo.setFechaPrestamo(LocalDateTime.now());
+        prestamo.setFechaPrestamo(ahora);
+
+        // La fecha prevista es automáticamente el día actual.
         prestamo.setFechaDevolucionPrevista(
-                solicitud.fechaDevolucionPrevista());
+                ahora.toLocalDate());
+
         prestamo.setObservaciones(solicitud.observaciones());
         prestamo.setEstado("Activo");
 
@@ -94,21 +124,37 @@ public class PrestamoService {
 
     @Transactional
     public Prestamo devolverPrestamo(Long id) {
+
         Prestamo prestamo = prestamoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
+                        HttpStatus.NOT_FOUND,
+                        "Préstamo no encontrado"));
 
         if (!"Activo".equals(prestamo.getEstado())) {
             throw new IllegalArgumentException(
                     "Este préstamo ya fue devuelto");
         }
 
+        LocalDateTime ahora = LocalDateTime.now();
+
+        if (!ahora.toLocalDate().equals(
+                prestamo.getFechaPrestamo().toLocalDate())) {
+
+            throw new IllegalArgumentException(
+                    "El equipo debe devolverse el mismo día "
+                    + "del préstamo");
+        }
+
+        if (!ahora.toLocalTime().isBefore(HORA_CIERRE)) {
+            throw new IllegalArgumentException(
+                    "El horario de devolución termina a las 20:00");
+        }
+
         prestamo.setEstado("Devuelto");
-        prestamo.setFechaDevolucionReal(LocalDateTime.now());
+        prestamo.setFechaDevolucionReal(ahora);
 
         Equipo equipo = prestamo.getEquipo();
 
-        // Si el artículo sigue activo, vuelve a estar disponible.
         if (!Boolean.FALSE.equals(equipo.getActivo())) {
             equipo.setEstado("Disponible");
             equipoRepository.save(equipo);

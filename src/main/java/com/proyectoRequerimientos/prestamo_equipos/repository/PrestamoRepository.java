@@ -11,7 +11,12 @@ public interface PrestamoRepository
 
     List<Prestamo> findAllByOrderByFechaPrestamoDesc();
 
-    boolean existsByEquipo_IdAndEstado(Long equipoId, String estado);
+    List<Prestamo> findByPersona_IdOrderByFechaPrestamoDesc(
+            Long personaId);
 
-    boolean existsByPersona_IdAndEstado(Long personaId, String estado);
+    boolean existsByEquipo_IdAndEstado(
+            Long equipoId, String estado);
+
+    boolean existsByPersona_IdAndEstado(
+            Long personaId, String estado);
 }

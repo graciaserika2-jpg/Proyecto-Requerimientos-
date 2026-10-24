@@ -1,10 +1,9 @@
 
 package com.proyectoRequerimientos.prestamo_equipos.controller;
-
+import org.springframework.web.bind.annotation.RequestParam;
 import com.proyectoRequerimientos.prestamo_equipos.model.Equipo;
 import com.proyectoRequerimientos.prestamo_equipos.service.EquipoService;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 
@@ -21,6 +20,12 @@ public class EquipoController {
     @GetMapping
     public List<Equipo> listarEquipos() {
         return equipoService.listarEquipos();
+    }
+
+    @GetMapping("/buscar")
+    public List<Equipo> buscarEquipos(
+            @RequestParam String texto) {
+        return equipoService.buscarDisponiblesParaPrestamo(texto);
     }
 
     @PostMapping

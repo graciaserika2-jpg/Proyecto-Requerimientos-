@@ -1,88 +1,149 @@
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
     <title>Préstamos y devoluciones | UPIICSA</title>
     <link rel="stylesheet" href="/estilos.css">
 </head>
+
 <body>
-    <aside class="sidebar">
-        <h2>Préstamo de equipos</h2>
-        <nav>
-            <a href="/inicio">Inicio</a>
-            <a href="/inventario">Inventario</a>
-            <a href="/prestamos" class="active">Préstamos y devoluciones</a>
-            <a href="/personas">Personas</a>
-        </nav>
-    </aside>
+    <div class="app">
+        <aside class="sidebar">
+            <h2>Préstamo de equipos</h2>
 
-    <main class="main-content">
-        <header>
-            <h1>Préstamos y devoluciones</h1>
-            <p>Registra préstamos y controla la devolución de equipos.</p>
-        </header>
+            <nav>
+                <a href="/inicio">Inicio</a>
+                <a href="/inventario">Inventario</a>
+                <a href="/prestamos" class="active">
+                    Préstamos y devoluciones
+                </a>
+                <a href="/personas">Personas</a>
+            </nav>
+        </aside>
 
-        <section class="card">
-            <h2>Registrar préstamo</h2>
+        <main class="main-content">
+            <header>
+                <div>
+                    <h1>Préstamos y devoluciones</h1>
+                    <p>Registra préstamos y controla la devolución de equipos.</p>
+                </div>
+            </header>
 
-            <form id="formPrestamo">
-                <label for="personaId">Persona solicitante</label>
-                <select id="personaId" name="personaId" required>
-                    <option value="">Cargando personas...</option>
+            <section class="card">
+                <h2>Registrar préstamo</h2>
+
+                <p>
+                    <strong>Horario de atención:</strong>
+                    de 08:00 a 20:00.
+                </p>
+
+                <p>
+                    Los equipos deben devolverse el mismo día,
+                    antes de las 20:00.
+                </p>
+
+                <form id="formPrestamo">
+                    <label for="buscarPersona">Persona solicitante</label>
+                    <input
+                        type="text"
+                        id="buscarPersona"
+                        autocomplete="off"
+                        placeholder="Escribe nombre o boleta..."
+                        minlength="2"
+                        required>
+
+                    <input type="hidden" id="personaId" name="personaId">
+
+                    <div
+                        id="resultadosPersonas"
+                        class="resultados-busqueda"
+                        role="listbox"
+                        aria-label="Personas encontradas">
+                    </div>
+
+                    <p id="personaSeleccionada" aria-live="polite"></p>
+
+                    <label for="buscarEquipo">Equipo disponible</label>
+                    <input
+                        type="text"
+                        id="buscarEquipo"
+                        autocomplete="off"
+                        placeholder="Escribe nombre, tipo o número de serie..."
+                        minlength="2"
+                        required>
+
+                    <input type="hidden" id="equipoId" name="equipoId">
+
+                    <div
+                        id="resultadosEquipos"
+                        class="resultados-busqueda"
+                        role="listbox"
+                        aria-label="Equipos encontrados">
+                    </div>
+
+                    <p id="equipoSeleccionado" aria-live="polite"></p>
+
+                    <label for="observaciones">Observaciones</label>
+                    <textarea
+                        id="observaciones"
+                        name="observaciones"
+                        rows="3"
+                        maxlength="500"
+                        placeholder="Observaciones opcionales"></textarea>
+
+                    <button type="submit">Registrar préstamo</button>
+
+                    <p
+                        id="mensajePrestamo"
+                        role="status"
+                        aria-live="polite">
+                    </p>
+                </form>
+            </section>
+
+            <section class="card">
+                <h2>Préstamos registrados</h2>
+
+                <label for="filtroPrestamos">Filtrar préstamos</label>
+                <select id="filtroPrestamos">
+                    <option value="Todos">Todos</option>
+                    <option value="Activo">Activos</option>
+                    <option value="Devuelto">Devueltos</option>
                 </select>
 
-                <label for="equipoId">Equipo</label>
-                <select id="equipoId" name="equipoId" required>
-                    <option value="">Cargando equipos...</option>
-                </select>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Persona</th>
+                                <th>Equipo</th>
+                                <th>Fecha de préstamo</th>
+                                <th>Devolución prevista</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
 
-                <label for="fechaDevolucionPrevista">Fecha prevista de devolución</label>
-                <input type="date" id="fechaDevolucionPrevista"
-                       name="fechaDevolucionPrevista" required>
-
-                <label for="observaciones">Observaciones</label>
-                <textarea id="observaciones" name="observaciones"
-                          rows="3" maxlength="500"
-                          placeholder="Observaciones opcionales"></textarea>
-
-                <button type="submit">Registrar préstamo</button>
-                <p id="mensajePrestamo" role="status" aria-live="polite"></p>
-            </form>
-        </section>
-
-        <section class="card">
-            <h2>Préstamos registrados</h2>
-
-            <label for="filtroPrestamos">Filtrar préstamos</label>
-            <select id="filtroPrestamos">
-                <option value="Todos">Todos</option>
-                <option value="Activo">Activos</option>
-                <option value="Devuelto">Devueltos</option>
-            </select>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Persona</th>
-                            <th>Equipo</th>
-                            <th>Fecha de préstamo</th>
-                            <th>Devolución prevista</th>
-                            <th>Estado</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaPrestamos">
-                        <tr><td colspan="7">Cargando préstamos...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </main>
+                        <tbody id="tablaPrestamos">
+                            <tr>
+                                <td colspan="7">Cargando préstamos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
 
     <script src="/prestamos.js"></script>
 </body>
+
 </html>
