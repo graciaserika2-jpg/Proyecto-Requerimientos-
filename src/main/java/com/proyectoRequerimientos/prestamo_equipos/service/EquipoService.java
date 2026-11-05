@@ -1,6 +1,8 @@
 
 package com.proyectoRequerimientos.prestamo_equipos.service;
 
+
+import com.proyectoRequerimientos.prestamo_equipos.dto.EquipoDisponibilidad;
 import org.springframework.data.domain.PageRequest;
 import com.proyectoRequerimientos.prestamo_equipos.model.Equipo;
 import com.proyectoRequerimientos.prestamo_equipos.repository.EquipoRepository;
@@ -165,5 +167,15 @@ public class EquipoService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Artículo no encontrado"));
+    }
+
+    public List<EquipoDisponibilidad> listarDisponibilidad() {
+        return listarEquipos().stream()
+                .map(equipo -> new EquipoDisponibilidad(
+                        equipo.getNombre(),
+                        equipo.getTipo(),
+                        equipo.getDescripcion(),
+                        equipo.getEstado()))
+                .toList();  
     }
 }

@@ -37,4 +37,9 @@ public class PaginaController {
         return "encargados";
     }
 
+    @GetMapping("/cambiar-password")
+    public String mostrarCambiarPassword() {
+        return "cambiar-password";
+    }
+
 }

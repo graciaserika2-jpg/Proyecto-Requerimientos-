@@ -1,3 +1,4 @@
+
 package com.proyectoRequerimientos.prestamo_equipos.config;
 
 import org.springframework.context.annotation.Bean;
@@ -9,8 +10,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
 import com.proyectoRequerimientos.prestamo_equipos.repository.EncargadoRepository;
+import com.proyectoRequerimientos.prestamo_equipos.repository.CuentaPersonaRepository;
+import com.proyectoRequerimientos.prestamo_equipos.security.CambioPasswordObligatorioFilter;
 
 @Configuration
 public class SeguridadConfig {
@@ -22,76 +26,106 @@ public class SeguridadConfig {
 
     @Bean
     public UserDetailsService userDetailsService(
-            EncargadoRepository repository) {
+            EncargadoRepository encargadoRepository,
+            CuentaPersonaRepository cuentaPersonaRepository) {
 
-        return usuario -> repository
-                .findByUsuarioIgnoreCase(usuario)
-                .filter(empleado -> empleado.isActivo())
-                .map(empleado -> User
-                        .withUsername(empleado.getUsuario())
+        return usuario -> {
+            var encargado = encargadoRepository
+                    .findByUsuarioIgnoreCase(usuario)
+                    .filter(empleado -> empleado.isActivo());
+
+            if (encargado.isPresent()) {
+                var empleado = encargado.get();
+
+                return User.withUsername(empleado.getUsuario())
                         .password(empleado.getPasswordHash())
                         .roles(empleado.getRol())
-                        .build())
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "Cuenta no encontrada o inactiva"));
+                        .build();
+            }
+
+            var cuentaPersona = cuentaPersonaRepository
+                    .findByUsuarioIgnoreCase(usuario)
+                    .filter(cuenta -> cuenta.isActivo());
+
+            if (cuentaPersona.isPresent()) {
+                var cuenta = cuentaPersona.get();
+
+                String rol = cuenta.getPersona().getTipo()
+                        .equalsIgnoreCase("Alumno") ? "ALUMNO" : "PROFESOR";
+
+                return User.withUsername(cuenta.getUsuario())
+                        .password(cuenta.getPasswordHash())
+                        .roles(rol)
+                        .build();
+            }
+
+            throw new UsernameNotFoundException(
+                    "Cuenta no encontrada o inactiva");
+        };
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+            HttpSecurity http,
+            CuentaPersonaRepository cuentaPersonaRepository)
+            throws Exception {
 
-        http
-            .authorizeHttpRequests(auth -> auth
+        http.addFilterBefore(
+                new CambioPasswordObligatorioFilter(cuentaPersonaRepository),
+                AuthorizationFilter.class);
 
-                // Inicio de sesión y recursos públicos
-                .requestMatchers(
-                    "/login",
-                    "/estilos.css",
-                    "/login.css",
-                    "/favicon.ico"
-                ).permitAll()
+        http.authorizeHttpRequests(auth -> auth
 
-                // Solo ADMIN puede administrar cuentas de encargados
-                .requestMatchers(
-                    "/encargados",
-                    "/encargados/**",
-                    "/api/encargados",
-                    "/api/encargados/**"
-                ).hasRole("ADMIN")
+            .requestMatchers(
+                "/login",
+                "/estilos.css",
+                "/login.css",
+                "/favicon.ico"
+            ).permitAll()
 
-                // Operaciones del personal
-                .requestMatchers(
-                    "/inventario",
-                    "/inventario/**",
-                    "/personas",
-                    "/personas/**",
-                    "/prestamos",
-                    "/prestamos/**",
-                    "/api/equipos",
-                    "/api/equipos/**",
-                    "/api/personas",
-                    "/api/personas/**",
-                    "/api/prestamos",
-                    "/api/prestamos/**"
-                ).hasAnyRole("ADMIN", "ENCARGADO")
+            .requestMatchers(
+                "/encargados",
+                "/encargados/**",
+                "/api/encargados",
+                "/api/encargados/**"
+            ).hasRole("ADMIN")
 
-                // Todas las demás rutas requieren autenticación
-                .anyRequest().authenticated()
-            )
+            .requestMatchers(
+                "/inventario",
+                "/inventario/**",
+                "/personas",
+                "/personas/**",
+                "/prestamos",
+                "/prestamos/**",
+                "/api/equipos",
+                "/api/equipos/**",
+                "/api/personas",
+                "/api/personas/**",
+                "/api/prestamos",
+                "/api/prestamos/**"
+            ).hasAnyRole("ADMIN", "ENCARGADO")
 
-            .formLogin(form -> form
-                .loginPage("/login")
-                .defaultSuccessUrl("/inicio", true)
-                .failureUrl("/login?error")
-                .permitAll()
-            )
+            .requestMatchers(
+                "/cambiar-password",
+                "/api/mi-cuenta/**"
+            ).authenticated()
 
-            .logout(logout -> logout
-                .logoutSuccessUrl("/login?logout")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-                .permitAll()
-            );
+            .anyRequest().authenticated()
+        )
+
+        .formLogin(form -> form
+            .loginPage("/login")
+            .defaultSuccessUrl("/inicio", true)
+            .failureUrl("/login?error")
+            .permitAll()
+        )
+
+        .logout(logout -> logout
+            .logoutSuccessUrl("/login?logout")
+            .invalidateHttpSession(true)
+            .deleteCookies("JSESSIONID")
+            .permitAll()
+        );
 
         return http.build();
     }

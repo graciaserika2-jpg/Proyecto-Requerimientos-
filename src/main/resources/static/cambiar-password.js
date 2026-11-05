@@ -1,67 +1,134 @@
 
-document.addEventListener("DOMContentLoaded", () => {
-    const formulario = document.getElementById("formCambiarPassword");
-    const passwordActual = document.getElementById("passwordActual");
-    const passwordNueva = document.getElementById("passwordNueva");
-    const confirmarPassword = document.getElementById("confirmarPassword");
-    const mensaje = document.getElementById("mensaje");
+const formulario = document.getElementById("formCambiarPassword");
+const mensaje = document.getElementById("mensaje");
+const boton = document.getElementById("btnCambiarPassword");
 
-    formulario.addEventListener("submit", async (evento) => {
-        evento.preventDefault();
-        mensaje.textContent = "";
+formulario.addEventListener("submit", async (event) => {
+    event.preventDefault();
 
-        if (passwordNueva.value !== confirmarPassword.value) {
-            mensaje.textContent = "Las nuevas contraseñas no coinciden.";
-            return;
-        }
+    const passwordActual =
+        document.getElementById("passwordActual").value;
 
-        if (passwordNueva.value.length < 12) {
-            mensaje.textContent =
-                "La nueva contraseña debe tener al menos 12 caracteres.";
-            return;
-        }
+    const passwordNueva =
+        document.getElementById("passwordNueva").value;
 
-        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+    const confirmarPassword =
+        document.getElementById("confirmarPassword").value;
 
-        const encabezados = {
-            "Content-Type": "application/json"
-        };
+    if (passwordNueva.length < 12) {
+        mostrarMensaje(
+            "La nueva contraseña debe tener al menos 12 caracteres.",
+            false
+        );
+        return;
+    }
 
-        if (csrfToken && csrfHeader) {
-            encabezados[csrfHeader] = csrfToken;
-        }
+    if (passwordNueva !== confirmarPassword) {
+        mostrarMensaje("Las nuevas contraseñas no coinciden.", false);
+        return;
+    }
+
+    // Recuperar el token CSRF que Thymeleaf colocó en el formulario.
+    const csrfToken = document.querySelector(
+        'input[name="_csrf"]'
+    )?.value;
+
+    if (!csrfToken) {
+        mostrarMensaje(
+            "No se encontró el token de seguridad. Recarga la página e intenta nuevamente.",
+            false
+        );
+        return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = "Guardando...";
+
+    try {
+        const respuesta = await fetch("/api/mi-cuenta/cambiar-password", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken
+            },
+            body: JSON.stringify({
+                passwordActual,
+                passwordNueva,
+                confirmarPassword
+            })
+        });
+
+        const textoRespuesta = await respuesta.text();
+
+        let datos = {};
 
         try {
-            const respuesta = await fetch("/api/mi-cuenta/cambiar-password", {
-                method: "POST",
-                headers: encabezados,
-                body: JSON.stringify({
-                    passwordActual: passwordActual.value,
-                    passwordNueva: passwordNueva.value,
-                    confirmarPassword: confirmarPassword.value
-                })
-            });
+            datos = JSON.parse(textoRespuesta);
+        } catch (error) {
+            datos = {};
+        }
 
-            const datos = await respuesta.json();
+        if (!respuesta.ok) {
+            if (respuesta.status === 403) {
+                mostrarMensaje(
+                    "El servidor rechazó la solicitud por seguridad (403). Recarga la página e intenta nuevamente.",
+                    false
+                );
+            } else {
+                mostrarMensaje(
+                    datos.mensaje ||
+                    `Error del servidor (${respuesta.status}). Revisa los datos e intenta nuevamente.`,
+                    false
+                );
+            }
+            return;
+        }
 
-            if (!respuesta.ok) {
-                mensaje.textContent =
-                    datos.mensaje || "No se pudo cambiar la contraseña.";
-                return;
+        mostrarMensaje(
+            datos.mensaje || "Contraseña actualizada correctamente.",
+            true
+        );
+
+        formulario.reset();
+
+        setTimeout(() => {
+            const formularioLogout = document.createElement("form");
+            formularioLogout.method = "POST";
+            formularioLogout.action = "/logout";
+
+            const csrfToken = document.querySelector(
+                'input[name="_csrf"]'
+            )?.value;
+
+            if (csrfToken) {
+                const inputCsrf = document.createElement("input");
+                inputCsrf.type = "hidden";
+                inputCsrf.name = "_csrf";
+                inputCsrf.value = csrfToken;
+                formularioLogout.appendChild(inputCsrf);
             }
 
-            mensaje.textContent = "Contraseña actualizada correctamente.";
+            document.body.appendChild(formularioLogout);
+            formularioLogout.submit();
+        }, 1800);
 
-            formulario.reset();
+    } catch (error) {
+        console.error("Error al cambiar contraseña:", error);
 
-            setTimeout(() => {
-                window.location.href = "/inicio";
-            }, 1200);
-
-        } catch (error) {
-            mensaje.textContent =
-                "No se pudo conectar con el servidor. Intenta nuevamente.";
-        }
-    });
+        mostrarMensaje(
+            "No se pudo establecer comunicación con el servidor.",
+            false
+        );
+    } finally {
+        boton.disabled = false;
+        boton.textContent = "Guardar nueva contraseña";
+    }
 });
+
+function mostrarMensaje(texto, correcto) {
+    mensaje.textContent = texto;
+    mensaje.className = correcto
+        ? "mensaje correcto"
+        : "mensaje error";
+    mensaje.hidden = false;
+}
