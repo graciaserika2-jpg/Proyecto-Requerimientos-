@@ -96,6 +96,13 @@ public class SeguridadConfig {
                 "/api/encargados/**"
             ).hasRole("ADMIN")
 
+            // Historial personal: solo alumnos y profesores.
+            .requestMatchers(
+                "/mi-historial",
+                "/api/prestamos/mi-historial"
+            ).hasAnyRole("ALUMNO", "PROFESOR")
+
+            // Operaciones administrativas de préstamos.
             .requestMatchers(
                 "/inventario",
                 "/inventario/**",

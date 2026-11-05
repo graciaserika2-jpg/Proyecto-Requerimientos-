@@ -1,7 +1,9 @@
+
 package com.proyectoRequerimientos.prestamo_equipos.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -82,6 +84,20 @@ public class PersonaController {
         return cuentaPersonaService.crearCuenta(id);
     }
 
+    @PostMapping("/{id}/restablecer-password")
+    public ResponseEntity<?> restablecerPassword(
+            @PathVariable Long id) {
+
+        try {
+            return ResponseEntity.ok(
+                    cuentaPersonaService.restablecerPassword(id));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(new Respuesta(e.getMessage()));
+        }
+    }
+
     public record PersonaConCuenta(
             Long id,
             String nombre,
@@ -89,5 +105,8 @@ public class PersonaController {
             String identificador,
             boolean tieneCuenta
     ) {
+    }
+
+    public record Respuesta(String mensaje) {
     }
 }

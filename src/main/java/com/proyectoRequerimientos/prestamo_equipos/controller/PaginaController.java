@@ -1,4 +1,3 @@
-
 package com.proyectoRequerimientos.prestamo_equipos.controller;
 
 import org.springframework.stereotype.Controller;
@@ -42,4 +41,13 @@ public class PaginaController {
         return "cambiar-password";
     }
 
+    @GetMapping("/disponibilidad")
+    public String mostrarDisponibilidad() {
+        return "disponibilidad";
+    }
+
+    @GetMapping("/mi-historial")
+    public String mostrarMiHistorial() {
+        return "mi-historial";
+    }
 }

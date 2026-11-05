@@ -21,7 +21,6 @@ public class CuentaPersonaService {
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    // Mismo conjunto de caracteres que utiliza EncargadoService.
     private static final String CARACTERES =
             "abcdefghijkmnopqrstuvwxyz23456789";
 
@@ -73,6 +72,40 @@ public class CuentaPersonaService {
         cuentaRepository.save(cuenta);
 
         return new CredencialesTemporales(usuario, passwordTemporal);
+    }
+
+    @Transactional
+    public CredencialesTemporales restablecerPassword(Long personaId) {
+
+        if (personaId == null) {
+            throw new IllegalArgumentException(
+                    "El identificador de la persona es obligatorio.");
+        }
+
+        Persona persona = personaRepository.findById(personaId)
+                .filter(p -> !Boolean.FALSE.equals(p.getActivo()))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "La persona no existe o está inactiva."));
+
+        CuentaPersona cuenta = cuentaRepository
+                .findByPersona_Id(personaId)
+                .filter(CuentaPersona::isActivo)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "La persona no tiene una cuenta activa."));
+
+        String passwordTemporal = generarPasswordTemporal();
+
+        cuenta.setPasswordHash(
+                passwordEncoder.encode(passwordTemporal));
+
+        cuenta.setDebeCambiarPassword(true);
+
+        cuentaRepository.save(cuenta);
+
+        return new CredencialesTemporales(
+                cuenta.getUsuario(),
+                passwordTemporal
+        );
     }
 
     @Transactional
@@ -130,7 +163,6 @@ public class CuentaPersonaService {
 
         StringBuilder password = new StringBuilder();
 
-        // Igual que los encargados: 8 caracteres.
         for (int i = 0; i < 8; i++) {
             int indice = secureRandom.nextInt(CARACTERES.length());
             password.append(CARACTERES.charAt(indice));

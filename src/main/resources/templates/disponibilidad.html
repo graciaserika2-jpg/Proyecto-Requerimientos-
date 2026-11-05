@@ -1,0 +1,340 @@
+
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disponibilidad de equipos | Préstamo UPIICSA</title>
+    <link rel="stylesheet" th:href="@{/estilos.css}">
+
+    <style>
+        .disponibilidad-contenido {
+            padding: 25px;
+        }
+
+        .disponibilidad-resumen {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .disponibilidad-resumen-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+        }
+
+        .disponibilidad-resumen-card span {
+            display: block;
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .disponibilidad-resumen-card strong {
+            display: block;
+            color: #1f2937;
+            font-size: 28px;
+        }
+
+        .disponibilidad-filtros {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 22px;
+            padding: 18px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        }
+
+        .disponibilidad-campo label {
+            display: block;
+            margin-bottom: 7px;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .disponibilidad-campo input,
+        .disponibilidad-campo select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: #fff;
+            color: #1f2937;
+            font-size: 14px;
+        }
+
+        .disponibilidad-campo input:focus,
+        .disponibilidad-campo select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .disponibilidad-tabla-contenedor {
+            width: 100%;
+            overflow-x: auto;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        }
+
+        .disponibilidad-tabla {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .disponibilidad-tabla th {
+            padding: 15px 18px;
+            background: #f9fafb;
+            color: #4b5563;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .disponibilidad-tabla td {
+            padding: 15px 18px;
+            color: #374151;
+            font-size: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .disponibilidad-tabla tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .disponibilidad-tabla tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .equipo-nombre {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .equipo-tipo {
+            display: inline-block;
+            padding: 5px 9px;
+            color: #4b5563;
+            background: #f3f4f6;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .equipo-estado {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .equipo-estado.disponible {
+            color: #166534;
+            background: #dcfce7;
+        }
+
+        .equipo-estado.prestado {
+            color: #92400e;
+            background: #fef3c7;
+        }
+
+        .equipo-estado.mantenimiento {
+            color: #991b1b;
+            background: #fee2e2;
+        }
+
+        .disponibilidad-mensaje {
+            padding: 30px 20px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        @media (max-width: 700px) {
+            .disponibilidad-contenido {
+                padding: 16px;
+            }
+
+            .disponibilidad-resumen {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .disponibilidad-filtros {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <aside class="sidebar"
+           sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
+
+        <div class="brand">
+            <div class="brand-icon">U</div>
+            <div>
+                <h2>Préstamo de equipos</h2>
+                <p>UPIICSA · IPN</p>
+            </div>
+        </div>
+
+        <p class="menu-label">MI CUENTA</p>
+
+        <nav class="menu">
+
+            <a th:href="@{/inicio}" class="menu-item">
+                <span>⌂</span>
+                <span>Inicio</span>
+            </a>
+
+            <a th:href="@{/disponibilidad}" class="menu-item active">
+                <span>▦</span>
+                <span>Disponibilidad de equipos</span>
+            </a>
+
+            <a th:href="@{/mi-historial}" class="menu-item">
+                <span>◷</span>
+                <span>Mi historial de préstamos</span>
+            </a>
+
+            <a th:href="@{/cambiar-password}" class="menu-item">
+                <span>⚙</span>
+                <span>Cambiar contraseña</span>
+            </a>
+
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="topbar-heading">
+                <p class="breadcrumb">Mi cuenta / Disponibilidad de equipos</p>
+                <h1>Disponibilidad de equipos</h1>
+                <p class="topbar-description">
+                    Consulta los equipos registrados y revisa su estado actual.
+                </p>
+            </div>
+
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit" class="btn-logout">
+                    <span aria-hidden="true">⇥</span>
+                    Cerrar sesión
+                </button>
+            </form>
+        </header>
+
+        <section class="disponibilidad-contenido">
+
+            <div class="disponibilidad-resumen">
+
+                <article class="disponibilidad-resumen-card">
+                    <span>Total de equipos</span>
+                    <strong id="totalEquipos">0</strong>
+                </article>
+
+                <article class="disponibilidad-resumen-card">
+                    <span>Equipos disponibles</span>
+                    <strong id="totalDisponibles">0</strong>
+                </article>
+
+                <article class="disponibilidad-resumen-card">
+                    <span>Equipos prestados</span>
+                    <strong id="totalPrestados">0</strong>
+                </article>
+
+            </div>
+
+            <section class="disponibilidad-filtros"
+                     aria-label="Filtros de equipos">
+
+                <div class="disponibilidad-campo">
+                    <label for="buscarEquipo">Buscar equipo</label>
+                    <input type="search"
+                           id="buscarEquipo"
+                           placeholder="Escribe el nombre del equipo..."
+                           autocomplete="off">
+                </div>
+
+                <div class="disponibilidad-campo">
+                    <label for="filtroTipo">Tipo de equipo</label>
+                    <select id="filtroTipo">
+                        <option value="">Todos los tipos</option>
+                        <option value="Cómputo">Cómputo</option>
+                        <option value="Proyección">Proyección</option>
+                        <option value="Audio">Audio</option>
+                        <option value="Cableado">Cableado</option>
+                        <option value="Accesorios">Accesorios</option>
+                    </select>
+                </div>
+
+                <div class="disponibilidad-campo">
+                    <label for="filtroEstado">Estado</label>
+                    <select id="filtroEstado">
+                        <option value="">Todos los estados</option>
+                        <option value="Disponible">Disponible</option>
+                        <option value="Prestado">Prestado</option>
+                        <option value="Mantenimiento">Mantenimiento</option>
+                    </select>
+                </div>
+
+            </section>
+
+            <div class="disponibilidad-tabla-contenedor">
+
+                <table class="disponibilidad-tabla">
+
+                    <thead>
+                        <tr>
+                            <th>Equipo</th>
+                            <th>Tipo</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tablaDisponibilidad">
+                        <tr>
+                            <td colspan="4" class="disponibilidad-mensaje">
+                                Cargando equipos...
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <footer class="page-footer">
+            Sistema de préstamo de equipos · UPIICSA · IPN
+        </footer>
+
+    </main>
+
+</div>
+
+<script th:src="@{/disponibilidad.js}" defer></script>
+
+</body>
+</html>

@@ -2,8 +2,11 @@
 package com.proyectoRequerimientos.prestamo_equipos.controller;
 
 import com.proyectoRequerimientos.prestamo_equipos.dto.CrearPrestamoRequest;
+import com.proyectoRequerimientos.prestamo_equipos.dto.MiPrestamoResponse;
 import com.proyectoRequerimientos.prestamo_equipos.model.Prestamo;
 import com.proyectoRequerimientos.prestamo_equipos.service.PrestamoService;
+
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,9 +26,18 @@ public class PrestamoController {
         return prestamoService.listarPrestamos();
     }
 
+    @GetMapping("/mi-historial")
+    public List<MiPrestamoResponse> listarMiHistorial(
+            Authentication authentication) {
+
+        return prestamoService.listarHistorialUsuario(
+                authentication.getName());
+    }
+
     @PostMapping
     public Prestamo crearPrestamo(
             @RequestBody CrearPrestamoRequest solicitud) {
+
         return prestamoService.crearPrestamo(solicitud);
     }
 
