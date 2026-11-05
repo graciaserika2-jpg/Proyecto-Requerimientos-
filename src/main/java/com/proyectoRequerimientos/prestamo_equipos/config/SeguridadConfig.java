@@ -30,11 +30,13 @@ public class SeguridadConfig {
             CuentaPersonaRepository cuentaPersonaRepository) {
 
         return usuario -> {
+
             var encargado = encargadoRepository
                     .findByUsuarioIgnoreCase(usuario)
                     .filter(empleado -> empleado.isActivo());
 
             if (encargado.isPresent()) {
+
                 var empleado = encargado.get();
 
                 return User.withUsername(empleado.getUsuario())
@@ -48,6 +50,7 @@ public class SeguridadConfig {
                     .filter(cuenta -> cuenta.isActivo());
 
             if (cuentaPersona.isPresent()) {
+
                 var cuenta = cuentaPersona.get();
 
                 String rol = cuenta.getPersona().getTipo()
@@ -67,11 +70,14 @@ public class SeguridadConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            CuentaPersonaRepository cuentaPersonaRepository)
+            CuentaPersonaRepository cuentaPersonaRepository,
+            EncargadoRepository encargadoRepository)
             throws Exception {
 
         http.addFilterBefore(
-                new CambioPasswordObligatorioFilter(cuentaPersonaRepository),
+                new CambioPasswordObligatorioFilter(
+                        cuentaPersonaRepository,
+                        encargadoRepository),
                 AuthorizationFilter.class);
 
         http.authorizeHttpRequests(auth -> auth
@@ -104,6 +110,12 @@ public class SeguridadConfig {
                 "/api/prestamos",
                 "/api/prestamos/**"
             ).hasAnyRole("ADMIN", "ENCARGADO")
+
+            .requestMatchers(
+                "/disponibilidad",
+                "/api/disponibilidad",
+                "/api/disponibilidad/**"
+            ).hasAnyRole("ALUMNO", "PROFESOR")
 
             .requestMatchers(
                 "/cambiar-password",

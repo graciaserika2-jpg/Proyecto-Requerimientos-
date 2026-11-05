@@ -5,10 +5,10 @@ import java.io.IOException;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.proyectoRequerimientos.prestamo_equipos.repository.CuentaPersonaRepository;
+import com.proyectoRequerimientos.prestamo_equipos.repository.EncargadoRepository;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,10 +18,14 @@ import jakarta.servlet.http.HttpServletResponse;
 public class CambioPasswordObligatorioFilter extends OncePerRequestFilter {
 
     private final CuentaPersonaRepository cuentaPersonaRepository;
+    private final EncargadoRepository encargadoRepository;
 
     public CambioPasswordObligatorioFilter(
-            CuentaPersonaRepository cuentaPersonaRepository) {
+            CuentaPersonaRepository cuentaPersonaRepository,
+            EncargadoRepository encargadoRepository) {
+
         this.cuentaPersonaRepository = cuentaPersonaRepository;
+        this.encargadoRepository = encargadoRepository;
     }
 
     @Override
@@ -38,12 +42,32 @@ public class CambioPasswordObligatorioFilter extends OncePerRequestFilter {
                 && autenticacion.isAuthenticated()
                 && !"anonymousUser".equals(autenticacion.getPrincipal())) {
 
-            var cuenta = cuentaPersonaRepository
-                    .findByUsuarioIgnoreCase(autenticacion.getName());
+            String usuario = autenticacion.getName();
 
-            if (cuenta.isPresent()
-                    && cuenta.get().isActivo()
-                    && cuenta.get().isDebeCambiarPassword()) {
+            boolean debeCambiarPassword = false;
+
+            var encargado = encargadoRepository
+                    .findByUsuarioIgnoreCase(usuario)
+                    .filter(empleado -> empleado.isActivo());
+
+            if (encargado.isPresent()) {
+
+                debeCambiarPassword =
+                        encargado.get().isDebeCambiarPassword();
+
+            } else {
+
+                var cuenta = cuentaPersonaRepository
+                        .findByUsuarioIgnoreCase(usuario)
+                        .filter(persona -> persona.isActivo());
+
+                if (cuenta.isPresent()) {
+                    debeCambiarPassword =
+                            cuenta.get().isDebeCambiarPassword();
+                }
+            }
+
+            if (debeCambiarPassword) {
 
                 String ruta = request.getServletPath();
 

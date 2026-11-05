@@ -1,4 +1,3 @@
-
 package com.proyectoRequerimientos.prestamo_equipos.repository;
 
 import java.util.Optional;
@@ -15,4 +14,6 @@ public interface CuentaPersonaRepository
     Optional<CuentaPersona> findByPersona_Id(Long personaId);
 
     boolean existsByUsuarioIgnoreCase(String usuario);
+
+    boolean existsByPersona_Id(Long personaId);
 }

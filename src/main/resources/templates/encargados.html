@@ -20,6 +20,7 @@
 
     <!-- MENÚ LATERAL -->
     <aside class="sidebar">
+
         <div class="brand">
             <div class="brand-icon">U</div>
             <div>
@@ -31,6 +32,7 @@
         <p class="menu-label">MENÚ PRINCIPAL</p>
 
         <nav class="menu">
+
             <a th:href="@{/inicio}" class="menu-item">
                 <span>⌂</span>
                 <span>Inicio</span>
@@ -56,6 +58,7 @@
                 <span>⚙</span>
                 <span>Administrar encargados</span>
             </a>
+
         </nav>
     </aside>
 
@@ -63,9 +66,12 @@
     <main class="main-content">
 
         <header class="topbar">
+
             <div class="topbar-heading">
                 <p class="breadcrumb">Sistema / Administración</p>
+
                 <h1>Administración de encargados</h1>
+
                 <p class="topbar-description">
                     Registra y consulta las cuentas del personal que administra los préstamos.
                 </p>
@@ -77,10 +83,12 @@
                     Cerrar sesión
                 </button>
             </form>
+
         </header>
 
         <!-- REGISTRO -->
         <section class="dashboard-section">
+
             <div class="section-heading">
                 <div>
                     <h2>Registrar encargado</h2>
@@ -89,8 +97,11 @@
             </div>
 
             <section class="tarjeta">
+
                 <form id="formularioEncargado">
+
                     <label for="nombre">Nombre completo</label>
+
                     <input
                         id="nombre"
                         name="nombre"
@@ -100,6 +111,7 @@
                     >
 
                     <label for="usuario">Nombre de usuario</label>
+
                     <input
                         id="usuario"
                         name="usuario"
@@ -108,29 +120,74 @@
                         required
                     >
 
-                    <label for="password">Contraseña temporal</label>
-                    <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        minlength="8"
-                        required
-                    >
-
-                    <small>La contraseña debe tener al menos 8 caracteres.</small>
+                    <small>
+                        El sistema generará automáticamente una contraseña temporal.
+                    </small>
 
                     <p>
-                        <button type="submit">Crear cuenta</button>
+                        <button type="submit" id="btnCrearEncargado">
+                            Crear cuenta
+                        </button>
                     </p>
+
                 </form>
 
                 <p id="mensaje" role="status" aria-live="polite"></p>
+
             </section>
+
+            <!-- CREDENCIALES GENERADAS -->
+            <section
+                class="tarjeta"
+                id="panelCredenciales"
+                hidden
+                aria-live="polite"
+                style="margin-top: 20px;">
+
+                <h2>Credenciales del encargado</h2>
+
+                <p>
+                    La cuenta se creó correctamente. Entrega estas credenciales
+                    al encargado.
+                </p>
+
+                <p>
+                    <strong>Nombre:</strong>
+                    <span id="nombreGenerado"></span>
+                </p>
+
+                <p>
+                    <strong>Usuario:</strong>
+                    <code id="usuarioGenerado"></code>
+                </p>
+
+                <p>
+                    <strong>Contraseña temporal:</strong>
+                    <code id="passwordGenerado"></code>
+                </p>
+
+                <p>
+                    <button type="button" id="btnCopiarCredenciales">
+                        Copiar credenciales
+                    </button>
+                </p>
+
+                <small>
+                    Guarda esta contraseña ahora. No volverá a mostrarse
+                    después de salir de esta página o actualizarla.
+                </small>
+
+                <p id="mensajeCopia" role="status"></p>
+
+            </section>
+
         </section>
 
         <!-- LISTA DE ENCARGADOS -->
         <section class="dashboard-section">
+
             <div class="section-heading">
+
                 <div>
                     <h2>Encargados registrados</h2>
                     <p>Consulta las cuentas existentes en el sistema.</p>
@@ -139,10 +196,13 @@
                 <button type="button" id="btnActualizar">
                     Actualizar lista
                 </button>
+
             </div>
 
             <section class="tarjeta">
+
                 <div class="tabla-contenedor">
+
                     <table>
                         <thead>
                             <tr>
@@ -151,10 +211,14 @@
                                 <th>Rol</th>
                             </tr>
                         </thead>
+
                         <tbody id="listaEncargados"></tbody>
                     </table>
+
                 </div>
+
             </section>
+
         </section>
 
         <footer class="page-footer">
@@ -162,8 +226,10 @@
         </footer>
 
     </main>
+
 </div>
 
 <script th:src="@{/encargados.js}"></script>
+
 </body>
 </html>

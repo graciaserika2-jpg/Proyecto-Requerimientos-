@@ -21,8 +21,9 @@ public class CuentaPersonaService {
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom secureRandom = new SecureRandom();
 
+    // Mismo conjunto de caracteres que utiliza EncargadoService.
     private static final String CARACTERES =
-            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+            "abcdefghijkmnopqrstuvwxyz23456789";
 
     public CuentaPersonaService(
             CuentaPersonaRepository cuentaRepository,
@@ -126,9 +127,11 @@ public class CuentaPersonaService {
     }
 
     private String generarPasswordTemporal() {
+
         StringBuilder password = new StringBuilder();
 
-        for (int i = 0; i < 14; i++) {
+        // Igual que los encargados: 8 caracteres.
+        for (int i = 0; i < 8; i++) {
             int indice = secureRandom.nextInt(CARACTERES.length());
             password.append(CARACTERES.charAt(indice));
         }

@@ -18,6 +18,7 @@ public class EncargadoInicial {
             PasswordEncoder encoder) {
 
         return args -> {
+
             String usuario = System.getenv("ADMIN_USER");
             String password = System.getenv("ADMIN_PASSWORD");
             String nombre = System.getenv("ADMIN_NAME");
@@ -25,15 +26,19 @@ public class EncargadoInicial {
             if (usuario == null || usuario.isBlank()
                     || password == null || password.isBlank()
                     || nombre == null || nombre.isBlank()) {
+
                 System.out.println(
                     "No se creó el administrador inicial: " +
                     "faltan variables de entorno."
                 );
+
                 return;
             }
 
             if (repository.count() == 0) {
+
                 Encargado administrador = new Encargado();
+
                 administrador.setUsuario(usuario.trim());
                 administrador.setNombre(nombre.trim());
                 administrador.setPasswordHash(
@@ -41,6 +46,9 @@ public class EncargadoInicial {
                 );
                 administrador.setRol("ADMIN");
                 administrador.setActivo(true);
+
+                // El administrador inicial conserva su contraseña.
+                administrador.setDebeCambiarPassword(false);
 
                 repository.save(administrador);
 

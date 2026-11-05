@@ -1,13 +1,13 @@
+
 package com.proyectoRequerimientos.prestamo_equipos.controller;
 
-import java.util.List;
-
+import com.proyectoRequerimientos.prestamo_equipos.dto.EquipoDisponibilidad;
+import com.proyectoRequerimientos.prestamo_equipos.service.EquipoService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.proyectoRequerimientos.prestamo_equipos.dto.EquipoDisponibilidad;
-import com.proyectoRequerimientos.prestamo_equipos.service.EquipoService;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/disponibilidad")
@@ -20,7 +20,7 @@ public class DisponibilidadController {
     }
 
     @GetMapping("/equipos")
-    public List<EquipoDisponibilidad> listarEquiposDisponibles() {
+    public List<EquipoDisponibilidad> listarDisponibilidad() {
         return equipoService.listarDisponibilidad();
     }
 }

@@ -1,3 +1,4 @@
+
 package com.proyectoRequerimientos.prestamo_equipos.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -26,6 +27,9 @@ public class Encargado {
 
     @Column(nullable = false, length = 20)
     private String rol = "ENCARGADO";
+
+    @Column(nullable = false)
+    private boolean debeCambiarPassword = false;
 
     public Long getId() {
         return id;
@@ -69,5 +73,13 @@ public class Encargado {
 
     public void setRol(String rol) {
         this.rol = rol;
+    }
+
+    public boolean isDebeCambiarPassword() {
+        return debeCambiarPassword;
+    }
+
+    public void setDebeCambiarPassword(boolean debeCambiarPassword) {
+        this.debeCambiarPassword = debeCambiarPassword;
     }
 }

@@ -41,18 +41,26 @@ public class EncargadoController {
                     "Debes enviar los datos del encargado.");
         }
 
-        Encargado encargado = encargadoService.crearEncargado(
-                solicitud.usuario(),
-                solicitud.nombre(),
-                solicitud.password()
-        );
+        try {
+            EncargadoService.CredencialesTemporales credenciales =
+                    encargadoService.crearEncargado(
+                            solicitud.usuario(),
+                            solicitud.nombre()
+                    );
 
-        return Map.of(
-                "mensaje", "Encargado registrado correctamente.",
-                "id", encargado.getId(),
-                "usuario", encargado.getUsuario(),
-                "nombre", encargado.getNombre(),
-                "rol", encargado.getRol()
-        );
+            return Map.of(
+                    "mensaje", "Encargado registrado correctamente.",
+                    "id", credenciales.id(),
+                    "nombre", credenciales.nombre(),
+                    "usuario", credenciales.usuario(),
+                    "rol", credenciales.rol(),
+                    "passwordTemporal", credenciales.passwordTemporal()
+            );
+
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    e.getMessage());
+        }
     }
 }
