@@ -6,6 +6,7 @@ const selectorPersona = document.getElementById("personaId");
 const resultadosPersonas = document.getElementById("resultadosPersonas");
 const personaSeleccionada = document.getElementById("personaSeleccionada");
 
+const listaEquipos = document.getElementById("listaEquipos");
 const campoBuscarEquipo = document.getElementById("buscarEquipo");
 const selectorEquipo = document.getElementById("equipoId");
 const resultadosEquipos = document.getElementById("resultadosEquipos");
@@ -20,11 +21,11 @@ const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
 const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
 
 let prestamos = [];
+let equiposDisponibles = [];
 
 let temporizadorPersona;
 let temporizadorEquipo;
 let solicitudPersona = 0;
-let solicitudEquipo = 0;
 
 function obtenerHeaders(extra = {}) {
     const headers = { ...extra };
@@ -70,6 +71,7 @@ function invalidarSeleccionPersona() {
 function invalidarSeleccionEquipo() {
     selectorEquipo.value = "";
     equipoSeleccionado.textContent = "";
+    listaEquipos.value = "";
 }
 
 // -------------------------
@@ -92,7 +94,6 @@ async function buscarPersonas(texto) {
             `/api/personas/buscar?texto=${encodeURIComponent(termino)}`
         );
 
-        // Ignorar respuestas de búsquedas anteriores.
         if (numeroSolicitud !== solicitudPersona) return;
 
         const activas = personas.filter(
@@ -151,8 +152,6 @@ async function buscarPersonas(texto) {
 
 campoBuscarPersona.addEventListener("input", () => {
     clearTimeout(temporizadorPersona);
-
-    // Si cambia el texto, ya no se considera válida la selección anterior.
     invalidarSeleccionPersona();
 
     temporizadorPersona = setTimeout(
@@ -162,98 +161,163 @@ campoBuscarPersona.addEventListener("input", () => {
 });
 
 // -------------------------
-// Búsqueda de equipos
+// Cargar equipos disponibles
 // -------------------------
 
-async function buscarEquipos(texto) {
-    const numeroSolicitud = ++solicitudEquipo;
-    const termino = texto.trim();
+function obtenerTextoEquipo(equipo) {
+    const datos = [
+        `ID: ${equipo.id}`,
+        equipo.nombre,
+        equipo.tipo,
+        equipo.numeroSerie ? `Serie: ${equipo.numeroSerie}` : null
+    ].filter(Boolean);
 
-    if (termino.length < 2) {
-        ocultarResultados(resultadosEquipos);
-        return;
-    }
+    return datos.join(" — ");
+}
 
-    mostrarMensajeBusqueda(resultadosEquipos, "Buscando equipos...");
-
+async function cargarEquiposDisponibles() {
     try {
-        const equipos = await consultarLista(
-            `/api/equipos/buscar?texto=${encodeURIComponent(termino)}`
-        );
+        const equipos = await consultarLista("/api/equipos");
 
-        if (numeroSolicitud !== solicitudEquipo) return;
-
-        const disponibles = equipos.filter(equipo =>
+        equiposDisponibles = equipos.filter(equipo =>
             equipo.activo !== false &&
             equipo.estado?.toLowerCase() === "disponible"
         );
 
-        if (disponibles.length === 0) {
-            mostrarMensajeBusqueda(
-                resultadosEquipos,
-                "No se encontraron equipos disponibles."
-            );
-            return;
-        }
+        listaEquipos.replaceChildren();
 
-        resultadosEquipos.replaceChildren();
+        const opcionInicial = document.createElement("option");
+        opcionInicial.value = "";
+        opcionInicial.textContent = equiposDisponibles.length > 0
+            ? "Selecciona un equipo disponible..."
+            : "No hay equipos disponibles";
 
-        disponibles.forEach(equipo => {
-            const boton = document.createElement("button");
-            boton.type = "button";
-            boton.className = "resultado-busqueda";
-            boton.setAttribute("role", "option");
+        listaEquipos.appendChild(opcionInicial);
 
-            const nombre = document.createElement("strong");
-            nombre.textContent = equipo.nombre;
+        equiposDisponibles.forEach(equipo => {
+            const opcion = document.createElement("option");
 
-            const detalles = document.createElement("small");
+            opcion.value = equipo.id;
+            opcion.textContent = obtenerTextoEquipo(equipo);
 
-            const datosEquipo = [
-                equipo.tipo,
-                equipo.numeroSerie
-                    ? `Serie: ${equipo.numeroSerie}`
-                    : null
-            ].filter(Boolean);
-
-            detalles.textContent = datosEquipo.join(" · ");
-
-            boton.append(nombre, detalles);
-
-            boton.addEventListener("click", () => {
-                selectorEquipo.value = equipo.id;
-                campoBuscarEquipo.value =
-                    `${equipo.nombre} (${equipo.tipo})`;
-
-                equipoSeleccionado.textContent =
-                    `Equipo seleccionado: ${equipo.nombre}`;
-
-                ocultarResultados(resultadosEquipos);
-            });
-
-            resultadosEquipos.appendChild(boton);
+            listaEquipos.appendChild(opcion);
         });
 
-        resultadosEquipos.classList.add("visible");
     } catch (error) {
-        if (numeroSolicitud !== solicitudEquipo) return;
+        listaEquipos.replaceChildren();
 
-        mostrarMensajeBusqueda(
-            resultadosEquipos,
-            "No se pudo buscar. Intenta nuevamente."
-        );
+        const opcion = document.createElement("option");
+        opcion.value = "";
+        opcion.textContent = "No se pudieron cargar los equipos";
+
+        listaEquipos.appendChild(opcion);
+
+        mensajePrestamo.textContent = error.message;
     }
 }
 
-campoBuscarEquipo.addEventListener("input", () => {
-    clearTimeout(temporizadorEquipo);
+// Selección mediante lista desplegable.
+
+listaEquipos.addEventListener("change", () => {
+    const id = listaEquipos.value;
 
     invalidarSeleccionEquipo();
+    ocultarResultados(resultadosEquipos);
 
-    temporizadorEquipo = setTimeout(
-        () => buscarEquipos(campoBuscarEquipo.value),
-        300
+    if (!id) {
+        campoBuscarEquipo.value = "";
+        return;
+    }
+
+    const equipo = equiposDisponibles.find(
+        elemento => String(elemento.id) === id
     );
+
+    if (!equipo) {
+        campoBuscarEquipo.value = "";
+        return;
+    }
+
+    selectorEquipo.value = equipo.id;
+    campoBuscarEquipo.value = obtenerTextoEquipo(equipo);
+
+    equipoSeleccionado.textContent =
+        `Equipo seleccionado: ${equipo.nombre}`;
+});
+
+// -------------------------
+// Búsqueda manual de equipos
+// -------------------------
+
+function buscarEquiposLocalmente(texto) {
+    const termino = texto.trim().toLocaleLowerCase();
+
+    if (termino.length === 0) {
+        ocultarResultados(resultadosEquipos);
+        return;
+    }
+
+    const encontrados = equiposDisponibles.filter(equipo => {
+        const datos = [
+            equipo.id,
+            equipo.nombre,
+            equipo.tipo,
+            equipo.descripcion,
+            equipo.numeroSerie
+        ];
+
+        return datos.some(dato =>
+            dato !== null &&
+            dato !== undefined &&
+            String(dato).toLocaleLowerCase().includes(termino)
+        );
+    });
+
+    if (encontrados.length === 0) {
+        mostrarMensajeBusqueda(
+            resultadosEquipos,
+            "No se encontraron equipos disponibles con ese dato."
+        );
+        return;
+    }
+
+    resultadosEquipos.replaceChildren();
+
+    encontrados.forEach(equipo => {
+        const boton = document.createElement("button");
+        boton.type = "button";
+        boton.className = "resultado-busqueda";
+        boton.setAttribute("role", "option");
+
+        const nombre = document.createElement("strong");
+        nombre.textContent = equipo.nombre;
+
+        const detalles = document.createElement("small");
+        detalles.textContent = obtenerTextoEquipo(equipo);
+
+        boton.append(nombre, detalles);
+
+        boton.addEventListener("click", () => {
+            selectorEquipo.value = equipo.id;
+            listaEquipos.value = String(equipo.id);
+            campoBuscarEquipo.value = obtenerTextoEquipo(equipo);
+
+            equipoSeleccionado.textContent =
+                `Equipo seleccionado: ${equipo.nombre}`;
+
+            ocultarResultados(resultadosEquipos);
+        });
+
+        resultadosEquipos.appendChild(boton);
+    });
+
+    resultadosEquipos.classList.add("visible");
+}
+
+campoBuscarEquipo.addEventListener("input", () => {
+    invalidarSeleccionEquipo();
+
+    buscarEquiposLocalmente(campoBuscarEquipo.value);
 });
 
 // -------------------------
@@ -265,7 +329,18 @@ formularioPrestamo.addEventListener("submit", async evento => {
 
     if (!selectorPersona.value || !selectorEquipo.value) {
         mensajePrestamo.textContent =
-            "Busca y selecciona una persona y un equipo de los resultados.";
+            "Busca y selecciona una persona y un equipo disponible.";
+        return;
+    }
+
+    // Comprobar que el equipo siga en nuestra lista de disponibles.
+    const equipoValido = equiposDisponibles.some(
+        equipo => String(equipo.id) === selectorEquipo.value
+    );
+
+    if (!equipoValido) {
+        mensajePrestamo.textContent =
+            "El equipo seleccionado ya no está disponible. Actualiza la selección.";
         return;
     }
 
@@ -314,8 +389,10 @@ formularioPrestamo.addEventListener("submit", async evento => {
             "Préstamo registrado correctamente.";
 
         await Promise.all([
-            cargarPrestamos()
+            cargarPrestamos(),
+            cargarEquiposDisponibles()
         ]);
+
     } catch (error) {
         mensajePrestamo.textContent = error.message;
     } finally {
@@ -431,7 +508,11 @@ async function devolverPrestamo(id, boton) {
         mensajePrestamo.textContent =
             "Devolución registrada correctamente.";
 
-        await cargarPrestamos();
+        await Promise.all([
+            cargarPrestamos(),
+            cargarEquiposDisponibles()
+        ]);
+
     } catch (error) {
         mensajePrestamo.textContent = error.message;
         boton.disabled = false;
@@ -445,7 +526,10 @@ async function devolverPrestamo(id, boton) {
 filtroPrestamos.addEventListener("change", mostrarPrestamos);
 
 async function iniciarModuloPrestamos() {
-    await cargarPrestamos();
+    await Promise.all([
+        cargarPrestamos(),
+        cargarEquiposDisponibles()
+    ]);
 }
 
 iniciarModuloPrestamos();

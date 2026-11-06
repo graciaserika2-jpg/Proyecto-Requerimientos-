@@ -16,15 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalTime;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class PrestamoService {
-
-    private static final LocalTime HORA_APERTURA = LocalTime.of(8, 0);
-    private static final LocalTime HORA_CIERRE = LocalTime.of(20, 0);
 
     private final PrestamoRepository prestamoRepository;
     private final EquipoRepository equipoRepository;
@@ -41,16 +37,6 @@ public class PrestamoService {
         this.equipoRepository = equipoRepository;
         this.personaService = personaService;
         this.cuentaPersonaRepository = cuentaPersonaRepository;
-    }
-
-    private void validarHorarioPrestamo() {
-        LocalTime horaActual = LocalTime.now();
-
-        if (horaActual.isBefore(HORA_APERTURA)
-                || !horaActual.isBefore(HORA_CIERRE)) {
-            throw new IllegalArgumentException(
-                    "Solo se pueden registrar préstamos entre las 08:00 y las 20:00");
-        }
     }
 
     public List<Prestamo> listarPrestamos() {
@@ -111,8 +97,6 @@ public class PrestamoService {
                     "La persona y el artículo son obligatorios");
         }
 
-        validarHorarioPrestamo();
-
         Persona persona = personaService.buscarActiva(solicitud.personaId());
 
         Equipo equipo = equipoRepository.findById(solicitud.equipoId())
@@ -172,11 +156,6 @@ public class PrestamoService {
                 prestamo.getFechaPrestamo().toLocalDate())) {
             throw new IllegalArgumentException(
                     "El equipo debe devolverse el mismo día del préstamo");
-        }
-
-        if (!ahora.toLocalTime().isBefore(HORA_CIERRE)) {
-            throw new IllegalArgumentException(
-                    "El horario de devolución termina a las 20:00");
         }
 
         prestamo.setEstado("Devuelto");

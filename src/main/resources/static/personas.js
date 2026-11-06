@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let personas = [];
 
-    // Obtiene los encabezados necesarios, incluyendo CSRF.
+    // Encabezados para las solicitudes, incluyendo CSRF.
     function obtenerHeaders() {
         const headers = {
             "Content-Type": "application/json"
@@ -34,45 +34,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
         mensaje.textContent = texto;
         mensaje.className = esError ? "mensaje error" : "mensaje exito";
-
         mensaje.style.display = "block";
     }
 
-    // Actualiza la etiqueta y ayuda del identificador según el tipo.
+    // Actualiza el identificador según el tipo de persona.
     function actualizarIdentificador() {
         if (!tipo || !identificador) return;
 
-        if (tipo.value === "Alumno") {
-            if (etiquetaIdentificador) {
-                etiquetaIdentificador.textContent = "Número de boleta";
-            }
+        identificador.disabled = tipo.value === "";
 
-            if (ayudaIdentificador) {
-                ayudaIdentificador.textContent =
-                    "Ingresa los 10 dígitos de la boleta.";
-            }
+        if (tipo.value === "Alumno") {
+            etiquetaIdentificador.textContent = "Número de boleta";
+            ayudaIdentificador.textContent =
+                "Ingresa los 10 dígitos de la boleta.";
 
             identificador.placeholder = "Ej. 2024630001";
             identificador.maxLength = 10;
-        } else {
-            if (etiquetaIdentificador) {
-                etiquetaIdentificador.textContent = "Número de empleado";
-            }
 
-            if (ayudaIdentificador) {
-                ayudaIdentificador.textContent =
-                    "Ingresa el número de empleado.";
-            }
+        } else if (tipo.value === "Profesor") {
+            etiquetaIdentificador.textContent = "Número de empleado";
+            ayudaIdentificador.textContent =
+                "Ingresa el número de empleado.";
 
             identificador.placeholder = "Número de empleado";
             identificador.removeAttribute("maxLength");
+
+        } else {
+            etiquetaIdentificador.textContent =
+                "Boleta o identificador institucional";
+
+            ayudaIdentificador.textContent =
+                "Selecciona si registrarás un alumno o un profesor.";
+
+            identificador.placeholder =
+                "Selecciona primero el tipo de persona";
         }
     }
 
-    // Valida el identificador de acuerdo con el tipo de persona.
+    // Valida el identificador.
     function validarIdentificador() {
-        if (!tipo || !identificador) return true;
-
         const valor = identificador.value.trim();
 
         if (!valor) {
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return true;
     }
 
-    // Interpreta los errores enviados por el servidor.
+    // Lee los errores enviados por el servidor.
     async function leerError(respuesta) {
         try {
             const datos = await respuesta.json();
@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Carga las personas desde el servidor.
+    // Carga las personas registradas.
     async function cargarPersonas() {
         try {
             const respuesta = await fetch("/api/personas/estado-cuentas");
@@ -119,6 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             personas = await respuesta.json();
             mostrarPersonas();
+
         } catch (error) {
             mostrarMensaje(
                 error.message || "No se pudieron cargar las personas.",
@@ -127,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Dibuja la tabla y aplica el filtro de búsqueda.
+    // Muestra las personas en la tabla.
     function mostrarPersonas() {
         if (!tablaPersonas) return;
 
@@ -154,28 +155,29 @@ document.addEventListener("DOMContentLoaded", () => {
         filtradas.forEach(persona => {
             const fila = document.createElement("tr");
 
+            const celdaId = document.createElement("td");
+            celdaId.textContent = persona.id;
+
+            const celdaNombre = document.createElement("td");
+            celdaNombre.textContent = persona.nombre || "";
+
+            const celdaTipo = document.createElement("td");
+            celdaTipo.textContent = persona.tipo || "";
+
+            const celdaIdentificador = document.createElement("td");
+            celdaIdentificador.textContent = persona.identificador || "";
+
+            const celdaCuenta = document.createElement("td");
             const tieneCuenta = persona.tieneCuenta === true;
 
-            fila.innerHTML = `
-                <td>${persona.id}</td>
-                <td></td>
-                <td>${persona.tipo || ""}</td>
-                <td>${persona.identificador || ""}</td>
-                <td></td>
-                <td></td>
-            `;
-
-            // Nombre
-            fila.children[1].textContent = persona.nombre || "";
-
-            // Estado de la cuenta
-            fila.children[4].textContent = tieneCuenta
+            celdaCuenta.textContent = tieneCuenta
                 ? "Cuenta creada"
                 : "Sin cuenta";
 
-            // Acciones
-            const celdaAcciones = fila.children[5];
+            const celdaAcciones = document.createElement("td");
 
+            // Solo aparece restablecer contraseña.
+            // Ya no existe el botón Crear cuenta.
             if (tieneCuenta) {
                 const botonRestablecer = document.createElement("button");
 
@@ -189,31 +191,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 celdaAcciones.appendChild(botonRestablecer);
             } else {
-                const botonCrear = document.createElement("button");
-
-                botonCrear.type = "button";
-                botonCrear.textContent = "Crear cuenta";
-                botonCrear.className = "btn-editar";
-
-                botonCrear.addEventListener("click", () => {
-                    crearCuenta(persona, botonCrear);
-                });
-
-                celdaAcciones.appendChild(botonCrear);
+                celdaAcciones.textContent = "—";
             }
+
+            fila.append(
+                celdaId,
+                celdaNombre,
+                celdaTipo,
+                celdaIdentificador,
+                celdaCuenta,
+                celdaAcciones
+            );
 
             tablaPersonas.appendChild(fila);
         });
     }
 
-    // Registra una persona.
+    // Registra a la persona y crea su cuenta automáticamente.
     async function registrarPersona(evento) {
         evento.preventDefault();
 
         if (!validarIdentificador()) return;
 
         const datos = {
-            nombre: formPersona.nombre.value.trim(),
+            nombre: document.getElementById("nombre").value.trim(),
             tipo: tipo.value,
             identificador: identificador.value.trim()
         };
@@ -227,7 +228,8 @@ document.addEventListener("DOMContentLoaded", () => {
         botonRegistrar.textContent = "Registrando...";
 
         try {
-            const respuesta = await fetch("/api/personas", {
+            // Este endpoint registra a la persona y crea su cuenta.
+            const respuesta = await fetch("/api/personas/registro-completo", {
                 method: "POST",
                 headers: obtenerHeaders(),
                 body: JSON.stringify(datos)
@@ -237,15 +239,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error(await leerError(respuesta));
             }
 
-            mostrarMensaje("Persona registrada correctamente.");
+            const resultado = await respuesta.json();
 
+            // El backend devuelve persona y credenciales.
+            const personaRegistrada = resultado.persona;
+            const credenciales = resultado.credenciales;
+
+            // Limpia el formulario.
             formPersona.reset();
             actualizarIdentificador();
 
+            // Actualiza la tabla.
             await cargarPersonas();
+
+            // Muestra las credenciales inmediatamente.
+            mostrarCredenciales(
+                personaRegistrada.nombre,
+                credenciales,
+                "¡Persona registrada correctamente!"
+            );
+
         } catch (error) {
             mostrarMensaje(
-                error.message || "No se pudo registrar la persona.",
+                error.message || "No se pudo registrar la persona y crear su cuenta.",
                 true
             );
         } finally {
@@ -254,53 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Crea una cuenta para una persona que todavía no tiene.
-    async function crearCuenta(persona, boton) {
-        const confirmar = window.confirm(
-            `¿Deseas crear una cuenta para ${persona.nombre}?`
-        );
-
-        if (!confirmar) return;
-
-        boton.disabled = true;
-        boton.textContent = "Creando...";
-
-        try {
-            const respuesta = await fetch(
-                `/api/personas/${persona.id}/cuenta`,
-                {
-                    method: "POST",
-                    headers: obtenerHeaders()
-                }
-            );
-
-            if (!respuesta.ok) {
-                throw new Error(await leerError(respuesta));
-            }
-
-            const credenciales = await respuesta.json();
-
-            mostrarMensaje(`Cuenta creada para ${persona.nombre}.`);
-
-            mostrarCredenciales(
-                persona.nombre,
-                credenciales,
-                "¡Cuenta creada correctamente!"
-            );
-
-            await cargarPersonas();
-        } catch (error) {
-            mostrarMensaje(
-                error.message || "No se pudo crear la cuenta.",
-                true
-            );
-        } finally {
-            boton.disabled = false;
-            boton.textContent = "Crear cuenta";
-        }
-    }
-
-    // Restablece la contraseña de una cuenta existente.
+    // Restablece la contraseña de una persona que ya tiene cuenta.
     async function restablecerPassword(persona, boton) {
         const confirmar = window.confirm(
             `¿Deseas restablecer la contraseña de ${persona.nombre}?\n\n` +
@@ -327,15 +297,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const credenciales = await respuesta.json();
 
-            mostrarMensaje(
-                `Contraseña restablecida para ${persona.nombre}.`
-            );
-
             mostrarCredenciales(
                 persona.nombre,
                 credenciales,
                 "¡Contraseña restablecida!"
             );
+
         } catch (error) {
             mostrarMensaje(
                 error.message || "No se pudo restablecer la contraseña.",
@@ -347,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Muestra las credenciales temporales en un modal con opción de copiar.
+    // Muestra las credenciales en una ventana con opción de copiar.
     function mostrarCredenciales(
         nombre,
         credenciales,
@@ -469,7 +436,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(modal);
     }
 
-    // Eventos
+    // Eventos.
     if (formPersona) {
         formPersona.addEventListener("submit", registrarPersona);
     }
@@ -483,6 +450,6 @@ document.addEventListener("DOMContentLoaded", () => {
         actualizarIdentificador();
     }
 
-    // Carga inicial
+    // Carga inicial.
     cargarPersonas();
 });

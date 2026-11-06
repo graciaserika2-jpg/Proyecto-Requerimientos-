@@ -9,6 +9,8 @@ import com.proyectoRequerimientos.prestamo_equipos.service.PrestamoService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -22,8 +24,11 @@ public class PrestamoController {
     }
 
     @GetMapping
-    public List<Prestamo> listarPrestamos() {
-        return prestamoService.listarPrestamos();
+    public List<PrestamoResponse> listarPrestamos() {
+        return prestamoService.listarPrestamos()
+                .stream()
+                .map(this::convertirRespuesta)
+                .toList();
     }
 
     @GetMapping("/mi-historial")
@@ -35,14 +40,61 @@ public class PrestamoController {
     }
 
     @PostMapping
-    public Prestamo crearPrestamo(
+    public PrestamoResponse crearPrestamo(
             @RequestBody CrearPrestamoRequest solicitud) {
 
-        return prestamoService.crearPrestamo(solicitud);
+        Prestamo prestamo = prestamoService.crearPrestamo(solicitud);
+
+        return convertirRespuesta(prestamo);
     }
 
     @PostMapping("/{id}/devolver")
-    public Prestamo devolverPrestamo(@PathVariable Long id) {
-        return prestamoService.devolverPrestamo(id);
+    public PrestamoResponse devolverPrestamo(@PathVariable Long id) {
+
+        Prestamo prestamo = prestamoService.devolverPrestamo(id);
+
+        return convertirRespuesta(prestamo);
+    }
+
+    private PrestamoResponse convertirRespuesta(Prestamo prestamo) {
+
+        PersonaResumen persona = prestamo.getPersona() == null
+                ? null
+                : new PersonaResumen(
+                        prestamo.getPersona().getNombre());
+
+        EquipoResumen equipo = prestamo.getEquipo() == null
+                ? null
+                : new EquipoResumen(
+                        prestamo.getEquipo().getNombre());
+
+        return new PrestamoResponse(
+                prestamo.getId(),
+                persona,
+                equipo,
+                prestamo.getFechaPrestamo(),
+                prestamo.getFechaDevolucionPrevista(),
+                prestamo.getFechaDevolucionReal(),
+                prestamo.getEstado(),
+                prestamo.getObservaciones()
+        );
+    }
+
+    public record PrestamoResponse(
+            Long id,
+            PersonaResumen persona,
+            EquipoResumen equipo,
+            LocalDateTime fechaPrestamo,
+            LocalDate fechaDevolucionPrevista,
+            LocalDateTime fechaDevolucionReal,
+            String estado,
+            String observaciones
+    ) {
+    }
+
+    public record PersonaResumen(String nombre) {
+    }
+
+    public record EquipoResumen(String nombre) {
     }
 }

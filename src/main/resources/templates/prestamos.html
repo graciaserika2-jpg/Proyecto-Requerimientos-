@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -40,70 +39,50 @@
                 <h2>Registrar préstamo</h2>
 
                 <p>
-                    <strong>Horario de atención:</strong>
-                    de 08:00 a 20:00.
-                </p>
-
-                <p>
-                    Los equipos deben devolverse el mismo día,
-                    antes de las 20:00.
+                    Los equipos deben devolverse el mismo día del préstamo.
                 </p>
 
                 <form id="formPrestamo">
                     <label for="buscarPersona">Persona solicitante</label>
-                    <input
-                        type="text"
-                        id="buscarPersona"
-                        autocomplete="off"
-                        placeholder="Escribe nombre o boleta..."
-                        minlength="2"
-                        required>
+                    <input type="text" id="buscarPersona" autocomplete="off" placeholder="Escribe nombre o boleta..."
+                        minlength="2" required>
 
                     <input type="hidden" id="personaId" name="personaId">
 
-                    <div
-                        id="resultadosPersonas"
-                        class="resultados-busqueda"
-                        role="listbox"
+                    <div id="resultadosPersonas" class="resultados-busqueda" role="listbox"
                         aria-label="Personas encontradas">
                     </div>
 
                     <p id="personaSeleccionada" aria-live="polite"></p>
 
-                    <label for="buscarEquipo">Equipo disponible</label>
-                    <input
-                        type="text"
-                        id="buscarEquipo"
-                        autocomplete="off"
-                        placeholder="Escribe nombre, tipo o número de serie..."
-                        minlength="2"
-                        required>
+                    <label for="listaEquipos">Seleccionar equipo disponible</label>
+                    <select id="listaEquipos">
+                        <option value="">Cargando equipos disponibles...</option>
+                    </select>
+
+                    <p style="text-align: center; margin: 12px 0;">
+                        <strong>O búscalo manualmente</strong>
+                    </p>
+
+                    <label for="buscarEquipo">Buscar equipo por nombre o ID</label>
+                    <input type="text" id="buscarEquipo" autocomplete="off"
+                        placeholder="Escribe nombre, ID, tipo o número de serie...">
 
                     <input type="hidden" id="equipoId" name="equipoId">
 
-                    <div
-                        id="resultadosEquipos"
-                        class="resultados-busqueda"
-                        role="listbox"
+                    <div id="resultadosEquipos" class="resultados-busqueda" role="listbox"
                         aria-label="Equipos encontrados">
                     </div>
 
                     <p id="equipoSeleccionado" aria-live="polite"></p>
 
                     <label for="observaciones">Observaciones</label>
-                    <textarea
-                        id="observaciones"
-                        name="observaciones"
-                        rows="3"
-                        maxlength="500"
+                    <textarea id="observaciones" name="observaciones" rows="3" maxlength="500"
                         placeholder="Observaciones opcionales"></textarea>
 
                     <button type="submit">Registrar préstamo</button>
 
-                    <p
-                        id="mensajePrestamo"
-                        role="status"
-                        aria-live="polite">
+                    <p id="mensajePrestamo" role="status" aria-live="polite">
                     </p>
                 </form>
             </section>
