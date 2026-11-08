@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario | Préstamo de Equipos UPIICSA</title>
+
+    <!-- Token CSRF de Spring Security -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
 
     <link rel="stylesheet" href="/estilos.css">
     <script src="/inventario.js" defer></script>
@@ -162,7 +167,7 @@
 
                         <tbody id="tablaEquipos">
                             <tr>
-                                <td colspan="5" class="table-message">
+                                <td colspan="6" class="table-message">
                                     Cargando artículos...
                                 </td>
                             </tr>
@@ -188,20 +193,25 @@
     <div class="modal" id="modalEquipo" hidden>
         <div class="modal-backdrop" id="cerrarModalFondo"></div>
 
-        <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tituloModal">
+        <section class="modal-content" role="dialog" aria-modal="true"
+            aria-labelledby="tituloModal">
+
             <div class="modal-header">
                 <div>
                     <h2 id="tituloModal">Registrar artículo</h2>
                     <p>Completa los datos del artículo.</p>
                 </div>
 
-                <button type="button" class="btn-close" id="cerrarModal" aria-label="Cerrar ventana">×</button>
+                <button type="button" class="btn-close" id="cerrarModal"
+                    aria-label="Cerrar ventana">×</button>
             </div>
 
             <form id="formEquipo">
+
                 <label for="nombre">Nombre del artículo *</label>
-                <input type="text" id="nombre" name="nombre" placeholder="Ej. Cable HDMI de 2 metros" required
-                    maxlength="100">
+                <input type="text" id="nombre" name="nombre"
+                    placeholder="Ej. Cable HDMI de 2 metros"
+                    required maxlength="100">
 
                 <label for="tipo">Tipo de artículo *</label>
                 <select id="tipo" name="tipo" required>
@@ -213,14 +223,14 @@
                     <option value="Accesorios">Accesorios</option>
                 </select>
 
-
                 <label for="descripcion">Descripción (opcional)</label>
-                <textarea id="descripcion" name="descripcion" placeholder="Características del artículo" rows="3"
-                    maxlength="500"></textarea>
+                <textarea id="descripcion" name="descripcion"
+                    placeholder="Características del artículo"
+                    rows="3" maxlength="500"></textarea>
 
                 <label for="numeroSerie">Número de serie o identificador</label>
-                <input type="text" id="numeroSerie" name="numeroSerie" placeholder="Ej. UPIICSA-CAB-001"
-                    maxlength="100">
+                <input type="text" id="numeroSerie" name="numeroSerie"
+                    placeholder="Ej. UPIICSA-CAB-001" maxlength="100">
 
                 <label for="estado">Estado inicial *</label>
                 <select id="estado" name="estado" required>
@@ -231,16 +241,19 @@
                 <p id="mensajeFormulario" class="form-message" role="status"></p>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn-secondary" id="cancelarEquipo">Cancelar</button>
+                    <button type="button" class="btn-secondary"
+                        id="cancelarEquipo">
+                        Cancelar
+                    </button>
 
                     <button type="submit" class="btn-primary" id="guardarEquipo">
                         Guardar artículo
                     </button>
                 </div>
+
             </form>
         </section>
     </div>
 
 </body>
-
 </html>

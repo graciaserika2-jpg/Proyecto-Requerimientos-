@@ -1,4 +1,3 @@
-
 // ==========================================
 // 1. ELEMENTOS DE LA PÁGINA
 // ==========================================
@@ -22,8 +21,29 @@ const mensajeFormulario = document.getElementById("mensajeFormulario");
 let equipos = [];
 let equipoEnEdicion = null;
 
+
 // ==========================================
-// 2. CARGAR EQUIPOS DESDE SPRING BOOT
+// 2. OBTENER TOKEN CSRF
+// ==========================================
+
+function obtenerCabecerasCSRF() {
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const nombreCabecera = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    if (!token || !nombreCabecera) {
+        throw new Error(
+            "No se encontró el token de seguridad CSRF. Recarga la página e inténtalo nuevamente."
+        );
+    }
+
+    return {
+        [nombreCabecera]: token
+    };
+}
+
+
+// ==========================================
+// 3. CARGAR EQUIPOS DESDE SPRING BOOT
 // ==========================================
 
 async function cargarEquipos() {
@@ -32,7 +52,7 @@ async function cargarEquipos() {
     const fila = document.createElement("tr");
     const celda = document.createElement("td");
 
-    celda.colSpan = 5;
+    celda.colSpan = 6;
     celda.className = "table-message";
     celda.textContent = "Cargando artículos...";
 
@@ -43,7 +63,9 @@ async function cargarEquipos() {
         const respuesta = await fetch("/api/equipos");
 
         if (!respuesta.ok) {
-            throw new Error("No se pudieron consultar los artículos.");
+            throw new Error(
+                `No se pudieron consultar los artículos. Error ${respuesta.status}`
+            );
         }
 
         equipos = await respuesta.json();
@@ -65,8 +87,9 @@ async function cargarEquipos() {
     }
 }
 
+
 // ==========================================
-// 3. MOSTRAR LOS EQUIPOS EN LA TABLA
+// 4. MOSTRAR LOS EQUIPOS EN LA TABLA
 // ==========================================
 
 function mostrarEquipos() {
@@ -75,6 +98,7 @@ function mostrarEquipos() {
     const estadoSeleccionado = filtroEstado.value;
 
     const equiposFiltrados = equipos.filter((equipo) => {
+
         const texto = [
             equipo.id,
             equipo.nombre,
@@ -109,6 +133,7 @@ function mostrarEquipos() {
     }
 
     equiposFiltrados.forEach((equipo) => {
+
         const fila = document.createElement("tr");
 
         // ID
@@ -128,6 +153,7 @@ function mostrarEquipos() {
             descripcion.className = "article-description";
             descripcion.textContent = equipo.descripcion;
             descripcion.title = equipo.descripcion;
+
             celdaNombre.appendChild(descripcion);
         }
 
@@ -161,12 +187,10 @@ function mostrarEquipos() {
         celdaEstado.appendChild(etiquetaEstado);
         fila.appendChild(celdaEstado);
 
-        // Botón para editar el artículo
-
-        // Botones de acciones
+        // Acciones
         const celdaAcciones = document.createElement("td");
 
-        // Botón Editar
+        // Botón editar
         const botonEditar = document.createElement("button");
 
         botonEditar.textContent = "Editar";
@@ -179,7 +203,7 @@ function mostrarEquipos() {
 
         celdaAcciones.appendChild(botonEditar);
 
-        // Botón Eliminar
+        // Botón eliminar
         const botonEliminar = document.createElement("button");
 
         botonEliminar.textContent = "Eliminar";
@@ -187,6 +211,7 @@ function mostrarEquipos() {
         botonEliminar.className = "btn-eliminar";
 
         botonEliminar.addEventListener("click", async () => {
+
             const confirmar = confirm(
                 `¿Deseas eliminar el artículo "${equipo.nombre}"?`
             );
@@ -198,31 +223,37 @@ function mostrarEquipos() {
             try {
                 const respuesta = await fetch(
                     `/api/equipos/${equipo.id}`,
-                    { method: "DELETE" }
+                    {
+                        method: "DELETE",
+                        headers: obtenerCabecerasCSRF()
+                    }
                 );
 
                 if (!respuesta.ok) {
+                    const detalle = await respuesta.text();
+
                     throw new Error(
-                        `Error del servidor: ${respuesta.status}`
+                        detalle || `Error del servidor: ${respuesta.status}`
                     );
                 }
 
                 await cargarEquipos();
-                mostrarEquipos();
 
                 alert("Artículo eliminado correctamente.");
 
             } catch (error) {
                 console.error("Error al eliminar el artículo:", error);
+
                 alert(
+                    error.message ||
                     "No se pudo eliminar el artículo. Revisa la consola."
                 );
             }
         });
 
         celdaAcciones.appendChild(botonEliminar);
-        fila.appendChild(celdaAcciones);
 
+        // Agregar la celda de acciones una sola vez
         fila.appendChild(celdaAcciones);
 
         tablaEquipos.appendChild(fila);
@@ -232,15 +263,18 @@ function mostrarEquipos() {
         `Mostrando ${equiposFiltrados.length} de ${equipos.length} artículos`;
 }
 
+
 // ==========================================
-// 4. CREAR CELDAS DE FORMA SEGURA
+// 5. CREAR CELDAS DE FORMA SEGURA
 // ==========================================
 
 function crearCelda(valor) {
     const celda = document.createElement("td");
     celda.textContent = String(valor);
+
     return celda;
 }
+
 
 function mostrarMensajeTabla(mensaje) {
     tablaEquipos.replaceChildren();
@@ -248,7 +282,7 @@ function mostrarMensajeTabla(mensaje) {
     const fila = document.createElement("tr");
     const celda = document.createElement("td");
 
-    celda.colSpan = 5;
+    celda.colSpan = 6;
     celda.className = "table-message";
     celda.textContent = mensaje;
 
@@ -256,8 +290,10 @@ function mostrarMensajeTabla(mensaje) {
     tablaEquipos.appendChild(fila);
 }
 
+
 function obtenerClaseEstado(estado) {
     switch (estado.toLowerCase()) {
+
         case "disponible":
             return "status-disponible";
 
@@ -272,11 +308,13 @@ function obtenerClaseEstado(estado) {
     }
 }
 
+
 // ==========================================
-// 5. ACTUALIZAR ESTADÍSTICAS
+// 6. ACTUALIZAR ESTADÍSTICAS
 // ==========================================
 
 function actualizarEstadisticas() {
+
     totalEquipos.textContent = equipos.length;
 
     equiposDisponibles.textContent = equipos.filter(
@@ -288,11 +326,13 @@ function actualizarEstadisticas() {
     ).length;
 }
 
+
 // ==========================================
-// 6. ACTUALIZAR FILTRO DE TIPOS
+// 7. ACTUALIZAR FILTRO DE TIPOS
 // ==========================================
 
 function actualizarFiltroTipos() {
+
     const tipoAnterior = filtroTipo.value;
 
     filtroTipo.replaceChildren();
@@ -300,6 +340,7 @@ function actualizarFiltroTipos() {
     const opcionTodos = document.createElement("option");
     opcionTodos.value = "";
     opcionTodos.textContent = "Todos los tipos";
+
     filtroTipo.appendChild(opcionTodos);
 
     const tipos = [
@@ -311,9 +352,12 @@ function actualizarFiltroTipos() {
     ].sort((a, b) => a.localeCompare(b, "es"));
 
     tipos.forEach((tipo) => {
+
         const opcion = document.createElement("option");
+
         opcion.value = tipo;
         opcion.textContent = tipo;
+
         filtroTipo.appendChild(opcion);
     });
 
@@ -322,12 +366,15 @@ function actualizarFiltroTipos() {
     }
 }
 
+
 // ==========================================
-// 7. ABRIR Y CERRAR EL FORMULARIO
+// 8. ABRIR Y CERRAR EL FORMULARIO
 // ==========================================
 
 function abrirModal() {
+
     equipoEnEdicion = null;
+
     formEquipo.reset();
 
     mensajeFormulario.textContent = "";
@@ -335,38 +382,66 @@ function abrirModal() {
 
     btnGuardarEquipo.textContent = "Guardar artículo";
 
-    modalEquipo.hidden = false;
-    document.getElementById("nombre").focus();
+    document.getElementById("tituloModal").textContent =
+        "Registrar artículo";
 
+    modalEquipo.hidden = false;
+
+    document.getElementById("nombre").focus();
 }
 
+
 function cerrarModal() {
+
     modalEquipo.hidden = true;
+
     formEquipo.reset();
+
+    equipoEnEdicion = null;
 
     mensajeFormulario.textContent = "";
     mensajeFormulario.className = "form-message";
 }
 
+
 function editarEquipo(equipo) {
+
     equipoEnEdicion = equipo.id;
 
     formEquipo.reset();
 
-    document.getElementById("nombre").value = equipo.nombre || "";
-    document.getElementById("tipo").value = equipo.tipo || "";
-    document.getElementById("descripcion").value = equipo.descripcion || "";
-    document.getElementById("numeroSerie").value = equipo.numeroSerie || "";
-    document.getElementById("estado").value = equipo.estado || "Disponible";
+    document.getElementById("nombre").value =
+        equipo.nombre || "";
+
+    document.getElementById("tipo").value =
+        equipo.tipo || "";
+
+    document.getElementById("descripcion").value =
+        equipo.descripcion || "";
+
+    document.getElementById("numeroSerie").value =
+        equipo.numeroSerie || "";
+
+    document.getElementById("estado").value =
+        equipo.estado || "Disponible";
 
     mensajeFormulario.textContent = "";
     mensajeFormulario.className = "form-message";
 
     btnGuardarEquipo.textContent = "Guardar cambios";
+
+    document.getElementById("tituloModal").textContent =
+        "Editar artículo";
+
     modalEquipo.hidden = false;
 
     document.getElementById("nombre").focus();
 }
+
+
+// ==========================================
+// 9. EVENTOS DEL MODAL
+// ==========================================
 
 btnNuevoEquipo.addEventListener("click", abrirModal);
 
@@ -380,16 +455,19 @@ document.getElementById("cerrarModalFondo")
     .addEventListener("click", cerrarModal);
 
 document.addEventListener("keydown", (evento) => {
+
     if (evento.key === "Escape" && !modalEquipo.hidden) {
         cerrarModal();
     }
 });
 
+
 // ==========================================
-// 8. REGISTRAR UN ARTÍCULO EN MYSQL
+// 10. REGISTRAR O ACTUALIZAR UN ARTÍCULO
 // ==========================================
 
 formEquipo.addEventListener("submit", async (evento) => {
+
     evento.preventDefault();
 
     const equipo = {
@@ -401,6 +479,7 @@ formEquipo.addEventListener("submit", async (evento) => {
     };
 
     const editando = equipoEnEdicion !== null;
+
     const url = editando
         ? `/api/equipos/${equipoEnEdicion}`
         : "/api/equipos";
@@ -414,32 +493,43 @@ formEquipo.addEventListener("submit", async (evento) => {
     mensajeFormulario.className = "form-message";
 
     btnGuardarEquipo.disabled = true;
+
     btnGuardarEquipo.textContent = editando
         ? "Guardando cambios..."
         : "Guardando...";
 
     try {
+
         const respuesta = await fetch(url, {
             method: metodo,
+
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                ...obtenerCabecerasCSRF()
             },
+
             body: JSON.stringify(equipo)
         });
 
         if (!respuesta.ok) {
+
             const detalle = await respuesta.text();
 
-            let mensajeError = `Error del servidor: ${respuesta.status}`;
+            let mensajeError =
+                `Error del servidor: ${respuesta.status}`;
 
             try {
+
                 const datosError = JSON.parse(detalle);
 
-                mensajeError = datosError.error
-                    || datosError.message
-                    || mensajeError;
+                mensajeError =
+                    datosError.error ||
+                    datosError.message ||
+                    mensajeError;
+
             } catch {
-                if (detalle) {
+
+                if (detalle && !detalle.trim().startsWith("<!DOCTYPE")) {
                     mensajeError = detalle;
                 }
             }
@@ -466,17 +556,21 @@ formEquipo.addEventListener("submit", async (evento) => {
         }, 700);
 
     } catch (error) {
+
         console.error("Error al guardar el artículo:", error);
 
-        mensajeFormulario.textContent = error.message
-            || (editando
+        mensajeFormulario.textContent =
+            error.message ||
+            (editando
                 ? "No se pudo actualizar el artículo. Inténtalo de nuevo."
                 : "No se pudo guardar el artículo. Inténtalo de nuevo.");
 
         mensajeFormulario.className = "form-message error";
 
     } finally {
+
         btnGuardarEquipo.disabled = false;
+
         btnGuardarEquipo.textContent = editando
             ? "Guardar cambios"
             : "Guardar artículo";
@@ -484,18 +578,19 @@ formEquipo.addEventListener("submit", async (evento) => {
 });
 
 
-
-
 // ==========================================
-// 9. ACTIVAR BUSCADOR Y FILTROS
+// 11. ACTIVAR BUSCADOR Y FILTROS
 // ==========================================
 
 buscarEquipo.addEventListener("input", mostrarEquipos);
+
 filtroTipo.addEventListener("change", mostrarEquipos);
+
 filtroEstado.addEventListener("change", mostrarEquipos);
 
+
 // ==========================================
-// 10. INICIAR LA PÁGINA
+// 12. INICIAR LA PÁGINA
 // ==========================================
 
 cargarEquipos();
