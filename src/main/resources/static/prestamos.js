@@ -6,11 +6,14 @@ const selectorPersona = document.getElementById("personaId");
 const resultadosPersonas = document.getElementById("resultadosPersonas");
 const personaSeleccionada = document.getElementById("personaSeleccionada");
 
-const listaEquipos = document.getElementById("listaEquipos");
 const campoBuscarEquipo = document.getElementById("buscarEquipo");
 const selectorEquipo = document.getElementById("equipoId");
 const resultadosEquipos = document.getElementById("resultadosEquipos");
+
 const equipoSeleccionado = document.getElementById("equipoSeleccionado");
+const nombreEquipoSeleccionado = document.getElementById("nombreEquipoSeleccionado");
+const detallesEquipoSeleccionado = document.getElementById("detallesEquipoSeleccionado");
+const quitarEquipo = document.getElementById("quitarEquipo");
 
 const tablaPrestamos = document.getElementById("tablaPrestamos");
 const mensajePrestamo = document.getElementById("mensajePrestamo");
@@ -24,8 +27,12 @@ let prestamos = [];
 let equiposDisponibles = [];
 
 let temporizadorPersona;
-let temporizadorEquipo;
 let solicitudPersona = 0;
+
+
+// -------------------------
+// Configuración general
+// -------------------------
 
 function obtenerHeaders(extra = {}) {
     const headers = { ...extra };
@@ -63,6 +70,35 @@ function ocultarResultados(contenedor) {
     contenedor.classList.remove("visible");
 }
 
+
+// -------------------------
+// Etiquetas de personas
+// -------------------------
+
+function obtenerEtiquetaIdentificador(tipo) {
+    if (tipo?.toLowerCase() === "alumno") {
+        return "Boleta";
+    }
+
+    if (tipo?.toLowerCase() === "profesor") {
+        return "No. de empleado";
+    }
+
+    return "Identificador";
+}
+
+function obtenerTextoIdentificador(persona) {
+    const etiqueta = obtenerEtiquetaIdentificador(persona?.tipo);
+    const identificador = persona?.identificador;
+
+    return `${etiqueta}: ${identificador || "No registrado"}`;
+}
+
+
+// -------------------------
+// Selecciones
+// -------------------------
+
 function invalidarSeleccionPersona() {
     selectorPersona.value = "";
     personaSeleccionada.textContent = "";
@@ -70,9 +106,24 @@ function invalidarSeleccionPersona() {
 
 function invalidarSeleccionEquipo() {
     selectorEquipo.value = "";
-    equipoSeleccionado.textContent = "";
-    listaEquipos.value = "";
+    equipoSeleccionado.hidden = true;
+    nombreEquipoSeleccionado.textContent = "";
+    detallesEquipoSeleccionado.textContent = "";
 }
+
+function seleccionarEquipo(equipo) {
+    selectorEquipo.value = String(equipo.id);
+
+    nombreEquipoSeleccionado.textContent = equipo.nombre;
+    detallesEquipoSeleccionado.textContent = obtenerTextoEquipo(equipo);
+
+    equipoSeleccionado.hidden = false;
+
+    campoBuscarEquipo.value = "";
+
+    ocultarResultados(resultadosEquipos);
+}
+
 
 // -------------------------
 // Búsqueda de personas
@@ -87,7 +138,10 @@ async function buscarPersonas(texto) {
         return;
     }
 
-    mostrarMensajeBusqueda(resultadosPersonas, "Buscando personas...");
+    mostrarMensajeBusqueda(
+        resultadosPersonas,
+        "Buscando personas..."
+    );
 
     try {
         const personas = await consultarLista(
@@ -121,17 +175,18 @@ async function buscarPersonas(texto) {
 
             const detalles = document.createElement("small");
             detalles.textContent =
-                `${persona.tipo} · Identificador: ${persona.identificador}`;
+                `${persona.tipo} · ${obtenerTextoIdentificador(persona)}`;
 
             boton.append(nombre, detalles);
 
             boton.addEventListener("click", () => {
-                selectorPersona.value = persona.id;
+                selectorPersona.value = String(persona.id);
+
                 campoBuscarPersona.value =
-                    `${persona.nombre} (${persona.tipo})`;
+                    `${persona.nombre} (${persona.identificador || "Sin identificador"})`;
 
                 personaSeleccionada.textContent =
-                    `Persona seleccionada: ${persona.nombre}`;
+                    `Persona seleccionada: ${persona.nombre} · ${persona.tipo} · ${obtenerTextoIdentificador(persona)}`;
 
                 ocultarResultados(resultadosPersonas);
             });
@@ -140,6 +195,7 @@ async function buscarPersonas(texto) {
         });
 
         resultadosPersonas.classList.add("visible");
+
     } catch (error) {
         if (numeroSolicitud !== solicitudPersona) return;
 
@@ -152,6 +208,7 @@ async function buscarPersonas(texto) {
 
 campoBuscarPersona.addEventListener("input", () => {
     clearTimeout(temporizadorPersona);
+
     invalidarSeleccionPersona();
 
     temporizadorPersona = setTimeout(
@@ -160,8 +217,9 @@ campoBuscarPersona.addEventListener("input", () => {
     );
 });
 
+
 // -------------------------
-// Cargar equipos disponibles
+// Equipos disponibles
 // -------------------------
 
 function obtenerTextoEquipo(equipo) {
@@ -169,10 +227,12 @@ function obtenerTextoEquipo(equipo) {
         `ID: ${equipo.id}`,
         equipo.nombre,
         equipo.tipo,
-        equipo.numeroSerie ? `Serie: ${equipo.numeroSerie}` : null
+        equipo.numeroSerie
+            ? `Serie: ${equipo.numeroSerie}`
+            : null
     ].filter(Boolean);
 
-    return datos.join(" — ");
+    return datos.join(" · ");
 }
 
 async function cargarEquiposDisponibles() {
@@ -184,100 +244,50 @@ async function cargarEquiposDisponibles() {
             equipo.estado?.toLowerCase() === "disponible"
         );
 
-        listaEquipos.replaceChildren();
-
-        const opcionInicial = document.createElement("option");
-        opcionInicial.value = "";
-        opcionInicial.textContent = equiposDisponibles.length > 0
-            ? "Selecciona un equipo disponible..."
-            : "No hay equipos disponibles";
-
-        listaEquipos.appendChild(opcionInicial);
-
-        equiposDisponibles.forEach(equipo => {
-            const opcion = document.createElement("option");
-
-            opcion.value = equipo.id;
-            opcion.textContent = obtenerTextoEquipo(equipo);
-
-            listaEquipos.appendChild(opcion);
-        });
-
     } catch (error) {
-        listaEquipos.replaceChildren();
+        equiposDisponibles = [];
 
-        const opcion = document.createElement("option");
-        opcion.value = "";
-        opcion.textContent = "No se pudieron cargar los equipos";
-
-        listaEquipos.appendChild(opcion);
-
-        mensajePrestamo.textContent = error.message;
+        mensajePrestamo.textContent =
+            "No se pudieron cargar los equipos disponibles.";
     }
 }
 
-// Selección mediante lista desplegable.
-
-listaEquipos.addEventListener("change", () => {
-    const id = listaEquipos.value;
-
-    invalidarSeleccionEquipo();
-    ocultarResultados(resultadosEquipos);
-
-    if (!id) {
-        campoBuscarEquipo.value = "";
-        return;
-    }
-
-    const equipo = equiposDisponibles.find(
-        elemento => String(elemento.id) === id
-    );
-
-    if (!equipo) {
-        campoBuscarEquipo.value = "";
-        return;
-    }
-
-    selectorEquipo.value = equipo.id;
-    campoBuscarEquipo.value = obtenerTextoEquipo(equipo);
-
-    equipoSeleccionado.textContent =
-        `Equipo seleccionado: ${equipo.nombre}`;
-});
 
 // -------------------------
-// Búsqueda manual de equipos
+// Mostrar resultados de equipos
 // -------------------------
 
-function buscarEquiposLocalmente(texto) {
+function mostrarEquiposDisponibles(texto = "") {
     const termino = texto.trim().toLocaleLowerCase();
 
-    if (termino.length === 0) {
-        ocultarResultados(resultadosEquipos);
-        return;
+    let encontrados = equiposDisponibles;
+
+    if (termino.length > 0) {
+        encontrados = equiposDisponibles.filter(equipo => {
+            const datos = [
+                equipo.id,
+                equipo.nombre,
+                equipo.tipo,
+                equipo.descripcion,
+                equipo.numeroSerie
+            ];
+
+            return datos.some(dato =>
+                dato !== null &&
+                dato !== undefined &&
+                String(dato).toLocaleLowerCase().includes(termino)
+            );
+        });
     }
-
-    const encontrados = equiposDisponibles.filter(equipo => {
-        const datos = [
-            equipo.id,
-            equipo.nombre,
-            equipo.tipo,
-            equipo.descripcion,
-            equipo.numeroSerie
-        ];
-
-        return datos.some(dato =>
-            dato !== null &&
-            dato !== undefined &&
-            String(dato).toLocaleLowerCase().includes(termino)
-        );
-    });
 
     if (encontrados.length === 0) {
         mostrarMensajeBusqueda(
             resultadosEquipos,
-            "No se encontraron equipos disponibles con ese dato."
+            termino.length > 0
+                ? "No se encontraron equipos disponibles con ese dato."
+                : "Actualmente no hay equipos disponibles."
         );
+
         return;
     }
 
@@ -295,17 +305,13 @@ function buscarEquiposLocalmente(texto) {
         const detalles = document.createElement("small");
         detalles.textContent = obtenerTextoEquipo(equipo);
 
-        boton.append(nombre, detalles);
+        const disponibilidad = document.createElement("small");
+        disponibilidad.textContent = "Disponible";
+
+        boton.append(nombre, detalles, disponibilidad);
 
         boton.addEventListener("click", () => {
-            selectorEquipo.value = equipo.id;
-            listaEquipos.value = String(equipo.id);
-            campoBuscarEquipo.value = obtenerTextoEquipo(equipo);
-
-            equipoSeleccionado.textContent =
-                `Equipo seleccionado: ${equipo.nombre}`;
-
-            ocultarResultados(resultadosEquipos);
+            seleccionarEquipo(equipo);
         });
 
         resultadosEquipos.appendChild(boton);
@@ -314,11 +320,33 @@ function buscarEquiposLocalmente(texto) {
     resultadosEquipos.classList.add("visible");
 }
 
+
+// Al escribir, se elimina la selección anterior.
 campoBuscarEquipo.addEventListener("input", () => {
     invalidarSeleccionEquipo();
 
-    buscarEquiposLocalmente(campoBuscarEquipo.value);
+    mostrarEquiposDisponibles(campoBuscarEquipo.value);
 });
+
+
+// Al entrar al buscador, se muestran los equipos disponibles.
+campoBuscarEquipo.addEventListener("focus", () => {
+    if (!selectorEquipo.value) {
+        mostrarEquiposDisponibles(campoBuscarEquipo.value);
+    }
+});
+
+
+// Botón para quitar el equipo seleccionado.
+quitarEquipo.addEventListener("click", () => {
+    invalidarSeleccionEquipo();
+
+    campoBuscarEquipo.value = "";
+    campoBuscarEquipo.focus();
+
+    mostrarEquiposDisponibles();
+});
+
 
 // -------------------------
 // Registrar un préstamo
@@ -329,22 +357,10 @@ formularioPrestamo.addEventListener("submit", async evento => {
 
     if (!selectorPersona.value || !selectorEquipo.value) {
         mensajePrestamo.textContent =
-            "Busca y selecciona una persona y un equipo disponible.";
+            "Debes buscar y seleccionar una persona y un equipo disponible.";
+
         return;
     }
-
-    // Comprobar que el equipo siga en nuestra lista de disponibles.
-    const equipoValido = equiposDisponibles.some(
-        equipo => String(equipo.id) === selectorEquipo.value
-    );
-
-    if (!equipoValido) {
-        mensajePrestamo.textContent =
-            "El equipo seleccionado ya no está disponible. Actualiza la selección.";
-        return;
-    }
-
-    mensajePrestamo.textContent = "Registrando préstamo...";
 
     const botonEnviar = formularioPrestamo.querySelector(
         'button[type="submit"]'
@@ -352,13 +368,39 @@ formularioPrestamo.addEventListener("submit", async evento => {
 
     botonEnviar.disabled = true;
 
-    const datos = {
-        personaId: Number(selectorPersona.value),
-        equipoId: Number(selectorEquipo.value),
-        observaciones: campoObservaciones.value.trim()
-    };
-
     try {
+        mensajePrestamo.textContent =
+            "Verificando disponibilidad del equipo...";
+
+        const equiposActualizados = await consultarLista("/api/equipos");
+
+        equiposDisponibles = equiposActualizados.filter(equipo =>
+            equipo.activo !== false &&
+            equipo.estado?.toLowerCase() === "disponible"
+        );
+
+        const equipoValido = equiposDisponibles.find(
+            equipo => String(equipo.id) === selectorEquipo.value
+        );
+
+        if (!equipoValido) {
+            invalidarSeleccionEquipo();
+
+            mensajePrestamo.textContent =
+                "El equipo seleccionado ya no está disponible. Selecciona otro.";
+
+            mostrarEquiposDisponibles();
+            return;
+        }
+
+        mensajePrestamo.textContent = "Registrando préstamo...";
+
+        const datos = {
+            personaId: Number(selectorPersona.value),
+            equipoId: Number(selectorEquipo.value),
+            observaciones: campoObservaciones.value.trim()
+        };
+
         const respuesta = await fetch("/api/prestamos", {
             method: "POST",
             headers: obtenerHeaders({
@@ -395,10 +437,37 @@ formularioPrestamo.addEventListener("submit", async evento => {
 
     } catch (error) {
         mensajePrestamo.textContent = error.message;
+
     } finally {
         botonEnviar.disabled = false;
     }
 });
+
+
+// -------------------------
+// Formato de fechas
+// -------------------------
+
+function formatearFechaHora(valor) {
+    if (!valor) {
+        return "—";
+    }
+
+    const fecha = new Date(valor);
+
+    if (Number.isNaN(fecha.getTime())) {
+        return valor;
+    }
+
+    return fecha.toLocaleString("es-MX", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
 
 // -------------------------
 // Mostrar préstamos
@@ -417,29 +486,54 @@ function mostrarPrestamos() {
         const fila = tablaPrestamos.insertRow();
         const celda = fila.insertCell();
 
-        celda.colSpan = 7;
+        celda.colSpan = 8;
         celda.textContent = "No hay préstamos para mostrar.";
+
         return;
     }
 
     filtrados.forEach(prestamo => {
         const fila = tablaPrestamos.insertRow();
 
-        const valores = [
-            prestamo.id,
-            prestamo.persona?.nombre || "Sin nombre",
-            prestamo.equipo?.nombre || "Sin equipo",
-            prestamo.fechaPrestamo
-                ? new Date(prestamo.fechaPrestamo).toLocaleString("es-MX")
-                : "—",
-            prestamo.fechaDevolucionPrevista || "—",
-            prestamo.estado
-        ];
+        // ID del préstamo
+        fila.insertCell().textContent = prestamo.id;
 
-        valores.forEach(valor => {
-            fila.insertCell().textContent = valor ?? "";
-        });
+        // Nombre de la persona
+        fila.insertCell().textContent =
+            prestamo.persona?.nombre || "Sin nombre";
 
+        // Boleta o número de empleado
+        const celdaIdentificador = fila.insertCell();
+
+        const tipoPersona = prestamo.persona?.tipo;
+        const identificador = prestamo.persona?.identificador;
+
+        celdaIdentificador.textContent = identificador
+            ? `${obtenerEtiquetaIdentificador(tipoPersona)}: ${identificador}`
+            : "No registrado";
+
+        // Equipo
+        fila.insertCell().textContent =
+            prestamo.equipo?.nombre || "Sin equipo";
+
+        // Fecha del préstamo
+        fila.insertCell().textContent =
+            formatearFechaHora(prestamo.fechaPrestamo);
+
+        // Fecha real de devolución
+        const fechaDevolucion =
+            prestamo.estado === "Activo"
+                ? "Pendiente"
+                : prestamo.fechaDevolucionReal
+                    ? formatearFechaHora(prestamo.fechaDevolucionReal)
+                    : "No registrada";
+
+        fila.insertCell().textContent = fechaDevolucion;
+
+        // Estado
+        fila.insertCell().textContent = prestamo.estado;
+
+        // Acción
         const celdaAccion = fila.insertCell();
 
         if (prestamo.estado === "Activo") {
@@ -452,6 +546,7 @@ function mostrarPrestamos() {
             );
 
             celdaAccion.appendChild(boton);
+
         } else {
             celdaAccion.textContent = "Sin acciones";
         }
@@ -461,17 +556,20 @@ function mostrarPrestamos() {
 async function cargarPrestamos() {
     try {
         prestamos = await consultarLista("/api/prestamos");
+
         mostrarPrestamos();
+
     } catch (error) {
         tablaPrestamos.replaceChildren();
 
         const fila = tablaPrestamos.insertRow();
         const celda = fila.insertCell();
 
-        celda.colSpan = 7;
+        celda.colSpan = 8;
         celda.textContent = error.message;
     }
 }
+
 
 // -------------------------
 // Registrar una devolución
@@ -515,9 +613,11 @@ async function devolverPrestamo(id, boton) {
 
     } catch (error) {
         mensajePrestamo.textContent = error.message;
+
         boton.disabled = false;
     }
 }
+
 
 // -------------------------
 // Inicializar módulo

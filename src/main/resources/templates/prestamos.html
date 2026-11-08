@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -20,9 +21,7 @@
             <nav>
                 <a href="/inicio">Inicio</a>
                 <a href="/inventario">Inventario</a>
-                <a href="/prestamos" class="active">
-                    Préstamos y devoluciones
-                </a>
+                <a href="/prestamos" class="active">Préstamos y devoluciones</a>
                 <a href="/personas">Personas</a>
             </nav>
         </aside>
@@ -37,53 +36,82 @@
 
             <section class="card">
                 <h2>Registrar préstamo</h2>
-
                 <p>
-                    Los equipos deben devolverse el mismo día del préstamo.
+                    Selecciona a la persona solicitante y el equipo disponible
+                    que deseas prestar.
                 </p>
 
                 <form id="formPrestamo">
+
                     <label for="buscarPersona">Persona solicitante</label>
-                    <input type="text" id="buscarPersona" autocomplete="off" placeholder="Escribe nombre o boleta..."
-                        minlength="2" required>
+
+                    <input
+                        type="text"
+                        id="buscarPersona"
+                        autocomplete="off"
+                        placeholder="Escribe nombre, boleta o número de empleado..."
+                    >
 
                     <input type="hidden" id="personaId" name="personaId">
 
-                    <div id="resultadosPersonas" class="resultados-busqueda" role="listbox"
+                    <div
+                        id="resultadosPersonas"
+                        class="resultados-busqueda"
+                        role="listbox"
                         aria-label="Personas encontradas">
                     </div>
 
-                    <p id="personaSeleccionada" aria-live="polite"></p>
-
-                    <label for="listaEquipos">Seleccionar equipo disponible</label>
-                    <select id="listaEquipos">
-                        <option value="">Cargando equipos disponibles...</option>
-                    </select>
-
-                    <p style="text-align: center; margin: 12px 0;">
-                        <strong>O búscalo manualmente</strong>
+                    <p
+                        id="personaSeleccionada"
+                        class="persona-seleccionada"
+                        aria-live="polite">
                     </p>
 
-                    <label for="buscarEquipo">Buscar equipo por nombre o ID</label>
-                    <input type="text" id="buscarEquipo" autocomplete="off"
-                        placeholder="Escribe nombre, ID, tipo o número de serie...">
+                    <label for="buscarEquipo">Equipo disponible</label>
+
+                    <input
+                        type="text"
+                        id="buscarEquipo"
+                        autocomplete="off"
+                        placeholder="Busca por nombre, ID, tipo o número de serie..."
+                    >
 
                     <input type="hidden" id="equipoId" name="equipoId">
 
-                    <div id="resultadosEquipos" class="resultados-busqueda" role="listbox"
-                        aria-label="Equipos encontrados">
+                    <div id="resultadosEquipos"
+                        class="resultados-busqueda"
+                        role="listbox"
+                        aria-label="Equipos disponibles">
                     </div>
 
-                    <p id="equipoSeleccionado" aria-live="polite"></p>
+                    <div id="equipoSeleccionado" class="equipo-seleccionado" hidden>
+                        <div class="equipo-seleccionado-info">
+                            <strong id="nombreEquipoSeleccionado"></strong>
+                            <p id="detallesEquipoSeleccionado"></p>
+                        </div>
+
+                        <button
+                            type="button"
+                            id="quitarEquipo"
+                            class="btn-quitar-equipo">
+                            Quitar selección
+                        </button>
+                    </div>
 
                     <label for="observaciones">Observaciones</label>
-                    <textarea id="observaciones" name="observaciones" rows="3" maxlength="500"
+
+                    <textarea
+                        id="observaciones"
+                        name="observaciones"
+                        rows="3"
+                        maxlength="500"
                         placeholder="Observaciones opcionales"></textarea>
 
-                    <button type="submit">Registrar préstamo</button>
+                    <button type="submit">
+                        Registrar préstamo
+                    </button>
 
-                    <p id="mensajePrestamo" role="status" aria-live="polite">
-                    </p>
+                    <p id="mensajePrestamo" role="status" aria-live="polite"></p>
                 </form>
             </section>
 
@@ -91,6 +119,7 @@
                 <h2>Préstamos registrados</h2>
 
                 <label for="filtroPrestamos">Filtrar préstamos</label>
+
                 <select id="filtroPrestamos">
                     <option value="Todos">Todos</option>
                     <option value="Activo">Activos</option>
@@ -103,9 +132,10 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Persona</th>
+                                <th>Boleta / No. de empleado</th>
                                 <th>Equipo</th>
                                 <th>Fecha de préstamo</th>
-                                <th>Devolución prevista</th>
+                                <th>Fecha y hora de devolución</th>
                                 <th>Estado</th>
                                 <th>Acción</th>
                             </tr>
@@ -113,7 +143,7 @@
 
                         <tbody id="tablaPrestamos">
                             <tr>
-                                <td colspan="7">Cargando préstamos...</td>
+                                <td colspan="8">Cargando préstamos...</td>
                             </tr>
                         </tbody>
                     </table>

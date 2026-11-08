@@ -1599,3 +1599,173 @@ body:has(#formPersona) #formPersona button[type="submit"]:hover {
         max-width: none;
     }
 }
+
+
+/* =========================================================
+   MEJORAS DE LA PÁGINA DE PRÉSTAMOS
+   ========================================================= */
+
+/* Información de la persona seleccionada */
+.persona-seleccionada {
+    margin: 2px 0 12px;
+    padding: 10px 12px;
+    border: 1px solid #bbebce;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: #166534;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* Tarjeta del equipo seleccionado */
+.equipo-seleccionado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 8px 0 14px;
+    padding: 15px 16px;
+    border: 1px solid #dbe4f0;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.equipo-seleccionado-info {
+    flex: 1;
+    min-width: 180px;
+}
+
+.equipo-seleccionado-info strong {
+    display: block;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.equipo-seleccionado-info p {
+    margin-top: 5px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+/* Botón quitar selección */
+button.btn-quitar-equipo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 8px 13px;
+    border: 1px solid #d7deea;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #475569;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background .2s, color .2s, border-color .2s;
+}
+
+button.btn-quitar-equipo:hover {
+    background: #fff1f2;
+    border-color: #fecdd3;
+    color: #be123c;
+}
+
+button.btn-quitar-equipo:active {
+    background: #ffe4e6;
+}
+
+/* Identificador debajo del nombre en la tabla */
+.identificador-tabla {
+    display: block;
+    margin-top: 5px;
+    color: #778397;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   AJUSTES FINALES DE LA PÁGINA DE PRÉSTAMOS
+   ========================================================= */
+
+/* Tarjeta de persona seleccionada: sustituye el verde por azul */
+body:has(#formPrestamo) .persona-seleccionada {
+    margin: 10px 0 16px;
+    padding: 13px 15px;
+    border: 1px solid #d8e2f2;
+    border-left: 4px solid #3157d5;
+    border-radius: 9px;
+    background: #f8faff;
+    color: #334155;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* Tarjeta del equipo seleccionado */
+body:has(#formPrestamo) .equipo-seleccionado {
+    margin: 10px 0 16px;
+    padding: 15px 16px;
+    border: 1px solid #d8e2f2;
+    border-left: 4px solid #3157d5;
+    border-radius: 9px;
+    background: #f8faff;
+}
+
+/* Nombre del equipo */
+body:has(#formPrestamo) .equipo-seleccionado-info strong {
+    color: #243b63;
+    font-size: 14px;
+}
+
+/* Detalles del equipo */
+body:has(#formPrestamo) .equipo-seleccionado-info p {
+    color: #64748b;
+    font-size: 12px;
+}
+
+/* Botón para quitar el equipo */
+body:has(#formPrestamo) button.btn-quitar-equipo {
+    min-height: 36px;
+    padding: 8px 13px;
+    border: 1px solid #d7deea;
+    border-radius: 7px;
+    background: #fff;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+body:has(#formPrestamo) button.btn-quitar-equipo:hover {
+    border-color: #f0b8bd;
+    background: #fff5f5;
+    color: #b42332;
+}
+
+/* Columna de boleta o número de empleado */
+body:has(#formPrestamo) .table-container td {
+    vertical-align: middle;
+}
+
+body:has(#formPrestamo) .table-container th {
+    white-space: nowrap;
+}
+
+body:has(#formPrestamo) .table-container td:nth-child(3) {
+    color: #475569;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Tabla con espacio suficiente para las nuevas columnas */
+body:has(#formPrestamo) .table-container table {
+    min-width: 950px;
+}
+
+/* Mensajes de operación */
+body:has(#formPrestamo) #mensajePrestamo {
+    margin-top: 12px;
+    line-height: 1.5;
+}

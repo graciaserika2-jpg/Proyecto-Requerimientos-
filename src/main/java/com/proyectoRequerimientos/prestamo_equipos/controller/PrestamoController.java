@@ -61,12 +61,16 @@ public class PrestamoController {
         PersonaResumen persona = prestamo.getPersona() == null
                 ? null
                 : new PersonaResumen(
-                        prestamo.getPersona().getNombre());
+                        prestamo.getPersona().getNombre(),
+                        prestamo.getPersona().getTipo(),
+                        prestamo.getPersona().getIdentificador()
+                );
 
         EquipoResumen equipo = prestamo.getEquipo() == null
                 ? null
                 : new EquipoResumen(
-                        prestamo.getEquipo().getNombre());
+                        prestamo.getEquipo().getNombre()
+                );
 
         return new PrestamoResponse(
                 prestamo.getId(),
@@ -92,7 +96,11 @@ public class PrestamoController {
     ) {
     }
 
-    public record PersonaResumen(String nombre) {
+    public record PersonaResumen(
+            String nombre,
+            String tipo,
+            String identificador
+    ) {
     }
 
     public record EquipoResumen(String nombre) {

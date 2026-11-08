@@ -53,7 +53,8 @@ public class PrestamoService {
         if (usuario == null || usuario.isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "No se pudo identificar la cuenta.");
+                    "No se pudo identificar la cuenta."
+            );
         }
 
         CuentaPersona cuenta = cuentaPersonaRepository
@@ -61,14 +62,16 @@ public class PrestamoService {
                 .filter(CuentaPersona::isActivo)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.FORBIDDEN,
-                        "No se encontró una cuenta de persona activa."));
+                        "No se encontró una cuenta de persona activa."
+                ));
 
         Persona persona = cuenta.getPersona();
 
         if (persona == null) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "La cuenta no tiene una persona asociada.");
+                    "La cuenta no tiene una persona asociada."
+            );
         }
 
         return prestamoRepository
@@ -94,32 +97,42 @@ public class PrestamoService {
                 || solicitud.personaId() == null
                 || solicitud.equipoId() == null) {
             throw new IllegalArgumentException(
-                    "La persona y el artículo son obligatorios");
+                    "La persona y el artículo son obligatorios"
+            );
         }
 
-        Persona persona = personaService.buscarActiva(solicitud.personaId());
+        Persona persona = personaService.buscarActiva(
+                solicitud.personaId()
+        );
 
         Equipo equipo = equipoRepository.findById(solicitud.equipoId())
                 .filter(e -> !Boolean.FALSE.equals(e.getActivo()))
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Artículo no encontrado"));
+                        HttpStatus.NOT_FOUND,
+                        "Artículo no encontrado"
+                ));
 
         if (!"Disponible".equals(equipo.getEstado())) {
             throw new IllegalArgumentException(
-                    "El artículo no está disponible para préstamo");
+                    "El artículo no está disponible para préstamo"
+            );
         }
 
+        // Ninguna persona puede tener más de un préstamo activo.
+        if (prestamoRepository.existsByPersona_IdAndEstado(
+                persona.getId(), "Activo")) {
+            throw new IllegalArgumentException(
+                    "La persona ya tiene un préstamo activo. "
+                    + "Debe devolverlo antes de solicitar otro."
+            );
+        }
+
+        // Un equipo tampoco puede tener más de un préstamo activo.
         if (prestamoRepository.existsByEquipo_IdAndEstado(
                 equipo.getId(), "Activo")) {
             throw new IllegalArgumentException(
-                    "El artículo ya tiene un préstamo activo");
-        }
-
-        if ("Alumno".equals(persona.getTipo())
-                && prestamoRepository.existsByPersona_IdAndEstado(
-                        persona.getId(), "Activo")) {
-            throw new IllegalArgumentException(
-                    "El alumno ya tiene un préstamo activo");
+                    "El artículo ya tiene un préstamo activo"
+            );
         }
 
         LocalDateTime ahora = LocalDateTime.now();
@@ -143,21 +156,19 @@ public class PrestamoService {
 
         Prestamo prestamo = prestamoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
+                        HttpStatus.NOT_FOUND,
+                        "Préstamo no encontrado"
+                ));
 
         if (!"Activo".equals(prestamo.getEstado())) {
             throw new IllegalArgumentException(
-                    "Este préstamo ya fue devuelto");
+                    "Este préstamo ya fue devuelto"
+            );
         }
 
         LocalDateTime ahora = LocalDateTime.now();
 
-        if (!ahora.toLocalDate().equals(
-                prestamo.getFechaPrestamo().toLocalDate())) {
-            throw new IllegalArgumentException(
-                    "El equipo debe devolverse el mismo día del préstamo");
-        }
-
+        // Se permite devolver el equipo cualquier día y a cualquier hora.
         prestamo.setEstado("Devuelto");
         prestamo.setFechaDevolucionReal(ahora);
 
