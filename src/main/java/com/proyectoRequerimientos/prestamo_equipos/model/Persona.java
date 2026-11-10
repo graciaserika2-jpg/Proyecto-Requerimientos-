@@ -1,6 +1,8 @@
+
 package com.proyectoRequerimientos.prestamo_equipos.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "personas")
@@ -21,6 +23,9 @@ public class Persona {
 
     @Column(nullable = false)
     private Boolean activo = true;
+
+    // Fecha hasta la que estará suspendida la persona.
+    private LocalDate fechaFinSuspension;
 
     public Persona() {
     }
@@ -107,5 +112,13 @@ public class Persona {
 
     public void setActivo(Boolean activo) {
         this.activo = activo;
+    }
+
+    public LocalDate getFechaFinSuspension() {
+        return fechaFinSuspension;
+    }
+
+    public void setFechaFinSuspension(LocalDate fechaFinSuspension) {
+        this.fechaFinSuspension = fechaFinSuspension;
     }
 }

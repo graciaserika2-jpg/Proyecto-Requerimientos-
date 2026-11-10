@@ -9,19 +9,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario | Préstamo de equipos UPIICSA</title>
 
-    <!-- Token CSRF de Spring Security -->
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
 
     <link rel="stylesheet" th:href="@{/estilos.css}">
     <script th:src="@{/inventario.js}" defer></script>
+
+    <style>
+        .report-modal-content {
+            width: min(760px, calc(100% - 32px));
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .report-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+            background: #fff;
+        }
+
+        .report-card h3 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+
+        .report-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px 18px;
+            margin: 12px 0;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        .report-description {
+            background: #fff7ed;
+            border-left: 4px solid #f59e0b;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 12px 0;
+            color: #7c2d12;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .report-review {
+            background: #f1f5f9;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .report-pending {
+            color: #b45309;
+            font-weight: 600;
+        }
+
+        .report-attended {
+            color: #15803d;
+            font-weight: 600;
+        }
+
+        .report-form {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .report-form label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 600;
+        }
+
+        .report-form textarea {
+            width: 100%;
+            min-height: 90px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .report-form button {
+            margin-top: 10px;
+        }
+
+        .report-message {
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .btn-reportes {
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+            border-radius: 6px;
+            padding: 8px 11px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-reportes:hover {
+            background: #ffedd5;
+        }
+
+        .sin-reportes {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .reportes-no-disponibles {
+            color: #b45309;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            .report-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="app">
 
-    <!-- MENÚ DEL PERSONAL ADMINISTRATIVO -->
     <aside class="sidebar">
 
         <div class="brand">
@@ -64,7 +180,6 @@
 
         </nav>
 
-        <!-- CERRAR SESIÓN -->
         <div class="sidebar-footer">
             <form th:action="@{/logout}" method="post">
                 <button type="submit" class="btn-logout">
@@ -77,7 +192,6 @@
     </aside>
 
 
-    <!-- CONTENIDO PRINCIPAL -->
     <main class="main-content">
 
         <header class="topbar">
@@ -105,7 +219,6 @@
         </section>
 
 
-        <!-- INDICADORES -->
         <section class="stats-grid">
 
             <article class="stat-card">
@@ -135,7 +248,6 @@
         </section>
 
 
-        <!-- TABLA DE INVENTARIO -->
         <section class="inventory-panel">
 
             <div class="panel-header">
@@ -183,13 +295,14 @@
                             <th>Tipo</th>
                             <th>Número de serie</th>
                             <th>Estado</th>
+                            <th>Reportes</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
 
                     <tbody id="tablaEquipos">
                         <tr>
-                            <td colspan="6" class="table-message">
+                            <td colspan="7" class="table-message">
                                 Cargando artículos...
                             </td>
                         </tr>
@@ -216,7 +329,7 @@
 </div>
 
 
-<!-- VENTANA PARA REGISTRAR UN ARTÍCULO -->
+<!-- VENTANA PARA REGISTRAR O EDITAR UN ARTÍCULO -->
 <div class="modal" id="modalEquipo" hidden>
 
     <div class="modal-backdrop" id="cerrarModalFondo"></div>
@@ -308,6 +421,39 @@
             </div>
 
         </form>
+
+    </section>
+
+</div>
+
+
+<!-- VENTANA PARA CONSULTAR Y ATENDER REPORTES DE DAÑOS -->
+<div class="modal" id="modalReportes" hidden>
+
+    <div class="modal-backdrop" id="cerrarModalReportesFondo"></div>
+
+    <section class="modal-content report-modal-content"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="tituloModalReportes">
+
+        <div class="modal-header">
+            <div>
+                <h2 id="tituloModalReportes">Reportes de daños</h2>
+                <p>Consulta los incidentes y registra las revisiones realizadas.</p>
+            </div>
+
+            <button type="button"
+                    class="btn-close"
+                    id="cerrarModalReportes"
+                    aria-label="Cerrar ventana">
+                ×
+            </button>
+        </div>
+
+        <div id="contenidoReportes">
+            <p>Cargando reportes...</p>
+        </div>
 
     </section>
 

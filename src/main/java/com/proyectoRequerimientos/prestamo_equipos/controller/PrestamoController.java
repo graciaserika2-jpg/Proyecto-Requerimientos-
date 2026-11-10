@@ -49,9 +49,33 @@ public class PrestamoController {
     }
 
     @PostMapping("/{id}/devolver")
-    public PrestamoResponse devolverPrestamo(@PathVariable Long id) {
+    public PrestamoResponse devolverPrestamo(
+            @PathVariable Long id,
+            @RequestBody DevolucionRequest solicitud,
+            Authentication authentication) {
 
-        Prestamo prestamo = prestamoService.devolverPrestamo(id);
+        Prestamo prestamo = prestamoService.devolverPrestamo(
+                id,
+                solicitud.condicionDevolucion(),
+                solicitud.detallesDanio(),
+                authentication.getName()
+        );
+
+        return convertirRespuesta(prestamo);
+    }
+
+    @PostMapping("/{id}/revision-mantenimiento")
+    public PrestamoResponse registrarRevisionMantenimiento(
+            @PathVariable Long id,
+            @RequestBody RevisionMantenimientoRequest solicitud,
+            Authentication authentication) {
+
+        Prestamo prestamo =
+                prestamoService.registrarRevisionMantenimiento(
+                        id,
+                        solicitud.revisionMantenimiento(),
+                        authentication.getName()
+                );
 
         return convertirRespuesta(prestamo);
     }
@@ -69,6 +93,7 @@ public class PrestamoController {
         EquipoResumen equipo = prestamo.getEquipo() == null
                 ? null
                 : new EquipoResumen(
+                        prestamo.getEquipo().getId(),
                         prestamo.getEquipo().getNombre()
                 );
 
@@ -80,8 +105,26 @@ public class PrestamoController {
                 prestamo.getFechaDevolucionPrevista(),
                 prestamo.getFechaDevolucionReal(),
                 prestamo.getEstado(),
-                prestamo.getObservaciones()
+                prestamo.getObservaciones(),
+                prestamo.getCondicionDevolucion(),
+                prestamo.getDetallesDanio(),
+                prestamo.getRecibidoPor(),
+                prestamo.getRevisionMantenimiento(),
+                prestamo.getFechaRevision(),
+                prestamo.getRevisadoPor(),
+                prestamo.getMantenimientoAtendido()
         );
+    }
+
+    public record DevolucionRequest(
+            String condicionDevolucion,
+            String detallesDanio
+    ) {
+    }
+
+    public record RevisionMantenimientoRequest(
+            String revisionMantenimiento
+    ) {
     }
 
     public record PrestamoResponse(
@@ -92,7 +135,14 @@ public class PrestamoController {
             LocalDate fechaDevolucionPrevista,
             LocalDateTime fechaDevolucionReal,
             String estado,
-            String observaciones
+            String observaciones,
+            String condicionDevolucion,
+            String detallesDanio,
+            String recibidoPor,
+            String revisionMantenimiento,
+            LocalDateTime fechaRevision,
+            String revisadoPor,
+            Boolean mantenimientoAtendido
     ) {
     }
 
@@ -103,6 +153,9 @@ public class PrestamoController {
     ) {
     }
 
-    public record EquipoResumen(String nombre) {
+    public record EquipoResumen(
+            Long id,
+            String nombre
+    ) {
     }
 }

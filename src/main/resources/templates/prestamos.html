@@ -8,20 +8,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Token CSRF de Spring Security -->
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
 
     <title>Préstamos y devoluciones | UPIICSA</title>
 
     <link rel="stylesheet" th:href="@{/estilos.css}">
+
+    <style>
+        /* VENTANA MODAL */
+        .modal-devolucion {
+            width: min(420px, calc(100% - 32px));
+            max-width: 420px;
+            padding: 0;
+            border: none;
+            border-radius: 14px;
+            margin: auto;
+            background: #ffffff;
+            color: #333333;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+        }
+
+        .modal-devolucion::backdrop {
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        .modal-contenido {
+            padding: 26px;
+        }
+
+        .modal-contenido h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 21px;
+            color: #222222;
+        }
+
+        .modal-descripcion {
+            margin-bottom: 22px;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .modal-contenido label {
+            display: block;
+            margin: 14px 0 7px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .modal-contenido select,
+        .modal-contenido textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px 12px;
+            border: 1px solid #d5d5d5;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .modal-contenido textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-ayuda {
+            display: block;
+            margin-top: 6px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .modal-acciones {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .modal-acciones button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .modal-acciones button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .modal-acciones button[type="button"] {
+            background: #eeeeee;
+            color: #333333;
+        }
+
+        .modal-acciones button[type="submit"] {
+            background: #2563eb;
+            color: white;
+        }
+
+        .modal-acciones button:hover {
+            opacity: 0.88;
+        }
+
+        #grupoDetallesDanio[hidden] {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="app">
 
-    <!-- MENÚ DEL PERSONAL ADMINISTRATIVO -->
     <aside class="sidebar">
 
         <div class="brand">
@@ -64,7 +166,6 @@
 
         </nav>
 
-        <!-- CERRAR SESIÓN -->
         <div class="sidebar-footer">
             <form th:action="@{/logout}" method="post">
                 <button type="submit" class="btn-logout">
@@ -77,7 +178,6 @@
     </aside>
 
 
-    <!-- CONTENIDO PRINCIPAL -->
     <main class="main-content">
 
         <header class="topbar">
@@ -91,7 +191,6 @@
         </header>
 
 
-        <!-- PRESENTACIÓN -->
         <section class="welcome">
             <div class="welcome-content">
                 <p class="eyebrow">GESTIÓN DE PRÉSTAMOS</p>
@@ -154,10 +253,11 @@
 
                 <input type="hidden" id="equipoId" name="equipoId">
 
-                <div id="resultadosEquipos"
-                     class="resultados-busqueda"
-                     role="listbox"
-                     aria-label="Equipos disponibles">
+                <div
+                    id="resultadosEquipos"
+                    class="resultados-busqueda"
+                    role="listbox"
+                    aria-label="Equipos disponibles">
                 </div>
 
 
@@ -213,6 +313,7 @@
             <select id="filtroPrestamos">
                 <option value="Todos">Todos</option>
                 <option value="Activo">Activos</option>
+                <option value="Vencido">Vencidos</option>
                 <option value="Devuelto">Devueltos</option>
             </select>
 
@@ -225,7 +326,7 @@
                         <tr>
                             <th>ID</th>
                             <th>Persona</th>
-                            <th>Boleta / No. de empleado</th>
+                            <th>Boleta (alumnos)</th>
                             <th>Equipo</th>
                             <th>Fecha de préstamo</th>
                             <th>Fecha y hora de devolución</th>
@@ -254,6 +355,72 @@
     </main>
 
 </div>
+
+
+<!-- VENTANA DE REGISTRO DE DEVOLUCIÓN -->
+<dialog id="modalDevolucion" class="modal-devolucion">
+
+    <div class="modal-contenido">
+
+        <h2>Registrar devolución</h2>
+
+        <p class="modal-descripcion">
+            Revisa las condiciones del equipo antes de confirmar su recepción.
+        </p>
+
+        <form id="formDevolucion">
+
+            <label for="condicionDevolucion">
+                ¿En qué condiciones se recibe el equipo?
+            </label>
+
+            <select id="condicionDevolucion" required>
+                <option value="">Selecciona una opción</option>
+                <option value="BUEN_ESTADO">Buen estado</option>
+                <option value="CON_DANOS">Con daños</option>
+            </select>
+
+            <div id="grupoDetallesDanio" hidden>
+
+                <label for="detallesDanio">
+                    Describe los daños encontrados
+                </label>
+
+                <textarea
+                    id="detallesDanio"
+                    rows="4"
+                    maxlength="1000"
+                    placeholder="Describe detalladamente los daños..."
+                ></textarea>
+
+                <small class="modal-ayuda">
+                    Esta descripción quedará guardada en el historial del préstamo.
+                </small>
+
+            </div>
+
+            <div class="modal-acciones">
+
+                <button
+                    type="button"
+                    id="cancelarDevolucion">
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn-primary">
+                    Confirmar devolución
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</dialog>
+
 
 <script th:src="@{/prestamos.js}"></script>
 

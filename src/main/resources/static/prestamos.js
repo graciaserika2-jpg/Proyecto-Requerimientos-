@@ -20,6 +20,14 @@ const mensajePrestamo = document.getElementById("mensajePrestamo");
 const filtroPrestamos = document.getElementById("filtroPrestamos");
 const campoObservaciones = document.getElementById("observaciones");
 
+// Elementos del formulario de devolución
+const modalDevolucion = document.getElementById("modalDevolucion");
+const formularioDevolucion = document.getElementById("formDevolucion");
+const condicionDevolucion = document.getElementById("condicionDevolucion");
+const grupoDetallesDanio = document.getElementById("grupoDetallesDanio");
+const detallesDanio = document.getElementById("detallesDanio");
+const cancelarDevolucion = document.getElementById("cancelarDevolucion");
+
 const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
 const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
 
@@ -28,6 +36,9 @@ let equiposDisponibles = [];
 
 let temporizadorPersona;
 let solicitudPersona = 0;
+
+let prestamoDevolucionId = null;
+let botonDevolucionActual = null;
 
 
 // -------------------------
@@ -320,24 +331,18 @@ function mostrarEquiposDisponibles(texto = "") {
     resultadosEquipos.classList.add("visible");
 }
 
-
-// Al escribir, se elimina la selección anterior.
 campoBuscarEquipo.addEventListener("input", () => {
     invalidarSeleccionEquipo();
 
     mostrarEquiposDisponibles(campoBuscarEquipo.value);
 });
 
-
-// Al entrar al buscador, se muestran los equipos disponibles.
 campoBuscarEquipo.addEventListener("focus", () => {
     if (!selectorEquipo.value) {
         mostrarEquiposDisponibles(campoBuscarEquipo.value);
     }
 });
 
-
-// Botón para quitar el equipo seleccionado.
 quitarEquipo.addEventListener("click", () => {
     invalidarSeleccionEquipo();
 
@@ -495,34 +500,31 @@ function mostrarPrestamos() {
     filtrados.forEach(prestamo => {
         const fila = tablaPrestamos.insertRow();
 
-        // ID del préstamo
         fila.insertCell().textContent = prestamo.id;
 
-        // Nombre de la persona
         fila.insertCell().textContent =
             prestamo.persona?.nombre || "Sin nombre";
 
-        // Boleta o número de empleado
+        // Solo mostrar la boleta numérica de los alumnos.
         const celdaIdentificador = fila.insertCell();
+        const esAlumno =
+            prestamo.persona?.tipo?.toLowerCase() === "alumno";
 
-        const tipoPersona = prestamo.persona?.tipo;
-        const identificador = prestamo.persona?.identificador;
+        if (esAlumno && prestamo.persona?.identificador) {
+            celdaIdentificador.textContent =
+                String(prestamo.persona.identificador).replace(/\D/g, "");
+        } else {
+            celdaIdentificador.textContent = "—";
+        }
 
-        celdaIdentificador.textContent = identificador
-            ? `${obtenerEtiquetaIdentificador(tipoPersona)}: ${identificador}`
-            : "No registrado";
-
-        // Equipo
         fila.insertCell().textContent =
             prestamo.equipo?.nombre || "Sin equipo";
 
-        // Fecha del préstamo
         fila.insertCell().textContent =
             formatearFechaHora(prestamo.fechaPrestamo);
 
-        // Fecha real de devolución
         const fechaDevolucion =
-            prestamo.estado === "Activo"
+            ["Activo", "Vencido"].includes(prestamo.estado)
                 ? "Pendiente"
                 : prestamo.fechaDevolucionReal
                     ? formatearFechaHora(prestamo.fechaDevolucionReal)
@@ -530,19 +532,17 @@ function mostrarPrestamos() {
 
         fila.insertCell().textContent = fechaDevolucion;
 
-        // Estado
         fila.insertCell().textContent = prestamo.estado;
 
-        // Acción
         const celdaAccion = fila.insertCell();
 
-        if (prestamo.estado === "Activo") {
+        if (["Activo", "Vencido"].includes(prestamo.estado)) {
             const boton = document.createElement("button");
             boton.type = "button";
             boton.textContent = "Registrar devolución";
 
             boton.addEventListener("click", () =>
-                devolverPrestamo(prestamo.id, boton)
+                abrirFormularioDevolucion(prestamo.id, boton)
             );
 
             celdaAccion.appendChild(boton);
@@ -572,24 +572,82 @@ async function cargarPrestamos() {
 
 
 // -------------------------
-// Registrar una devolución
+// Formulario de devolución
 // -------------------------
 
-async function devolverPrestamo(id, boton) {
-    if (!confirm(
-        "¿Confirmas que deseas registrar la devolución de este equipo?"
-    )) {
+function abrirFormularioDevolucion(id, boton) {
+    prestamoDevolucionId = id;
+    botonDevolucionActual = boton;
+
+    formularioDevolucion.reset();
+
+    grupoDetallesDanio.hidden = true;
+    detallesDanio.required = false;
+
+    modalDevolucion.showModal();
+}
+
+condicionDevolucion.addEventListener("change", () => {
+    const tieneDanios = condicionDevolucion.value === "CON_DANOS";
+
+    grupoDetallesDanio.hidden = !tieneDanios;
+    detallesDanio.required = tieneDanios;
+
+    if (!tieneDanios) {
+        detallesDanio.value = "";
+    }
+});
+
+cancelarDevolucion.addEventListener("click", () => {
+    modalDevolucion.close();
+});
+
+modalDevolucion.addEventListener("click", evento => {
+    if (evento.target === modalDevolucion) {
+        modalDevolucion.close();
+    }
+});
+
+formularioDevolucion.addEventListener("submit", async evento => {
+    evento.preventDefault();
+
+    if (!prestamoDevolucionId) {
         return;
     }
 
-    boton.disabled = true;
+    const condicion = condicionDevolucion.value;
+    const descripcion = detallesDanio.value.trim();
+
+    if (!condicion) {
+        alert("Selecciona la condición en la que se recibe el equipo.");
+        return;
+    }
+
+    if (condicion === "CON_DANOS" && !descripcion) {
+        alert("Describe los daños encontrados.");
+        detallesDanio.focus();
+        return;
+    }
+
+    const botonGuardar = formularioDevolucion.querySelector(
+        'button[type="submit"]'
+    );
+
+    botonGuardar.disabled = true;
+    cancelarDevolucion.disabled = true;
 
     try {
         const respuesta = await fetch(
-            `/api/prestamos/${id}/devolver`,
+            `/api/prestamos/${prestamoDevolucionId}/devolver`,
             {
                 method: "POST",
-                headers: obtenerHeaders()
+                headers: obtenerHeaders({
+                    "Content-Type": "application/json"
+                }),
+                body: JSON.stringify({
+                    condicionDevolucion: condicion,
+                    detallesDanio: descripcion
+                })
             }
         );
 
@@ -603,8 +661,15 @@ async function devolverPrestamo(id, boton) {
             );
         }
 
+        modalDevolucion.close();
+
         mensajePrestamo.textContent =
-            "Devolución registrada correctamente.";
+            condicion === "CON_DANOS"
+                ? "Devolución registrada. El equipo pasó a Mantenimiento."
+                : "Devolución registrada. El equipo volvió a estar Disponible.";
+
+        prestamoDevolucionId = null;
+        botonDevolucionActual = null;
 
         await Promise.all([
             cargarPrestamos(),
@@ -614,9 +679,11 @@ async function devolverPrestamo(id, boton) {
     } catch (error) {
         mensajePrestamo.textContent = error.message;
 
-        boton.disabled = false;
+    } finally {
+        botonGuardar.disabled = false;
+        cancelarDevolucion.disabled = false;
     }
-}
+});
 
 
 // -------------------------

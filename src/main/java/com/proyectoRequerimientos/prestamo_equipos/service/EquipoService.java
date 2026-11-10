@@ -71,8 +71,6 @@ public class EquipoService {
 
         validarEquipo(equipo);
 
-        // Si el artículo ya tiene un tipo asignado,
-        // no permitimos cambiarlo.
         if (existente.getTipo() != null
                 && !existente.getTipo().isBlank()
                 && !existente.getTipo().equals(equipo.getTipo())) {
@@ -82,29 +80,35 @@ public class EquipoService {
             );
         }
 
-        // El inventario no puede asignar manualmente
-        // el estado Prestado.
         if ("Prestado".equals(equipo.getEstado())) {
             throw new IllegalArgumentException(
                     "El estado Prestado debe gestionarse desde Préstamos."
             );
         }
 
-        // No permitimos editar artículos prestados.
         if ("Prestado".equals(existente.getEstado())) {
             throw new IllegalArgumentException(
                     "No se puede editar un artículo prestado desde Inventario."
             );
         }
 
-        // Actualizamos los datos del artículo.
+        // Un artículo en mantenimiento solo puede volver a Disponible
+        // mediante el proceso de revisión de sus reportes de daños.
+        if ("Mantenimiento".equals(existente.getEstado())
+                && "Disponible".equals(equipo.getEstado())) {
+
+            throw new IllegalArgumentException(
+                    "No puedes cambiar directamente un artículo de "
+                    + "Mantenimiento a Disponible. Primero debes atender "
+                    + "sus reportes de daños desde la revisión de mantenimiento."
+            );
+        }
+
         existente.setNombre(equipo.getNombre());
         existente.setDescripcion(equipo.getDescripcion());
         existente.setNumeroSerie(equipo.getNumeroSerie());
         existente.setEstado(equipo.getEstado());
 
-        // Si el artículo no tenía tipo, se permite asignarlo
-        // por primera vez.
         if (existente.getTipo() == null
                 || existente.getTipo().isBlank()) {
             existente.setTipo(equipo.getTipo());
@@ -185,7 +189,6 @@ public class EquipoService {
     public void eliminarEquipo(Long id) {
         Equipo existente = buscarActivo(id);
 
-        // Solamente se pueden eliminar artículos disponibles.
         if (!"Disponible".equals(existente.getEstado())) {
             throw new IllegalArgumentException(
                     "No se puede eliminar un artículo que está "
@@ -194,7 +197,6 @@ public class EquipoService {
             );
         }
 
-        // Eliminación lógica: el registro permanece en la base de datos.
         existente.setActivo(false);
 
         equipoRepository.save(existente);

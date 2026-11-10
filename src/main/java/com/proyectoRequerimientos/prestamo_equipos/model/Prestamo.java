@@ -21,10 +21,32 @@ public class Prestamo {
     private Equipo equipo;
 
     private LocalDateTime fechaPrestamo;
+
     private LocalDate fechaDevolucionPrevista;
+
     private LocalDateTime fechaDevolucionReal;
+
     private String estado;
+
     private String observaciones;
+
+    // Información de la devolución
+    private String condicionDevolucion;
+
+    @Column(length = 1000)
+    private String detallesDanio;
+
+    private String recibidoPor;
+
+    // Información de la revisión de mantenimiento
+    @Column(length = 1000)
+    private String revisionMantenimiento;
+
+    private LocalDateTime fechaRevision;
+
+    private String revisadoPor;
+
+    private Boolean mantenimientoAtendido = false;
 
     public Prestamo() {
     }
@@ -89,5 +111,61 @@ public class Prestamo {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public String getCondicionDevolucion() {
+        return condicionDevolucion;
+    }
+
+    public void setCondicionDevolucion(String condicionDevolucion) {
+        this.condicionDevolucion = condicionDevolucion;
+    }
+
+    public String getDetallesDanio() {
+        return detallesDanio;
+    }
+
+    public void setDetallesDanio(String detallesDanio) {
+        this.detallesDanio = detallesDanio;
+    }
+
+    public String getRecibidoPor() {
+        return recibidoPor;
+    }
+
+    public void setRecibidoPor(String recibidoPor) {
+        this.recibidoPor = recibidoPor;
+    }
+
+    public String getRevisionMantenimiento() {
+        return revisionMantenimiento;
+    }
+
+    public void setRevisionMantenimiento(String revisionMantenimiento) {
+        this.revisionMantenimiento = revisionMantenimiento;
+    }
+
+    public LocalDateTime getFechaRevision() {
+        return fechaRevision;
+    }
+
+    public void setFechaRevision(LocalDateTime fechaRevision) {
+        this.fechaRevision = fechaRevision;
+    }
+
+    public String getRevisadoPor() {
+        return revisadoPor;
+    }
+
+    public void setRevisadoPor(String revisadoPor) {
+        this.revisadoPor = revisadoPor;
+    }
+
+    public Boolean getMantenimientoAtendido() {
+        return mantenimientoAtendido;
+    }
+
+    public void setMantenimientoAtendido(Boolean mantenimientoAtendido) {
+        this.mantenimientoAtendido = mantenimientoAtendido;
     }
 }

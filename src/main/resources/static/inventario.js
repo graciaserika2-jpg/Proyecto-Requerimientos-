@@ -1,3 +1,4 @@
+
 // ==========================================
 // 1. ELEMENTOS DE LA PÁGINA
 // ==========================================
@@ -18,8 +19,17 @@ const btnNuevoEquipo = document.getElementById("btnNuevoEquipo");
 const btnGuardarEquipo = document.getElementById("guardarEquipo");
 const mensajeFormulario = document.getElementById("mensajeFormulario");
 
+const modalReportes = document.getElementById("modalReportes");
+const contenidoReportes = document.getElementById("contenidoReportes");
+const tituloModalReportes = document.getElementById("tituloModalReportes");
+
 let equipos = [];
 let equipoEnEdicion = null;
+let equipoActualReportes = null;
+
+// Contiene el historial de préstamos con daños.
+// null significa que todavía no se pudo consultar.
+let historialPrestamos = null;
 
 
 // ==========================================
@@ -43,16 +53,17 @@ function obtenerCabecerasCSRF() {
 
 
 // ==========================================
-// 3. CARGAR EQUIPOS DESDE SPRING BOOT
+// 3. CARGAR EQUIPOS E HISTORIAL DE REPORTES
 // ==========================================
 
 async function cargarEquipos() {
+
     tablaEquipos.replaceChildren();
 
     const fila = document.createElement("tr");
     const celda = document.createElement("td");
 
-    celda.colSpan = 6;
+    celda.colSpan = 7;
     celda.className = "table-message";
     celda.textContent = "Cargando artículos...";
 
@@ -60,6 +71,7 @@ async function cargarEquipos() {
     tablaEquipos.appendChild(fila);
 
     try {
+
         const respuesta = await fetch("/api/equipos");
 
         if (!respuesta.ok) {
@@ -70,10 +82,36 @@ async function cargarEquipos() {
 
         equipos = await respuesta.json();
 
+        // Consultar también los préstamos para conocer los reportes históricos.
+        // Si falla esta consulta, el inventario seguirá funcionando.
+        try {
+
+            const respuestaPrestamos = await fetch("/api/prestamos");
+
+            if (!respuestaPrestamos.ok) {
+                throw new Error(
+                    `Error ${respuestaPrestamos.status} al consultar el historial`
+                );
+            }
+
+            const prestamos = await respuestaPrestamos.json();
+
+            historialPrestamos = prestamos.filter(prestamo =>
+                prestamo.condicionDevolucion === "CON_DANOS"
+            );
+
+        } catch (error) {
+
+            console.error("No se pudo cargar el historial de reportes:", error);
+
+            historialPrestamos = null;
+        }
+
         actualizarFiltroTipos();
         mostrarEquipos();
 
     } catch (error) {
+
         console.error("Error al cargar el inventario:", error);
 
         mostrarMensajeTabla(
@@ -93,6 +131,7 @@ async function cargarEquipos() {
 // ==========================================
 
 function mostrarEquipos() {
+
     const busqueda = buscarEquipo.value.trim().toLowerCase();
     const tipoSeleccionado = filtroTipo.value;
     const estadoSeleccionado = filtroEstado.value;
@@ -122,6 +161,7 @@ function mostrarEquipos() {
     tablaEquipos.replaceChildren();
 
     if (equiposFiltrados.length === 0) {
+
         mostrarMensajeTabla(
             equipos.length === 0
                 ? "Todavía no hay artículos registrados."
@@ -149,6 +189,7 @@ function mostrarEquipos() {
         celdaNombre.appendChild(nombre);
 
         if (equipo.descripcion) {
+
             const descripcion = document.createElement("div");
             descripcion.className = "article-description";
             descripcion.textContent = equipo.descripcion;
@@ -187,7 +228,62 @@ function mostrarEquipos() {
         celdaEstado.appendChild(etiquetaEstado);
         fila.appendChild(celdaEstado);
 
-        // Acciones
+
+        // ==========================================
+        // COLUMNA DE REPORTES
+        // ==========================================
+
+        const celdaReportes = document.createElement("td");
+
+        const reportesDelEquipo = historialPrestamos === null
+            ? null
+            : historialPrestamos.filter(prestamo =>
+                prestamo.equipo
+                && Number(prestamo.equipo.id) === Number(equipo.id)
+            );
+
+        const tieneReportes =
+            reportesDelEquipo !== null && reportesDelEquipo.length > 0;
+
+        // Si el historial no se pudo consultar, no afirmamos que no existen reportes.
+        if (historialPrestamos === null) {
+
+            const mensaje = document.createElement("span");
+            mensaje.className = "reportes-no-disponibles";
+            mensaje.textContent = "No disponible";
+
+            celdaReportes.appendChild(mensaje);
+
+        } else if (tieneReportes || equipo.estado === "Mantenimiento") {
+
+            const botonReportes = document.createElement("button");
+
+            botonReportes.textContent = "Ver reportes";
+            botonReportes.type = "button";
+            botonReportes.className = "btn-reportes";
+
+            botonReportes.addEventListener("click", () => {
+                abrirModalReportes(equipo);
+            });
+
+            celdaReportes.appendChild(botonReportes);
+
+        } else {
+
+            const mensaje = document.createElement("span");
+            mensaje.className = "sin-reportes";
+            mensaje.textContent = "Sin reportes";
+
+            celdaReportes.appendChild(mensaje);
+        }
+
+        fila.appendChild(celdaReportes);
+
+
+        // ==========================================
+        // COLUMNA DE ACCIONES
+        // ==========================================
+
         const celdaAcciones = document.createElement("td");
 
         // Botón editar
@@ -221,6 +317,7 @@ function mostrarEquipos() {
             }
 
             try {
+
                 const respuesta = await fetch(
                     `/api/equipos/${equipo.id}`,
                     {
@@ -230,6 +327,7 @@ function mostrarEquipos() {
                 );
 
                 if (!respuesta.ok) {
+
                     const detalle = await respuesta.text();
 
                     throw new Error(
@@ -242,6 +340,7 @@ function mostrarEquipos() {
                 alert("Artículo eliminado correctamente.");
 
             } catch (error) {
+
                 console.error("Error al eliminar el artículo:", error);
 
                 alert(
@@ -253,9 +352,7 @@ function mostrarEquipos() {
 
         celdaAcciones.appendChild(botonEliminar);
 
-        // Agregar la celda de acciones una sola vez
         fila.appendChild(celdaAcciones);
-
         tablaEquipos.appendChild(fila);
     });
 
@@ -269,6 +366,7 @@ function mostrarEquipos() {
 // ==========================================
 
 function crearCelda(valor) {
+
     const celda = document.createElement("td");
     celda.textContent = String(valor);
 
@@ -277,12 +375,13 @@ function crearCelda(valor) {
 
 
 function mostrarMensajeTabla(mensaje) {
+
     tablaEquipos.replaceChildren();
 
     const fila = document.createElement("tr");
     const celda = document.createElement("td");
 
-    celda.colSpan = 6;
+    celda.colSpan = 7;
     celda.className = "table-message";
     celda.textContent = mensaje;
 
@@ -292,6 +391,7 @@ function mostrarMensajeTabla(mensaje) {
 
 
 function obtenerClaseEstado(estado) {
+
     switch (estado.toLowerCase()) {
 
         case "disponible":
@@ -368,7 +468,7 @@ function actualizarFiltroTipos() {
 
 
 // ==========================================
-// 8. ABRIR Y CERRAR EL FORMULARIO
+// 8. ABRIR Y CERRAR EL FORMULARIO DE EQUIPO
 // ==========================================
 
 function abrirModal() {
@@ -440,7 +540,440 @@ function editarEquipo(equipo) {
 
 
 // ==========================================
-// 9. EVENTOS DEL MODAL
+// 9. CONSULTAR REPORTES DE DAÑOS
+// ==========================================
+
+async function abrirModalReportes(equipo) {
+
+    equipoActualReportes = equipo;
+
+    tituloModalReportes.textContent =
+        `Reportes de daños: ${equipo.nombre}`;
+
+    contenidoReportes.replaceChildren();
+
+    const mensajeCarga = document.createElement("p");
+    mensajeCarga.textContent = "Cargando reportes...";
+
+    contenidoReportes.appendChild(mensajeCarga);
+
+    modalReportes.hidden = false;
+
+    await cargarReportesEquipo(equipo);
+}
+
+
+async function cargarReportesEquipo(equipo) {
+
+    contenidoReportes.replaceChildren();
+
+    const mensajeCarga = document.createElement("p");
+    mensajeCarga.textContent = "Consultando historial de daños...";
+
+    contenidoReportes.appendChild(mensajeCarga);
+
+    try {
+
+        // Consultar siempre el historial actualizado desde el servidor.
+        const respuesta = await fetch("/api/prestamos");
+
+        if (!respuesta.ok) {
+            throw new Error(
+                `No se pudieron consultar los reportes. Error ${respuesta.status}`
+            );
+        }
+
+        const prestamos = await respuesta.json();
+
+        const reportes = prestamos.filter(prestamo =>
+            prestamo.equipo
+            && Number(prestamo.equipo.id) === Number(equipo.id)
+            && prestamo.condicionDevolucion === "CON_DANOS"
+        );
+
+        mostrarReportesEquipo(equipo, reportes);
+
+    } catch (error) {
+
+        console.error("Error al consultar reportes:", error);
+
+        contenidoReportes.replaceChildren();
+
+        const mensaje = document.createElement("p");
+        mensaje.className = "form-message error";
+        mensaje.textContent =
+            error.message || "No se pudieron cargar los reportes.";
+
+        contenidoReportes.appendChild(mensaje);
+    }
+}
+
+
+// ==========================================
+// 10. MOSTRAR HISTORIAL DE REPORTES
+// ==========================================
+
+function mostrarReportesEquipo(equipo, reportes) {
+
+    contenidoReportes.replaceChildren();
+
+    if (reportes.length === 0) {
+
+        const mensaje = document.createElement("p");
+
+        mensaje.textContent =
+            "Este artículo no tiene reportes de daños registrados. "
+            + "Si se encuentra en mantenimiento, verifica su condición antes de cambiar su estado.";
+
+        contenidoReportes.appendChild(mensaje);
+        return;
+    }
+
+    const resumen = document.createElement("p");
+
+    const pendientes = reportes.filter(
+        reporte => reporte.mantenimientoAtendido !== true
+    ).length;
+
+    resumen.textContent =
+        `Se encontraron ${reportes.length} reporte(s). `
+        + `${pendientes} pendiente(s) de revisión.`;
+
+    contenidoReportes.appendChild(resumen);
+
+    // Ordenar del reporte más reciente al más antiguo.
+    reportes.sort((a, b) => {
+
+        const fechaA = new Date(a.fechaDevolucionReal || 0).getTime();
+        const fechaB = new Date(b.fechaDevolucionReal || 0).getTime();
+
+        return fechaB - fechaA;
+    });
+
+    reportes.forEach(reporte => {
+
+        const tarjeta = document.createElement("article");
+        tarjeta.className = "report-card";
+
+        const titulo = document.createElement("h3");
+        titulo.textContent = `Reporte del préstamo #${reporte.id}`;
+
+        tarjeta.appendChild(titulo);
+
+        const atendido = reporte.mantenimientoAtendido === true;
+
+        const estado = document.createElement("p");
+        estado.className = atendido
+            ? "report-attended"
+            : "report-pending";
+
+        estado.textContent = atendido
+            ? "✓ Reporte atendido"
+            : "● Pendiente de revisión";
+
+        tarjeta.appendChild(estado);
+
+
+        // Datos de la persona y devolución
+        const metadatos = document.createElement("div");
+        metadatos.className = "report-meta";
+
+        agregarDatoReporte(
+            metadatos,
+            "Persona",
+            reporte.persona?.nombre || "No disponible"
+        );
+
+        agregarDatoReporte(
+            metadatos,
+            "Identificador",
+            reporte.persona?.identificador || "No disponible"
+        );
+
+        agregarDatoReporte(
+            metadatos,
+            "Tipo de persona",
+            reporte.persona?.tipo || "No disponible"
+        );
+
+        agregarDatoReporte(
+            metadatos,
+            "Fecha de devolución",
+            formatearFecha(reporte.fechaDevolucionReal)
+        );
+
+        agregarDatoReporte(
+            metadatos,
+            "Recibido por",
+            reporte.recibidoPor || "No disponible"
+        );
+
+        tarjeta.appendChild(metadatos);
+
+
+        // Descripción original del daño
+        const etiquetaDanio = document.createElement("strong");
+        etiquetaDanio.textContent = "Descripción original del daño";
+
+        tarjeta.appendChild(etiquetaDanio);
+
+        const descripcionDanio = document.createElement("div");
+        descripcionDanio.className = "report-description";
+        descripcionDanio.textContent =
+            reporte.detallesDanio || "No se proporcionó una descripción.";
+
+        tarjeta.appendChild(descripcionDanio);
+
+
+        // Si ya fue atendido, mostrar la revisión guardada.
+        if (atendido) {
+
+            const tituloRevision = document.createElement("strong");
+            tituloRevision.textContent = "Revisión realizada";
+
+            tarjeta.appendChild(tituloRevision);
+
+            const revision = document.createElement("div");
+            revision.className = "report-review";
+            revision.textContent =
+                reporte.revisionMantenimiento || "Sin descripción de revisión.";
+
+            tarjeta.appendChild(revision);
+
+            const datosRevision = document.createElement("div");
+            datosRevision.className = "report-meta";
+
+            agregarDatoReporte(
+                datosRevision,
+                "Revisado por",
+                reporte.revisadoPor || "No disponible"
+            );
+
+            agregarDatoReporte(
+                datosRevision,
+                "Fecha de revisión",
+                formatearFecha(reporte.fechaRevision)
+            );
+
+            tarjeta.appendChild(datosRevision);
+
+        } else {
+
+            // Formulario para registrar la revisión.
+            const formulario = document.createElement("form");
+            formulario.className = "report-form";
+            formulario.dataset.prestamoId = reporte.id;
+
+            const etiqueta = document.createElement("label");
+            etiqueta.textContent =
+                "Describe qué encontraste o qué reparación realizaste";
+
+            const textarea = document.createElement("textarea");
+            textarea.name = "revisionMantenimiento";
+            textarea.placeholder =
+                "Ej. Se revisó la carcasa, se ajustó la pieza y se comprobó el funcionamiento...";
+            textarea.required = true;
+            textarea.maxLength = 1000;
+
+            const boton = document.createElement("button");
+            boton.type = "submit";
+            boton.className = "btn-primary";
+            boton.textContent = "Guardar revisión";
+
+            const mensaje = document.createElement("p");
+            mensaje.className = "report-message";
+            mensaje.setAttribute("role", "status");
+
+            formulario.appendChild(etiqueta);
+            formulario.appendChild(textarea);
+            formulario.appendChild(boton);
+            formulario.appendChild(mensaje);
+
+            formulario.addEventListener("submit", async evento => {
+
+                await enviarRevisionMantenimiento(
+                    evento,
+                    formulario,
+                    reporte.id,
+                    equipo
+                );
+            });
+
+            tarjeta.appendChild(formulario);
+        }
+
+        contenidoReportes.appendChild(tarjeta);
+    });
+}
+
+
+// ==========================================
+// 11. ELEMENTOS DE INFORMACIÓN DEL REPORTE
+// ==========================================
+
+function agregarDatoReporte(contenedor, etiqueta, valor) {
+
+    const elemento = document.createElement("div");
+
+    const nombre = document.createElement("strong");
+    nombre.textContent = `${etiqueta}: `;
+
+    const contenido = document.createElement("span");
+    contenido.textContent = valor;
+
+    elemento.appendChild(nombre);
+    elemento.appendChild(contenido);
+
+    contenedor.appendChild(elemento);
+}
+
+
+function formatearFecha(fecha) {
+
+    if (!fecha) {
+        return "No disponible";
+    }
+
+    const valor = new Date(fecha);
+
+    if (Number.isNaN(valor.getTime())) {
+        return fecha;
+    }
+
+    return valor.toLocaleString("es-MX", {
+        dateStyle: "medium",
+        timeStyle: "short"
+    });
+}
+
+
+// ==========================================
+// 12. GUARDAR REVISIÓN DE MANTENIMIENTO
+// ==========================================
+
+async function enviarRevisionMantenimiento(
+    evento,
+    formulario,
+    prestamoId,
+    equipo
+) {
+
+    evento.preventDefault();
+
+    const textarea = formulario.querySelector(
+        '[name="revisionMantenimiento"]'
+    );
+
+    const boton = formulario.querySelector('button[type="submit"]');
+    const mensaje = formulario.querySelector(".report-message");
+
+    const revisionMantenimiento = textarea.value.trim();
+
+    if (!revisionMantenimiento) {
+
+        mensaje.textContent =
+            "Escribe qué encontraste o qué reparación realizaste.";
+
+        mensaje.className = "report-message error";
+        return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = "Guardando revisión...";
+
+    mensaje.textContent = "";
+    mensaje.className = "report-message";
+
+    try {
+
+        const respuesta = await fetch(
+            `/api/prestamos/${prestamoId}/revision-mantenimiento`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    ...obtenerCabecerasCSRF()
+                },
+
+                body: JSON.stringify({
+                    revisionMantenimiento: revisionMantenimiento
+                })
+            }
+        );
+
+        if (!respuesta.ok) {
+
+            const detalle = await respuesta.text();
+
+            let mensajeError =
+                `No se pudo guardar la revisión. Error ${respuesta.status}`;
+
+            try {
+
+                const datosError = JSON.parse(detalle);
+
+                mensajeError =
+                    datosError.message ||
+                    datosError.error ||
+                    mensajeError;
+
+            } catch {
+
+                if (detalle && !detalle.trim().startsWith("<!DOCTYPE")) {
+                    mensajeError = detalle;
+                }
+            }
+
+            throw new Error(mensajeError);
+        }
+
+        alert(
+            "La revisión se registró correctamente. "
+            + "El estado del equipo se actualizará si ya no tiene reportes pendientes."
+        );
+
+        // Actualizar inventario e historial.
+        await cargarEquipos();
+
+        // Volver a consultar los reportes del equipo.
+        await cargarReportesEquipo(equipo);
+
+    } catch (error) {
+
+        console.error("Error al guardar la revisión:", error);
+
+        mensaje.textContent =
+            error.message || "Ocurrió un error al guardar la revisión.";
+
+        mensaje.className = "report-message error";
+
+        boton.disabled = false;
+        boton.textContent = "Guardar revisión";
+    }
+}
+
+
+// ==========================================
+// 13. CERRAR VENTANA DE REPORTES
+// ==========================================
+
+function cerrarModalReportes() {
+
+    modalReportes.hidden = true;
+    contenidoReportes.replaceChildren();
+    equipoActualReportes = null;
+}
+
+document.getElementById("cerrarModalReportes")
+    .addEventListener("click", cerrarModalReportes);
+
+document.getElementById("cerrarModalReportesFondo")
+    .addEventListener("click", cerrarModalReportes);
+
+
+// ==========================================
+// 14. EVENTOS DEL MODAL DE EQUIPO
 // ==========================================
 
 btnNuevoEquipo.addEventListener("click", abrirModal);
@@ -454,19 +987,27 @@ document.getElementById("cancelarEquipo")
 document.getElementById("cerrarModalFondo")
     .addEventListener("click", cerrarModal);
 
-document.addEventListener("keydown", (evento) => {
+document.addEventListener("keydown", evento => {
 
-    if (evento.key === "Escape" && !modalEquipo.hidden) {
-        cerrarModal();
+    if (evento.key === "Escape") {
+
+        if (!modalReportes.hidden) {
+            cerrarModalReportes();
+            return;
+        }
+
+        if (!modalEquipo.hidden) {
+            cerrarModal();
+        }
     }
 });
 
 
 // ==========================================
-// 10. REGISTRAR O ACTUALIZAR UN ARTÍCULO
+// 15. REGISTRAR O ACTUALIZAR UN ARTÍCULO
 // ==========================================
 
-formEquipo.addEventListener("submit", async (evento) => {
+formEquipo.addEventListener("submit", async evento => {
 
     evento.preventDefault();
 
@@ -579,7 +1120,7 @@ formEquipo.addEventListener("submit", async (evento) => {
 
 
 // ==========================================
-// 11. ACTIVAR BUSCADOR Y FILTROS
+// 16. ACTIVAR BUSCADOR Y FILTROS
 // ==========================================
 
 buscarEquipo.addEventListener("input", mostrarEquipos);
@@ -590,7 +1131,7 @@ filtroEstado.addEventListener("change", mostrarEquipos);
 
 
 // ==========================================
-// 12. INICIAR LA PÁGINA
+// 17. INICIAR LA PÁGINA
 // ==========================================
 
 cargarEquipos();
