@@ -4,6 +4,8 @@ package com.proyectoRequerimientos.prestamo_equipos.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(
     name = "cuentas_persona",
@@ -40,6 +42,20 @@ public class CuentaPersona {
 
     @Column(nullable = false)
     private boolean debeCambiarPassword = true;
+
+    // Correo electrónico asociado a la cuenta.
+    @Column(length = 254)
+    private String correo;
+
+    // Indica si el usuario verificó su correo.
+    // Puede ser null para conservar cuentas anteriores.
+    @Column(name = "correo_verificado")
+    private Boolean correoVerificado;
+
+    // Fecha en la que se activó la cuenta.
+    // Puede ser null para cuentas existentes.
+    @Column(name = "fecha_activacion")
+    private LocalDateTime fechaActivacion;
 
     public CuentaPersona() {
     }
@@ -86,5 +102,29 @@ public class CuentaPersona {
 
     public void setDebeCambiarPassword(boolean debeCambiarPassword) {
         this.debeCambiarPassword = debeCambiarPassword;
+    }
+
+    public String getCorreo() {
+        return correo;
+    }
+
+    public void setCorreo(String correo) {
+        this.correo = correo;
+    }
+
+    public Boolean getCorreoVerificado() {
+        return correoVerificado;
+    }
+
+    public void setCorreoVerificado(Boolean correoVerificado) {
+        this.correoVerificado = correoVerificado;
+    }
+
+    public LocalDateTime getFechaActivacion() {
+        return fechaActivacion;
+    }
+
+    public void setFechaActivacion(LocalDateTime fechaActivacion) {
+        this.fechaActivacion = fechaActivacion;
     }
 }

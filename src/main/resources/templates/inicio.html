@@ -1,8 +1,6 @@
-
 <!DOCTYPE html>
-<html lang="es"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
 <head>
     <meta charset="UTF-8">
@@ -13,274 +11,276 @@
 
 <body>
 
-<div class="app">
+    <div class="app">
 
-    <!-- MENÚ DEL PERSONAL ADMINISTRATIVO -->
-    <aside class="sidebar"
-           sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
+        <!-- MENÚ DEL PERSONAL ADMINISTRATIVO -->
+        <aside class="sidebar" sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
 
-        <div class="brand">
-            <div class="brand-icon">U</div>
-            <div>
-                <h2>Préstamo de equipos</h2>
-                <p>UPIICSA · IPN</p>
-            </div>
-        </div>
-
-        <p class="menu-label">MENÚ PRINCIPAL</p>
-
-        <nav class="menu">
-
-            <a th:href="@{/inicio}" class="menu-item active">
-                <span>⌂</span>
-                <span>Inicio</span>
-            </a>
-
-            <a th:href="@{/inventario}" class="menu-item">
-                <span>▦</span>
-                <span>Inventario</span>
-            </a>
-
-            <a th:href="@{/prestamos}" class="menu-item">
-                <span>⇄</span>
-                <span>Préstamos y devoluciones</span>
-            </a>
-
-            <a th:href="@{/personas}" class="menu-item">
-                <span>♙</span>
-                <span>Personas</span>
-            </a>
-
-            <a th:href="@{/encargados}" class="menu-item"
-               sec:authorize="hasRole('ADMIN')">
-                <span>⚙</span>
-                <span>Administrar encargados</span>
-            </a>
-
-        </nav>
-    </aside>
-
-
-    <!-- MENÚ DE ALUMNOS Y PROFESORES -->
-    <aside class="sidebar"
-           sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
-
-        <div class="brand">
-            <div class="brand-icon">U</div>
-            <div>
-                <h2>Préstamo de equipos</h2>
-                <p>UPIICSA · IPN</p>
-            </div>
-        </div>
-
-        <p class="menu-label">MI CUENTA</p>
-
-        <nav class="menu">
-
-            <a th:href="@{/inicio}" class="menu-item active">
-                <span>⌂</span>
-                <span>Inicio</span>
-            </a>
-
-            <a th:href="@{/disponibilidad}" class="menu-item">
-                <span>▦</span>
-                <span>Disponibilidad de equipos</span>
-            </a>
-
-            <a th:href="@{/mi-historial}" class="menu-item">
-                <span>◷</span>
-                <span>Mi historial de préstamos</span>
-            </a>
-
-            <a th:href="@{/cambiar-password}" class="menu-item">
-                <span>⚙</span>
-                <span>Cambiar contraseña</span>
-            </a>
-
-        </nav>
-    </aside>
-
-
-    <main class="main-content">
-
-        <!-- ENCABEZADO DEL PERSONAL -->
-        <header class="topbar"
-                sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
-
-            <div class="topbar-heading">
-                <p class="breadcrumb">Sistema / Inicio</p>
-                <h1>Panel principal</h1>
-                <p class="topbar-description">
-                    Resumen general del sistema de préstamo de equipos.
-                </p>
+            <div class="brand">
+                <div class="brand-icon">U</div>
+                <div>
+                    <h2>Préstamo de equipos</h2>
+                    <p>UPIICSA · IPN</p>
+                </div>
             </div>
 
-            <form th:action="@{/logout}" method="post" class="logout-form">
-                <button type="submit" class="btn-logout">
-                    <span aria-hidden="true">⇥</span>
-                    Cerrar sesión
-                </button>
-            </form>
+            <p class="menu-label">MENÚ PRINCIPAL</p>
 
-        </header>
+            <nav class="menu">
 
+                <a th:href="@{/inicio}" class="menu-item active">
+                    <span>⌂</span>
+                    <span>Inicio</span>
+                </a>
 
-        <!-- ENCABEZADO DEL ALUMNO O PROFESOR -->
-        <header class="topbar"
-                sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
+                <a th:href="@{/inventario}" class="menu-item">
+                    <span>▦</span>
+                    <span>Inventario</span>
+                </a>
 
-            <div class="topbar-heading">
-                <p class="breadcrumb">Mi cuenta / Inicio</p>
-                <h1>Portal de consulta</h1>
-                <p class="topbar-description">
-                    Consulta los equipos disponibles y tus préstamos.
-                </p>
+                <a th:href="@{/prestamos}" class="menu-item">
+                    <span>⇄</span>
+                    <span>Préstamos y devoluciones</span>
+                </a>
+
+                <a th:href="@{/personas}" class="menu-item">
+                    <span>♙</span>
+                    <span>Alumnos</span>
+                </a>
+
+                <a th:href="@{/encargados}" class="menu-item" sec:authorize="hasRole('ADMIN')">
+                    <span>⚙</span>
+                    <span>Administrar encargados</span>
+                </a>
+
+            </nav>
+
+            <!-- CERRAR SESIÓN -->
+            <div class="sidebar-footer">
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn-logout">
+                        <span aria-hidden="true">⇥</span>
+                        Cerrar sesión
+                    </button>
+                </form>
             </div>
 
-            <form th:action="@{/logout}" method="post" class="logout-form">
-                <button type="submit" class="btn-logout">
-                    <span aria-hidden="true">⇥</span>
-                    Cerrar sesión
-                </button>
-            </form>
-
-        </header>
+        </aside>
 
 
-        <!-- CONTENIDO DEL PERSONAL ADMINISTRATIVO -->
-        <div sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
+        <!-- MENÚ DE ALUMNOS Y PROFESORES -->
+        <aside class="sidebar" sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
 
-            <section class="welcome">
-                <div class="welcome-content">
-                    <p class="eyebrow">SISTEMA DE GESTIÓN</p>
-                    <h2>Bienvenido al panel principal</h2>
-                    <p>
-                        Administra el inventario, consulta los préstamos
-                        y lleva el control de los equipos de UPIICSA.
+            <div class="brand">
+                <div class="brand-icon">U</div>
+                <div>
+                    <h2>Préstamo de equipos</h2>
+                    <p>UPIICSA · IPN</p>
+                </div>
+            </div>
+
+            <p class="menu-label">MI CUENTA</p>
+
+            <nav class="menu">
+
+                <a th:href="@{/inicio}" class="menu-item active">
+                    <span>⌂</span>
+                    <span>Inicio</span>
+                </a>
+
+                <a th:href="@{/disponibilidad}" class="menu-item">
+                    <span>▦</span>
+                    <span>Disponibilidad de equipos</span>
+                </a>
+
+                <a th:href="@{/mi-historial}" class="menu-item">
+                    <span>◷</span>
+                    <span>Mi historial de préstamos</span>
+                </a>
+
+                <a th:href="@{/cambiar-password}" class="menu-item">
+                    <span>⚙</span>
+                    <span>Cambiar contraseña</span>
+                </a>
+
+            </nav>
+
+            <!-- CERRAR SESIÓN -->
+            <div class="sidebar-footer">
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn-logout">
+                        <span aria-hidden="true">⇥</span>
+                        Cerrar sesión
+                    </button>
+                </form>
+            </div>
+
+        </aside>
+
+
+        <main class="main-content">
+
+            <!-- ENCABEZADO DEL PERSONAL -->
+            <header class="topbar" sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
+
+                <div class="topbar-heading">
+                    <p class="breadcrumb">Sistema / Inicio</p>
+                    <h1>Panel principal</h1>
+                    <p class="topbar-description">
+                        Resumen general del sistema de préstamo de equipos.
                     </p>
                 </div>
-            </section>
 
-            <section class="dashboard-section">
-
-                <div class="section-heading">
-                    <div>
-                        <h2>Resumen del sistema</h2>
-                        <p>Consulta el estado actual de los registros.</p>
-                    </div>
-                </div>
-
-                <div class="resumen-grid">
-
-                    <article class="resumen-item">
-                        <div class="resumen-icon resumen-icon-blue">▦</div>
-                        <div class="resumen-data">
-                            <h3>Equipos registrados</h3>
-                            <p id="totalEquipos">—</p>
-                        </div>
-                    </article>
-
-                    <article class="resumen-item">
-                        <div class="resumen-icon resumen-icon-green">✓</div>
-                        <div class="resumen-data">
-                            <h3>Equipos disponibles</h3>
-                            <p id="equiposDisponibles">—</p>
-                        </div>
-                    </article>
-
-                    <article class="resumen-item">
-                        <div class="resumen-icon resumen-icon-orange">⇄</div>
-                        <div class="resumen-data">
-                            <h3>Préstamos activos</h3>
-                            <p id="prestamosActivos">—</p>
-                        </div>
-                    </article>
-
-                    <article class="resumen-item">
-                        <div class="resumen-icon resumen-icon-purple">♙</div>
-                        <div class="resumen-data">
-                            <h3>Personas registradas</h3>
-                            <p id="totalPersonas">—</p>
-                        </div>
-                    </article>
-
-                </div>
-
-                <p id="mensajeInicio" class="dashboard-message"
-                   role="status" aria-live="polite"></p>
-
-            </section>
-
-        </div>
+            </header>
 
 
-        <!-- CONTENIDO DEL ALUMNO O PROFESOR -->
-        <div sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
+            <!-- ENCABEZADO DEL ALUMNO O PROFESOR -->
+            <header class="topbar" sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
 
-            <section class="welcome">
-                <div class="welcome-content">
-                    <p class="eyebrow">PORTAL UPIICSA</p>
-                    <h2>¡Bienvenido!</h2>
-                    <p>
-                        Desde aquí puedes consultar los equipos disponibles
-                        y revisar el historial de tus préstamos.
+                <div class="topbar-heading">
+                    <p class="breadcrumb">Mi cuenta / Inicio</p>
+                    <h1>Portal de consulta</h1>
+                    <p class="topbar-description">
+                        Consulta los equipos disponibles y tus préstamos.
                     </p>
                 </div>
-            </section>
 
-            <section class="dashboard-section">
+            </header>
 
-                <div class="section-heading">
-                    <div>
-                        <h2>¿Qué deseas consultar?</h2>
-                        <p>Selecciona una de las siguientes opciones.</p>
+
+            <!-- CONTENIDO DEL PERSONAL ADMINISTRATIVO -->
+            <div sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
+
+                <section class="welcome">
+                    <div class="welcome-content">
+                        <p class="eyebrow">SISTEMA DE GESTIÓN</p>
+                        <h2>Bienvenido al panel principal</h2>
+                        <p>
+                            Administra el inventario, consulta los préstamos
+                            y lleva el control de los equipos de UPIICSA.
+                        </p>
                     </div>
-                </div>
+                </section>
 
-                <div class="resumen-grid">
+                <section class="dashboard-section">
 
-                    <a th:href="@{/disponibilidad}" class="resumen-item">
-                        <div class="resumen-icon resumen-icon-green">▦</div>
-                        <div class="resumen-data">
-                            <h3>Disponibilidad de equipos</h3>
-                            <p>Consulta qué equipos puedes solicitar.</p>
+                    <div class="section-heading">
+                        <div>
+                            <h2>Resumen del sistema</h2>
+                            <p>Consulta el estado actual de los registros.</p>
                         </div>
-                    </a>
+                    </div>
 
-                    <a th:href="@{/mi-historial}" class="resumen-item">
-                        <div class="resumen-icon resumen-icon-blue">◷</div>
-                        <div class="resumen-data">
-                            <h3>Mi historial de préstamos</h3>
-                            <p>Consulta tus préstamos anteriores y activos.</p>
+                    <div class="resumen-grid">
+
+                        <article class="resumen-item">
+                            <div class="resumen-icon resumen-icon-blue">▦</div>
+                            <div class="resumen-data">
+                                <h3>Equipos registrados</h3>
+                                <p id="totalEquipos">—</p>
+                            </div>
+                        </article>
+
+                        <article class="resumen-item">
+                            <div class="resumen-icon resumen-icon-green">✓</div>
+                            <div class="resumen-data">
+                                <h3>Equipos disponibles</h3>
+                                <p id="equiposDisponibles">—</p>
+                            </div>
+                        </article>
+
+                        <article class="resumen-item">
+                            <div class="resumen-icon resumen-icon-orange">⇄</div>
+                            <div class="resumen-data">
+                                <h3>Préstamos activos</h3>
+                                <p id="prestamosActivos">—</p>
+                            </div>
+                        </article>
+
+                        <article class="resumen-item">
+                            <div class="resumen-icon resumen-icon-purple">♙</div>
+                            <div class="resumen-data">
+                                <h3>Personas registradas</h3>
+                                <p id="totalPersonas">—</p>
+                            </div>
+                        </article>
+
+                    </div>
+
+                    <p id="mensajeInicio" class="dashboard-message" role="status" aria-live="polite"></p>
+
+                </section>
+
+            </div>
+
+
+            <!-- CONTENIDO DEL ALUMNO O PROFESOR -->
+            <div sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
+
+                <section class="welcome">
+                    <div class="welcome-content">
+                        <p class="eyebrow">PORTAL UPIICSA</p>
+                        <h2>¡Bienvenido!</h2>
+                        <p>
+                            Desde aquí puedes consultar los equipos disponibles
+                            y revisar el historial de tus préstamos.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="dashboard-section">
+
+                    <div class="section-heading">
+                        <div>
+                            <h2>¿Qué deseas consultar?</h2>
+                            <p>Selecciona una de las siguientes opciones.</p>
                         </div>
-                    </a>
+                    </div>
 
-                    <a th:href="@{/cambiar-password}" class="resumen-item">
-                        <div class="resumen-icon resumen-icon-purple">⚙</div>
-                        <div class="resumen-data">
-                            <h3>Cambiar contraseña</h3>
-                            <p>Actualiza la contraseña de tu cuenta.</p>
-                        </div>
-                    </a>
+                    <div class="resumen-grid">
 
-                </div>
+                        <a th:href="@{/disponibilidad}" class="resumen-item">
+                            <div class="resumen-icon resumen-icon-green">▦</div>
+                            <div class="resumen-data">
+                                <h3>Disponibilidad de equipos</h3>
+                                <p>Consulta qué equipos puedes solicitar.</p>
+                            </div>
+                        </a>
 
-            </section>
+                        <a th:href="@{/mi-historial}" class="resumen-item">
+                            <div class="resumen-icon resumen-icon-blue">◷</div>
+                            <div class="resumen-data">
+                                <h3>Mi historial de préstamos</h3>
+                                <p>Consulta tus préstamos anteriores y activos.</p>
+                            </div>
+                        </a>
 
-        </div>
+                        <a th:href="@{/cambiar-password}" class="resumen-item">
+                            <div class="resumen-icon resumen-icon-purple">⚙</div>
+                            <div class="resumen-data">
+                                <h3>Cambiar contraseña</h3>
+                                <p>Actualiza la contraseña de tu cuenta.</p>
+                            </div>
+                        </a>
+
+                    </div>
+
+                </section>
+
+            </div>
 
 
-        <footer class="page-footer">
-            Sistema de préstamo de equipos · UPIICSA · IPN
-        </footer>
+            <footer class="page-footer">
+                Sistema de préstamo de equipos · UPIICSA · IPN
+            </footer>
 
-    </main>
+        </main>
 
-</div>
+    </div>
 
-<!-- El JavaScript del panel solo se carga para personal administrativo -->
-<script sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')"
-        th:src="@{/inicio.js}"></script>
+    <!-- El JavaScript del panel solo se carga para personal administrativo -->
+    <script sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')" th:src="@{/inicio.js}"></script>
 
 </body>
+
 </html>

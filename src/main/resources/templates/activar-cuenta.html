@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Activar cuenta | Préstamo de equipos UPIICSA</title>
+
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
+    <link rel="stylesheet" href="/login.css">
+    <script src="/activar-cuenta.js" defer></script>
+</head>
+
+<body>
+
+    <main class="login-card">
+
+        <h1>Activar cuenta</h1>
+
+        <p class="subtitulo">
+            Préstamo de equipos · UPIICSA
+        </p>
+
+        <p>
+            Establece una contraseña para terminar de activar tu cuenta.
+        </p>
+
+        <form id="formActivacion">
+
+            <input
+                type="hidden"
+                id="token"
+                th:value="${param.token}"
+            >
+
+            <label for="password">Nueva contraseña</label>
+
+            <input
+                id="password"
+                name="password"
+                type="password"
+                minlength="12"
+                autocomplete="new-password"
+                placeholder="Mínimo 12 caracteres"
+                required
+            >
+
+            <label for="confirmarPassword">Confirmar contraseña</label>
+
+            <input
+                id="confirmarPassword"
+                name="confirmarPassword"
+                type="password"
+                minlength="12"
+                autocomplete="new-password"
+                placeholder="Repite tu contraseña"
+                required
+            >
+
+            <button type="submit" id="btnActivar">
+                Activar mi cuenta
+            </button>
+
+        </form>
+
+        <div id="mensaje" class="mensaje" role="status"></div>
+
+        <p>
+            <a href="/login">Volver al inicio de sesión</a>
+        </p>
+
+    </main>
+
+</body>
+</html>

@@ -1,44 +1,68 @@
 
 package com.proyectoRequerimientos.prestamo_equipos.service;
 
-import java.security.SecureRandom;
-import java.util.Locale;
+import com.proyectoRequerimientos.prestamo_equipos.model.CuentaPersona;
+import com.proyectoRequerimientos.prestamo_equipos.model.Persona;
+import com.proyectoRequerimientos.prestamo_equipos.repository.CuentaPersonaRepository;
+import com.proyectoRequerimientos.prestamo_equipos.repository.EncargadoRepository;
+import com.proyectoRequerimientos.prestamo_equipos.repository.PersonaRepository;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.proyectoRequerimientos.prestamo_equipos.model.CuentaPersona;
-import com.proyectoRequerimientos.prestamo_equipos.model.Persona;
-import com.proyectoRequerimientos.prestamo_equipos.repository.CuentaPersonaRepository;
-import com.proyectoRequerimientos.prestamo_equipos.repository.PersonaRepository;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Locale;
 
 @Service
 public class CuentaPersonaService {
 
     private final CuentaPersonaRepository cuentaRepository;
     private final PersonaRepository personaRepository;
+    private final EncargadoRepository encargadoRepository;
     private final PasswordEncoder passwordEncoder;
-    private final SecureRandom secureRandom = new SecureRandom();
+    private final TokenCuentaService tokenCuentaService;
+    private final CorreoService correoService;
 
-    private static final String CARACTERES =
-            "abcdefghijkmnopqrstuvwxyz23456789";
+    private final SecureRandom secureRandom = new SecureRandom();
 
     public CuentaPersonaService(
             CuentaPersonaRepository cuentaRepository,
             PersonaRepository personaRepository,
-            PasswordEncoder passwordEncoder) {
+            EncargadoRepository encargadoRepository,
+            PasswordEncoder passwordEncoder,
+            TokenCuentaService tokenCuentaService,
+            CorreoService correoService) {
+
         this.cuentaRepository = cuentaRepository;
         this.personaRepository = personaRepository;
+        this.encargadoRepository = encargadoRepository;
         this.passwordEncoder = passwordEncoder;
+        this.tokenCuentaService = tokenCuentaService;
+        this.correoService = correoService;
     }
 
     @Transactional
-    public CredencialesTemporales crearCuenta(Long personaId) {
+    public CuentaPersona crearCuenta(Long personaId, String correo) {
 
         if (personaId == null) {
             throw new IllegalArgumentException(
                     "El identificador de la persona es obligatorio.");
+        }
+
+        if (correo == null || correo.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El correo electrónico es obligatorio.");
+        }
+
+        String correoNormalizado = correo.trim().toLowerCase(Locale.ROOT);
+
+        if (!correoNormalizado.matches(
+                "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+
+            throw new IllegalArgumentException(
+                    "El correo electrónico no tiene un formato válido.");
         }
 
         Persona persona = personaRepository.findById(personaId)
@@ -46,66 +70,55 @@ public class CuentaPersonaService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "La persona no existe o está inactiva."));
 
-        if (cuentaRepository.findByPersona_Id(personaId).isPresent()) {
+        if (!"Alumno".equals(persona.getTipo())) {
             throw new IllegalArgumentException(
-                    "Esta persona ya tiene una cuenta.");
+                    "Solamente se pueden crear cuentas nuevas para alumnos.");
+        }
+
+        if (cuentaRepository.existsByPersona_Id(personaId)) {
+            throw new IllegalArgumentException(
+                    "Esta persona ya tiene una cuenta registrada.");
         }
 
         String usuario = persona.getIdentificador()
-                .trim().toLowerCase(Locale.ROOT);
+                .trim()
+                .toLowerCase(Locale.ROOT);
 
         if (cuentaRepository.existsByUsuarioIgnoreCase(usuario)) {
             throw new IllegalArgumentException(
-                    "El identificador ya está asociado a otra cuenta.");
+                    "Ya existe una cuenta con esa boleta.");
         }
 
-        String passwordTemporal = generarPasswordTemporal();
+        if (cuentaRepository.existsByCorreoIgnoreCase(correoNormalizado)
+                || encargadoRepository.existsByCorreoIgnoreCase(correoNormalizado)) {
+
+            throw new IllegalArgumentException(
+                    "Ese correo electrónico ya está registrado en otra cuenta.");
+        }
 
         CuentaPersona cuenta = new CuentaPersona();
+
         cuenta.setUsuario(usuario);
         cuenta.setPasswordHash(
-                passwordEncoder.encode(passwordTemporal));
+                passwordEncoder.encode(generarPasswordAleatorio()));
         cuenta.setPersona(persona);
+        cuenta.setCorreo(correoNormalizado);
+        cuenta.setCorreoVerificado(false);
+        cuenta.setFechaActivacion(null);
         cuenta.setActivo(true);
         cuenta.setDebeCambiarPassword(true);
 
-        cuentaRepository.save(cuenta);
+        CuentaPersona cuentaGuardada = cuentaRepository.save(cuenta);
 
-        return new CredencialesTemporales(usuario, passwordTemporal);
-    }
+        String token = tokenCuentaService.crearTokenActivacion(
+                cuentaGuardada);
 
-    @Transactional
-    public CredencialesTemporales restablecerPassword(Long personaId) {
+        correoService.enviarActivacion(
+                correoNormalizado,
+                persona.getNombre(),
+                token);
 
-        if (personaId == null) {
-            throw new IllegalArgumentException(
-                    "El identificador de la persona es obligatorio.");
-        }
-
-        Persona persona = personaRepository.findById(personaId)
-                .filter(p -> !Boolean.FALSE.equals(p.getActivo()))
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "La persona no existe o está inactiva."));
-
-        CuentaPersona cuenta = cuentaRepository
-                .findByPersona_Id(personaId)
-                .filter(CuentaPersona::isActivo)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "La persona no tiene una cuenta activa."));
-
-        String passwordTemporal = generarPasswordTemporal();
-
-        cuenta.setPasswordHash(
-                passwordEncoder.encode(passwordTemporal));
-
-        cuenta.setDebeCambiarPassword(true);
-
-        cuentaRepository.save(cuenta);
-
-        return new CredencialesTemporales(
-                cuenta.getUsuario(),
-                passwordTemporal
-        );
+        return cuentaGuardada;
     }
 
     @Transactional
@@ -115,64 +128,55 @@ public class CuentaPersonaService {
             String passwordNueva,
             String confirmarPassword) {
 
-        if (usuario == null || usuario.isBlank()) {
-            throw new IllegalArgumentException(
-                    "No se pudo identificar la cuenta.");
-        }
+        if (passwordNueva == null
+                || passwordNueva.length() < 12) {
 
-        if (passwordActual == null || passwordActual.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Escribe tu contraseña actual.");
-        }
-
-        if (passwordNueva == null || passwordNueva.length() < 12) {
             throw new IllegalArgumentException(
                     "La nueva contraseña debe tener al menos 12 caracteres.");
         }
 
         if (!passwordNueva.equals(confirmarPassword)) {
             throw new IllegalArgumentException(
-                    "Las nuevas contraseñas no coinciden.");
+                    "La confirmación de la contraseña no coincide.");
         }
 
         CuentaPersona cuenta = cuentaRepository
-                .findByUsuarioIgnoreCase(usuario.trim())
+                .findByUsuarioIgnoreCase(usuario)
                 .filter(CuentaPersona::isActivo)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "La cuenta no existe o está inactiva."));
+                        "No se encontró la cuenta."));
 
         if (!passwordEncoder.matches(
-                passwordActual, cuenta.getPasswordHash())) {
+                passwordActual,
+                cuenta.getPasswordHash())) {
+
             throw new IllegalArgumentException(
                     "La contraseña actual es incorrecta.");
         }
 
         if (passwordEncoder.matches(
-                passwordNueva, cuenta.getPasswordHash())) {
+                passwordNueva,
+                cuenta.getPasswordHash())) {
+
             throw new IllegalArgumentException(
-                    "La nueva contraseña debe ser diferente de la actual.");
+                    "La nueva contraseña debe ser diferente a la actual.");
         }
 
-        cuenta.setPasswordHash(passwordEncoder.encode(passwordNueva));
+        cuenta.setPasswordHash(
+                passwordEncoder.encode(passwordNueva));
+
         cuenta.setDebeCambiarPassword(false);
 
         cuentaRepository.save(cuenta);
     }
 
-    private String generarPasswordTemporal() {
+    private String generarPasswordAleatorio() {
 
-        StringBuilder password = new StringBuilder();
+        byte[] bytes = new byte[48];
+        secureRandom.nextBytes(bytes);
 
-        for (int i = 0; i < 8; i++) {
-            int indice = secureRandom.nextInt(CARACTERES.length());
-            password.append(CARACTERES.charAt(indice));
-        }
-
-        return password.toString();
-    }
-
-    public record CredencialesTemporales(
-            String usuario,
-            String passwordTemporal) {
+        return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(bytes);
     }
 }

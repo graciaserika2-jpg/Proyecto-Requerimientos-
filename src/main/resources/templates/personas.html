@@ -1,7 +1,8 @@
 
 <!DOCTYPE html>
 <html lang="es"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
 <head>
     <meta charset="UTF-8">
@@ -10,141 +11,211 @@
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
 
-    <title>Personas | Préstamo de equipos</title>
+    <title>Alumnos | Préstamo de equipos UPIICSA</title>
 
-    <link rel="stylesheet" href="/estilos.css">
+    <link rel="stylesheet" th:href="@{/estilos.css}">
 </head>
 
 <body>
 
-    <div class="app">
+<div class="app">
 
-        <aside class="sidebar">
+    <aside class="sidebar">
 
-            <h2>Préstamo de equipos</h2>
+        <div class="brand">
+            <div class="brand-icon">U</div>
+            <div>
+                <h2>Préstamo de equipos</h2>
+                <p>UPIICSA · IPN</p>
+            </div>
+        </div>
 
-            <nav>
-                <a href="/inicio">Inicio</a>
-                <a href="/inventario">Inventario</a>
-                <a href="/prestamos">Préstamos y devoluciones</a>
-                <a href="/personas" class="active">Personas</a>
-            </nav>
+        <p class="menu-label">MENÚ PRINCIPAL</p>
 
-        </aside>
+        <nav class="menu">
 
-        <main class="main-content">
+            <a th:href="@{/inicio}" class="menu-item">
+                <span>⌂</span>
+                <span>Inicio</span>
+            </a>
 
-            <header>
-                <div>
-                    <h1>Personas</h1>
-                    <p>
-                        Registra alumnos y profesores y crea sus cuentas
-                        para que puedan consultar los equipos disponibles.
-                    </p>
-                </div>
-            </header>
+            <a th:href="@{/inventario}" class="menu-item">
+                <span>▦</span>
+                <span>Inventario</span>
+            </a>
 
-            <section class="card">
+            <a th:href="@{/prestamos}" class="menu-item">
+                <span>⇄</span>
+                <span>Préstamos y devoluciones</span>
+            </a>
 
-                <h2>Registrar persona y crear cuenta</h2>
+            <a th:href="@{/personas}" class="menu-item active">
+                <span>♙</span>
+                <span>Alumnos</span>
+            </a>
 
-                <p>
-                    Al registrar una persona, el sistema generará
-                    automáticamente sus credenciales de acceso.
+            <a th:href="@{/encargados}" class="menu-item"
+               sec:authorize="hasRole('ADMIN')">
+                <span>⚙</span>
+                <span>Administrar encargados</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn-logout">
+                    <span aria-hidden="true">⇥</span>
+                    Cerrar sesión
+                </button>
+            </form>
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="topbar-heading">
+                <p class="breadcrumb">Sistema / Alumnos</p>
+                <h1>Alumnos</h1>
+                <p class="topbar-description">
+                    Administra los registros y cuentas de los alumnos.
                 </p>
+            </div>
+        </header>
 
-                <form id="formPersona">
+        <section class="welcome">
+            <div class="welcome-content">
+                <p class="eyebrow">GESTIÓN DE ALUMNOS</p>
+                <h2>Registro de alumnos</h2>
+                <p>
+                    Registra alumnos y envía un enlace a su correo
+                    para que activen su cuenta y establezcan su contraseña.
+                </p>
+            </div>
 
-                    <label for="nombre">Nombre completo</label>
+            <div class="welcome-icon">♙</div>
+        </section>
 
-                    <input
-                        id="nombre"
-                        name="nombre"
-                        type="text"
-                        required
-                        maxlength="150"
-                        autocomplete="name"
-                        placeholder="Nombre y apellidos">
+        <section class="card">
 
-                    <label for="tipo">Tipo de persona</label>
+            <h2>Registrar alumno</h2>
 
-                    <select id="tipo" name="tipo" required>
-                        <option value="">Selecciona una opción</option>
-                        <option value="Alumno">Alumno</option>
-                        <option value="Profesor">Profesor</option>
-                    </select>
+            <p>
+                El alumno recibirá un correo electrónico con un enlace
+                para activar su cuenta y crear su contraseña.
+            </p>
 
-                    <label id="etiquetaIdentificador" for="identificador">
-                        Boleta o identificador institucional
-                    </label>
+            <form id="formPersona">
 
-                    <input
-                        id="identificador"
-                        name="identificador"
-                        type="text"
-                        required
-                        maxlength="80"
-                        autocomplete="off"
-                        placeholder="Selecciona primero el tipo de persona"
-                        disabled>
-
-                    <small id="ayudaIdentificador">
-                        Selecciona si registrarás un alumno o un profesor.
-                    </small>
-
-                    <button id="botonRegistrar" type="submit">
-                        Registrar persona
-                    </button>
-
-                    <p id="mensaje" role="status" aria-live="polite"></p>
-
-                </form>
-
-            </section>
-
-            <section class="card">
-
-                <h2>Personas registradas</h2>
+                <label for="nombre">Nombre completo</label>
 
                 <input
-                    id="buscarPersona"
-                    type="search"
-                    placeholder="Buscar por nombre o identificador"
-                    aria-label="Buscar personas">
+                    id="nombre"
+                    name="nombre"
+                    type="text"
+                    required
+                    maxlength="150"
+                    autocomplete="name"
+                    placeholder="Nombre y apellidos">
 
-                <div class="table-container">
+                <label for="identificador">
+                    Número de boleta
+                </label>
 
-                    <table>
+                <input
+                    id="identificador"
+                    name="identificador"
+                    type="text"
+                    required
+                    maxlength="10"
+                    pattern="[0-9]{10}"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    placeholder="Ej. 2024630001">
 
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Tipo</th>
-                                <th>Identificador</th>
-                                <th>Cuenta</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
+                <small>
+                    Ingresa los 10 dígitos de la boleta.
+                </small>
 
-                        <tbody id="tablaPersonas">
-                            <tr>
-                                <td colspan="6">Cargando personas...</td>
-                            </tr>
-                        </tbody>
+                <label for="correo">
+                    Correo electrónico
+                </label>
 
-                    </table>
+                <input
+                    id="correo"
+                    name="correo"
+                    type="email"
+                    required
+                    maxlength="254"
+                    autocomplete="email"
+                    placeholder="alumno@ejemplo.com">
 
-                </div>
+                <small>
+                    Revisa que el correo esté escrito correctamente.
+                    Ahí se enviará el enlace de activación.
+                </small>
 
-            </section>
+                <button id="botonRegistrar"
+                        type="submit"
+                        class="btn-primary">
+                    Registrar alumno
+                </button>
 
-        </main>
+                <p id="mensaje"
+                   role="status"
+                   aria-live="polite"></p>
 
-    </div>
+            </form>
 
-    <script src="/personas.js" defer></script>
+        </section>
+
+        <section class="card">
+
+            <h2>Alumnos registrados</h2>
+
+            <input
+                id="buscarPersona"
+                type="search"
+                placeholder="Buscar por ID, nombre, boleta o correo"
+                aria-label="Buscar alumnos">
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Boleta</th>
+                            <th>Correo electrónico</th>
+                            <th>Estado de cuenta</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tablaPersonas">
+                        <tr>
+                            <td colspan="5">Cargando alumnos...</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <footer class="page-footer">
+            Sistema de préstamo de equipos · UPIICSA · IPN
+        </footer>
+
+    </main>
+
+</div>
+
+<script th:src="@{/personas.js}" defer></script>
 
 </body>
-
 </html>

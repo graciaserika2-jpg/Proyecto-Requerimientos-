@@ -1,5 +1,7 @@
+
 package com.proyectoRequerimientos.prestamo_equipos.service;
 
+import com.proyectoRequerimientos.prestamo_equipos.model.CuentaPersona;
 import com.proyectoRequerimientos.prestamo_equipos.model.Persona;
 import com.proyectoRequerimientos.prestamo_equipos.repository.PersonaRepository;
 
@@ -10,16 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class PersonaService {
 
     private final PersonaRepository personaRepository;
     private final CuentaPersonaService cuentaPersonaService;
-
-    private static final Set<String> TIPOS =
-            Set.of("Alumno", "Profesor");
 
     public PersonaService(
             PersonaRepository personaRepository,
@@ -34,6 +32,7 @@ public class PersonaService {
     }
 
     public List<Persona> buscarParaPrestamo(String texto) {
+
         if (texto == null || texto.trim().length() < 2) {
             return List.of();
         }
@@ -45,6 +44,7 @@ public class PersonaService {
     }
 
     public Persona buscarActiva(Long id) {
+
         return personaRepository.findById(id)
                 .filter(p -> !Boolean.FALSE.equals(p.getActivo()))
                 .orElseThrow(() -> new ResponseStatusException(
@@ -52,79 +52,73 @@ public class PersonaService {
                         "Persona no encontrada"));
     }
 
-    public Persona guardarPersona(Persona persona) {
+    @Transactional
+    public RegistroConCuenta registrarPersonaConCuenta(
+            Persona persona,
+            String correo) {
 
-        validarPersona(persona);
+        validarAlumnoNuevo(persona);
 
         persona.setActivo(true);
 
-        return personaRepository.save(persona);
+        Persona personaGuardada = personaRepository.save(persona);
+
+        CuentaPersona cuenta = cuentaPersonaService.crearCuenta(
+                personaGuardada.getId(),
+                correo
+        );
+
+        return new RegistroConCuenta(
+                personaGuardada,
+                cuenta.getCorreo(),
+                cuenta.getCorreoVerificado()
+        );
     }
 
-    @Transactional
-    public RegistroConCuenta registrarPersonaConCuenta(Persona persona) {
-
-        Persona personaGuardada = guardarPersona(persona);
-
-        CuentaPersonaService.CredencialesTemporales credenciales =
-                cuentaPersonaService.crearCuenta(personaGuardada.getId());
-
-        return new RegistroConCuenta(personaGuardada, credenciales);
-    }
-
-    private void validarPersona(Persona persona) {
+    private void validarAlumnoNuevo(Persona persona) {
 
         if (persona == null) {
             throw new IllegalArgumentException(
-                    "Los datos de la persona son obligatorios.");
+                    "Los datos del alumno son obligatorios.");
         }
 
         if (persona.getNombre() == null
                 || persona.getNombre().isBlank()) {
 
             throw new IllegalArgumentException(
-                    "El nombre de la persona es obligatorio.");
+                    "El nombre del alumno es obligatorio.");
         }
 
-        if (persona.getTipo() == null
-                || !TIPOS.contains(persona.getTipo().trim())) {
-
+        if (!"Alumno".equals(persona.getTipo())) {
             throw new IllegalArgumentException(
-                    "El tipo debe ser Alumno o Profesor.");
+                    "Solamente se pueden registrar alumnos nuevos.");
         }
 
         if (persona.getIdentificador() == null
-                || persona.getIdentificador().isBlank()) {
+                || !persona.getIdentificador().trim()
+                .matches("[0-9]{10}")) {
 
             throw new IllegalArgumentException(
-                    "La boleta o el identificador institucional es obligatorio.");
-        }
-
-        String tipo = persona.getTipo().trim();
-        String identificador = persona.getIdentificador().trim();
-
-        if ("Alumno".equals(tipo)
-                && !identificador.matches("[0-9]{10}")) {
-
-            throw new IllegalArgumentException(
-                    "La boleta debe contener exactamente 10 dígitos, sin letras, espacios ni símbolos.");
+                    "La boleta debe contener exactamente 10 dígitos.");
         }
 
         persona.setNombre(persona.getNombre().trim());
-        persona.setTipo(tipo);
-        persona.setIdentificador(identificador);
+        persona.setTipo("Alumno");
+        persona.setIdentificador(
+                persona.getIdentificador().trim());
 
         if (personaRepository.existsByIdentificadorIgnoreCase(
-                identificador)) {
+                persona.getIdentificador())) {
 
             throw new IllegalArgumentException(
-                    "Ese identificador ya está registrado.");
+                    "Esa boleta ya está registrada.");
         }
     }
 
     public record RegistroConCuenta(
             Persona persona,
-            CuentaPersonaService.CredencialesTemporales credenciales
+            String correo,
+            Boolean correoVerificado
     ) {
     }
 }

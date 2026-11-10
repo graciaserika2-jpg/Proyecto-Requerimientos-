@@ -1,179 +1,179 @@
 
-const formulario = document.getElementById("formularioEncargado");
-const mensaje = document.getElementById("mensaje");
-const lista = document.getElementById("listaEncargados");
-const botonActualizar = document.getElementById("btnActualizar");
-const botonCrear = document.getElementById("btnCrearEncargado");
+document.addEventListener("DOMContentLoaded", () => {
 
-const panelCredenciales = document.getElementById("panelCredenciales");
-const nombreGenerado = document.getElementById("nombreGenerado");
-const usuarioGenerado = document.getElementById("usuarioGenerado");
-const passwordGenerado = document.getElementById("passwordGenerado");
-const botonCopiar = document.getElementById("btnCopiarCredenciales");
-const mensajeCopia = document.getElementById("mensajeCopia");
+    const formulario = document.getElementById("formularioEncargado");
+    const mensaje = document.getElementById("mensaje");
+    const lista = document.getElementById("listaEncargados");
+    const botonActualizar = document.getElementById("btnActualizar");
+    const botonCrear = document.getElementById("btnCrearEncargado");
 
 
-async function cargarEncargados() {
+    // =====================================================
+    // CARGAR ENCARGADOS
+    // =====================================================
 
-    lista.replaceChildren();
+    async function cargarEncargados() {
 
-    try {
+        lista.replaceChildren();
 
-        const respuesta = await fetch("/api/encargados");
+        try {
 
-        if (!respuesta.ok) {
-            throw new Error("No se pudo consultar la lista de encargados.");
-        }
+            const respuesta = await fetch("/api/encargados");
 
-        const encargados = await respuesta.json();
+            if (!respuesta.ok) {
+                throw new Error(
+                    "No se pudo consultar la lista de encargados."
+                );
+            }
 
-        if (encargados.length === 0) {
+            const encargados = await respuesta.json();
 
-            const fila = document.createElement("tr");
-            const celda = document.createElement("td");
+            if (encargados.length === 0) {
 
-            celda.colSpan = 3;
-            celda.textContent = "Todavía no hay encargados registrados.";
-
-            fila.appendChild(celda);
-            lista.appendChild(fila);
-
-            return;
-        }
-
-        encargados.forEach(encargado => {
-
-            const fila = document.createElement("tr");
-
-            [
-                encargado.nombre,
-                encargado.usuario,
-                encargado.rol
-            ].forEach(valor => {
-
+                const fila = document.createElement("tr");
                 const celda = document.createElement("td");
 
-                celda.textContent = valor ?? "";
+                celda.colSpan = 5;
+                celda.textContent =
+                    "Todavía no hay encargados registrados.";
 
                 fila.appendChild(celda);
+                lista.appendChild(fila);
+
+                return;
+            }
+
+            encargados.forEach(encargado => {
+
+                const fila = document.createElement("tr");
+
+                const estadoActivacion =
+                    encargado.correoVerificado === true
+                        ? "Activada"
+                        : "Pendiente de activación";
+
+                const valores = [
+                    encargado.nombre,
+                    encargado.usuario,
+                    encargado.correo,
+                    encargado.rol,
+                    estadoActivacion
+                ];
+
+                valores.forEach(valor => {
+
+                    const celda = document.createElement("td");
+
+                    celda.textContent = valor ?? "No registrado";
+
+                    fila.appendChild(celda);
+                });
+
+                lista.appendChild(fila);
             });
 
-            lista.appendChild(fila);
-        });
+        } catch (error) {
 
-    } catch (error) {
-
-        mensaje.textContent = error.message;
-    }
-}
-
-
-// REGISTRAR ENCARGADO
-formulario.addEventListener("submit", async evento => {
-
-    evento.preventDefault();
-
-    mensaje.textContent = "";
-    mensajeCopia.textContent = "";
-    panelCredenciales.hidden = true;
-
-    const datos = {
-        nombre: formulario.nombre.value.trim(),
-        usuario: formulario.usuario.value.trim()
-    };
-
-    botonCrear.disabled = true;
-    botonCrear.textContent = "Creando cuenta...";
-
-    try {
-
-        // Obtener el token CSRF de Spring Security.
-        const tokenMeta = document.querySelector('meta[name="_csrf"]');
-        const headerMeta = document.querySelector('meta[name="_csrf_header"]');
-
-        if (!tokenMeta || !headerMeta) {
-            throw new Error(
-                "No se encontró el token de seguridad CSRF. Revisa encargados.html."
-            );
+            mensaje.textContent = error.message;
         }
+    }
 
-        const token = tokenMeta.content;
-        const nombreHeader = headerMeta.content;
 
-        const respuesta = await fetch("/api/encargados", {
+    // =====================================================
+    // REGISTRAR ENCARGADO
+    // =====================================================
 
-            method: "POST",
+    formulario.addEventListener("submit", async evento => {
 
-            headers: {
-                "Content-Type": "application/json",
-                [nombreHeader]: token
-            },
+        evento.preventDefault();
 
-            body: JSON.stringify(datos)
-        });
+        mensaje.textContent = "";
 
-        const resultado = await respuesta.json().catch(() => ({}));
+        const datos = {
 
-        if (!respuesta.ok) {
+            nombre: formulario.nombre.value.trim(),
 
-            throw new Error(
-                resultado.detail ||
-                resultado.error ||
-                resultado.message ||
-                `No se pudo crear la cuenta (HTTP ${respuesta.status}).`
-            );
+            usuario: formulario.usuario.value.trim(),
+
+            correo: formulario.correo.value.trim()
+        };
+
+        botonCrear.disabled = true;
+        botonCrear.textContent = "Registrando...";
+
+        try {
+
+            // Obtener token CSRF de Spring Security.
+
+            const tokenMeta =
+                document.querySelector('meta[name="_csrf"]');
+
+            const headerMeta =
+                document.querySelector('meta[name="_csrf_header"]');
+
+            if (!tokenMeta || !headerMeta) {
+
+                throw new Error(
+                    "No se encontró el token CSRF. Revisa encargados.html."
+                );
+            }
+
+            const respuesta = await fetch("/api/encargados", {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type": "application/json",
+
+                    [headerMeta.content]: tokenMeta.content
+                },
+
+                body: JSON.stringify(datos)
+            });
+
+            const resultado = await respuesta.json().catch(() => ({}));
+
+            if (!respuesta.ok) {
+
+                throw new Error(
+                    resultado.detail ||
+                    resultado.message ||
+                    resultado.error ||
+                    `No se pudo registrar el encargado (HTTP ${respuesta.status}).`
+                );
+            }
+
+            mensaje.textContent = resultado.mensaje ||
+                "Encargado registrado correctamente.";
+
+            formulario.reset();
+
+            await cargarEncargados();
+
+        } catch (error) {
+
+            mensaje.textContent = error.message;
+
+        } finally {
+
+            botonCrear.disabled = false;
+            botonCrear.textContent = "Registrar encargado";
         }
+    });
 
-        // Mostrar las credenciales generadas.
-        nombreGenerado.textContent = resultado.nombre;
-        usuarioGenerado.textContent = resultado.usuario;
-        passwordGenerado.textContent = resultado.passwordTemporal;
 
-        panelCredenciales.hidden = false;
+    // =====================================================
+    // ACTUALIZAR LISTA
+    // =====================================================
 
-        mensaje.textContent = resultado.mensaje;
+    botonActualizar.addEventListener("click", cargarEncargados);
 
-        formulario.reset();
 
-        await cargarEncargados();
+    // =====================================================
+    // CARGA INICIAL
+    // =====================================================
 
-    } catch (error) {
+    cargarEncargados();
 
-        mensaje.textContent = error.message;
-
-    } finally {
-
-        botonCrear.disabled = false;
-        botonCrear.textContent = "Crear cuenta";
-    }
 });
-
-
-// COPIAR CREDENCIALES
-botonCopiar.addEventListener("click", async () => {
-
-    const texto = 
-        "Nombre: " + nombreGenerado.textContent + "\n" +
-        "Usuario: " + usuarioGenerado.textContent + "\n" +
-        "Contraseña temporal: " + passwordGenerado.textContent;
-
-    try {
-
-        await navigator.clipboard.writeText(texto);
-
-        mensajeCopia.textContent = "Credenciales copiadas correctamente.";
-
-    } catch (error) {
-
-        mensajeCopia.textContent =
-            "No se pudieron copiar automáticamente. Puedes seleccionar y copiar las credenciales manualmente.";
-    }
-});
-
-
-// ACTUALIZAR LISTA
-botonActualizar.addEventListener("click", cargarEncargados);
-
-
-// CARGA INICIAL
-cargarEncargados();

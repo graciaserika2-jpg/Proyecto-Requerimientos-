@@ -1,3 +1,4 @@
+
 package com.proyectoRequerimientos.prestamo_equipos.controller;
 
 import org.springframework.stereotype.Controller;
@@ -49,5 +50,23 @@ public class PaginaController {
     @GetMapping("/mi-historial")
     public String mostrarMiHistorial() {
         return "mi-historial";
+    }
+
+    // Activación de cuentas.
+    @GetMapping("/activar-cuenta")
+    public String mostrarActivarCuenta() {
+        return "activar-cuenta";
+    }
+
+    // Solicitud de recuperación de contraseña.
+    @GetMapping("/olvide-password")
+    public String mostrarOlvidePassword() {
+        return "olvide-password";
+    }
+
+    // Formulario para establecer una contraseña nueva.
+    @GetMapping("/restablecer-password")
+    public String mostrarRestablecerPassword() {
+        return "restablecer-password";
     }
 }

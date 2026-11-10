@@ -16,4 +16,9 @@ public interface CuentaPersonaRepository
     boolean existsByUsuarioIgnoreCase(String usuario);
 
     boolean existsByPersona_Id(Long personaId);
+
+    // Consultas por correo electrónico
+    boolean existsByCorreoIgnoreCase(String correo);
+
+    Optional<CuentaPersona> findByCorreoIgnoreCase(String correo);
 }

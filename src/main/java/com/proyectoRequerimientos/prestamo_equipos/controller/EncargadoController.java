@@ -42,25 +42,42 @@ public class EncargadoController {
         }
 
         try {
-            EncargadoService.CredencialesTemporales credenciales =
-                    encargadoService.crearEncargado(
-                            solicitud.usuario(),
-                            solicitud.nombre()
-                    );
+
+            Encargado encargado = encargadoService.crearEncargado(
+                    solicitud.usuario(),
+                    solicitud.nombre(),
+                    solicitud.correo()
+            );
 
             return Map.of(
-                    "mensaje", "Encargado registrado correctamente.",
-                    "id", credenciales.id(),
-                    "nombre", credenciales.nombre(),
-                    "usuario", credenciales.usuario(),
-                    "rol", credenciales.rol(),
-                    "passwordTemporal", credenciales.passwordTemporal()
+                    "mensaje",
+                    "Encargado registrado. Se ha enviado un enlace de activación a su correo.",
+
+                    "id",
+                    encargado.getId(),
+
+                    "nombre",
+                    encargado.getNombre(),
+
+                    "usuario",
+                    encargado.getUsuario(),
+
+                    "correo",
+                    encargado.getCorreo(),
+
+                    "correoVerificado",
+                    Boolean.TRUE.equals(encargado.getCorreoVerificado()),
+
+                    "rol",
+                    encargado.getRol()
             );
 
         } catch (IllegalArgumentException e) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    e.getMessage());
+                    e.getMessage()
+            );
         }
     }
 }

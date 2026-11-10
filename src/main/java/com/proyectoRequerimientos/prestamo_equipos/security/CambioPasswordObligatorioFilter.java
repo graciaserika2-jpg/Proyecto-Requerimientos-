@@ -74,9 +74,18 @@ public class CambioPasswordObligatorioFilter extends OncePerRequestFilter {
                 boolean rutaPermitida =
                         ruta.equals("/cambiar-password")
                         || ruta.equals("/api/mi-cuenta/cambiar-password")
+                        || ruta.equals("/activar-cuenta")
+                        || ruta.equals("/olvide-password")
+                        || ruta.equals("/restablecer-password")
+                        || ruta.equals("/api/cuentas/activar")
+                        || ruta.equals("/api/cuentas/solicitar-recuperacion")
+                        || ruta.equals("/api/cuentas/restablecer-password")
                         || ruta.equals("/estilos.css")
                         || ruta.equals("/login.css")
                         || ruta.equals("/cambiar-password.js")
+                        || ruta.equals("/activar-cuenta.js")
+                        || ruta.equals("/olvide-password.js")
+                        || ruta.equals("/restablecer-password.js")
                         || ruta.equals("/favicon.ico")
                         || ruta.equals("/logout");
 

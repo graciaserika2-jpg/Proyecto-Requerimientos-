@@ -16,31 +16,43 @@ public class EncargadoService {
 
     private final EncargadoRepository encargadoRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TokenCuentaService tokenCuentaService;
+    private final CorreoService correoService;
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private static final String CARACTERES =
-            "abcdefghijkmnopqrstuvwxyz23456789";
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     public EncargadoService(
             EncargadoRepository encargadoRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            TokenCuentaService tokenCuentaService,
+            CorreoService correoService) {
 
         this.encargadoRepository = encargadoRepository;
         this.passwordEncoder = passwordEncoder;
+        this.tokenCuentaService = tokenCuentaService;
+        this.correoService = correoService;
     }
 
     public List<Encargado> listarEncargados() {
+
         return encargadoRepository.findAll()
                 .stream()
                 .filter(Encargado::isActivo)
                 .toList();
     }
 
+    // =====================================================
+    // REGISTRAR ENCARGADO Y ENVIAR ACTIVACIÓN
+    // =====================================================
+
     @Transactional
-    public CredencialesTemporales crearEncargado(
+    public Encargado crearEncargado(
             String usuario,
-            String nombre) {
+            String nombre,
+            String correo) {
 
         if (usuario == null || usuario.isBlank()) {
             throw new IllegalArgumentException(
@@ -52,7 +64,21 @@ public class EncargadoService {
                     "El nombre completo es obligatorio.");
         }
 
+        if (correo == null || correo.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El correo electrónico es obligatorio.");
+        }
+
         String usuarioLimpio = usuario.trim();
+        String nombreLimpio = nombre.trim();
+        String correoLimpio = correo.trim().toLowerCase();
+
+        if (!correoLimpio.matches(
+                "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+
+            throw new IllegalArgumentException(
+                    "Escribe un correo electrónico válido.");
+        }
 
         if (encargadoRepository
                 .findByUsuarioIgnoreCase(usuarioLimpio)
@@ -62,31 +88,49 @@ public class EncargadoService {
                     "Ese nombre de usuario ya está registrado.");
         }
 
-        String passwordTemporal = generarPasswordTemporal();
+        if (encargadoRepository
+                .existsByCorreoIgnoreCase(correoLimpio)) {
+
+            throw new IllegalArgumentException(
+                    "Ese correo ya está registrado en otra cuenta.");
+        }
 
         Encargado encargado = new Encargado();
 
         encargado.setUsuario(usuarioLimpio);
-        encargado.setNombre(nombre.trim());
+        encargado.setNombre(nombreLimpio);
+
+        // Se guarda una contraseña aleatoria que nadie conoce.
         encargado.setPasswordHash(
-                passwordEncoder.encode(passwordTemporal));
+                passwordEncoder.encode(generarPasswordAleatoria()));
+
         encargado.setRol("ENCARGADO");
         encargado.setActivo(true);
-
-        // El encargado deberá cambiar su contraseña al iniciar sesión.
         encargado.setDebeCambiarPassword(true);
+
+        encargado.setCorreo(correoLimpio);
+        encargado.setCorreoVerificado(false);
 
         Encargado encargadoGuardado =
                 encargadoRepository.save(encargado);
 
-        return new CredencialesTemporales(
-                encargadoGuardado.getId(),
-                encargadoGuardado.getNombre(),
-                encargadoGuardado.getUsuario(),
-                encargadoGuardado.getRol(),
-                passwordTemporal
+        // Crear enlace de activación.
+        String token = tokenCuentaService
+                .crearTokenActivacion(encargadoGuardado);
+
+        // Enviar correo al encargado.
+        correoService.enviarActivacion(
+                correoLimpio,
+                nombreLimpio,
+                token
         );
+
+        return encargadoGuardado;
     }
+
+    // =====================================================
+    // CAMBIAR CONTRASEÑA
+    // =====================================================
 
     @Transactional
     public void cambiarPassword(
@@ -143,25 +187,21 @@ public class EncargadoService {
         encargadoRepository.save(encargado);
     }
 
-    private String generarPasswordTemporal() {
+    // =====================================================
+    // GENERAR CONTRASEÑA ALEATORIA INTERNA
+    // =====================================================
+
+    private String generarPasswordAleatoria() {
 
         StringBuilder password = new StringBuilder();
 
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 32; i++) {
+
             int posicion = RANDOM.nextInt(CARACTERES.length());
 
             password.append(CARACTERES.charAt(posicion));
         }
 
         return password.toString();
-    }
-
-    public record CredencialesTemporales(
-            Long id,
-            String nombre,
-            String usuario,
-            String rol,
-            String passwordTemporal
-    ) {
     }
 }

@@ -10,4 +10,9 @@ public interface EncargadoRepository
         extends JpaRepository<Encargado, Long> {
 
     Optional<Encargado> findByUsuarioIgnoreCase(String usuario);
+
+    // Consultas por correo electrónico
+    boolean existsByCorreoIgnoreCase(String correo);
+
+    Optional<Encargado> findByCorreoIgnoreCase(String correo);
 }

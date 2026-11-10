@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectoRequerimientos.prestamo_equipos.model.Persona;
 import com.proyectoRequerimientos.prestamo_equipos.repository.CuentaPersonaRepository;
-import com.proyectoRequerimientos.prestamo_equipos.service.CuentaPersonaService;
 import com.proyectoRequerimientos.prestamo_equipos.service.PersonaService;
 
 @RestController
@@ -22,16 +20,13 @@ import com.proyectoRequerimientos.prestamo_equipos.service.PersonaService;
 public class PersonaController {
 
     private final PersonaService personaService;
-    private final CuentaPersonaService cuentaPersonaService;
     private final CuentaPersonaRepository cuentaPersonaRepository;
 
     public PersonaController(
             PersonaService personaService,
-            CuentaPersonaService cuentaPersonaService,
             CuentaPersonaRepository cuentaPersonaRepository) {
 
         this.personaService = personaService;
-        this.cuentaPersonaService = cuentaPersonaService;
         this.cuentaPersonaRepository = cuentaPersonaRepository;
     }
 
@@ -45,14 +40,26 @@ public class PersonaController {
 
         return personaService.listarPersonas()
                 .stream()
-                .map(persona -> new PersonaConCuenta(
-                        persona.getId(),
-                        persona.getNombre(),
-                        persona.getTipo(),
-                        persona.getIdentificador(),
-                        cuentaPersonaRepository.existsByPersona_Id(
-                                persona.getId())
-                ))
+                .map(persona -> cuentaPersonaRepository
+                        .findByPersona_Id(persona.getId())
+                        .map(cuenta -> new PersonaConCuenta(
+                                persona.getId(),
+                                persona.getNombre(),
+                                persona.getTipo(),
+                                persona.getIdentificador(),
+                                true,
+                                cuenta.getCorreo(),
+                                cuenta.getCorreoVerificado()
+                        ))
+                        .orElseGet(() -> new PersonaConCuenta(
+                                persona.getId(),
+                                persona.getNombre(),
+                                persona.getTipo(),
+                                persona.getIdentificador(),
+                                false,
+                                null,
+                                null
+                        )))
                 .toList();
     }
 
@@ -63,39 +70,38 @@ public class PersonaController {
         return personaService.buscarParaPrestamo(texto);
     }
 
-    @PostMapping
-    public Persona guardarPersona(
-            @RequestBody Persona persona) {
-
-        return personaService.guardarPersona(persona);
-    }
-
     @PostMapping("/registro-completo")
-    public PersonaService.RegistroConCuenta registrarPersonaConCuenta(
-            @RequestBody Persona persona) {
-
-        return personaService.registrarPersonaConCuenta(persona);
-    }
-
-    @PostMapping("/{id}/cuenta")
-    public CuentaPersonaService.CredencialesTemporales crearCuenta(
-            @PathVariable Long id) {
-
-        return cuentaPersonaService.crearCuenta(id);
-    }
-
-    @PostMapping("/{id}/restablecer-password")
-    public ResponseEntity<?> restablecerPassword(
-            @PathVariable Long id) {
+    public ResponseEntity<?> registrarPersonaConCuenta(
+            @RequestBody RegistroPersonaRequest solicitud) {
 
         try {
-            return ResponseEntity.ok(
-                    cuentaPersonaService.restablecerPassword(id));
+            Persona persona = new Persona();
+
+            persona.setNombre(solicitud.nombre());
+            persona.setTipo(solicitud.tipo());
+            persona.setIdentificador(solicitud.identificador());
+
+            PersonaService.RegistroConCuenta resultado =
+                    personaService.registrarPersonaConCuenta(
+                            persona,
+                            solicitud.correo()
+                    );
+
+            return ResponseEntity.ok(resultado);
 
         } catch (IllegalArgumentException e) {
+
             return ResponseEntity.badRequest()
                     .body(new Respuesta(e.getMessage()));
         }
+    }
+
+    public record RegistroPersonaRequest(
+            String nombre,
+            String tipo,
+            String identificador,
+            String correo
+    ) {
     }
 
     public record PersonaConCuenta(
@@ -103,7 +109,9 @@ public class PersonaController {
             String nombre,
             String tipo,
             String identificador,
-            boolean tieneCuenta
+            boolean tieneCuenta,
+            String correo,
+            Boolean correoVerificado
     ) {
     }
 
