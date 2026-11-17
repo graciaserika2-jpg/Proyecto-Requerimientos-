@@ -1,8 +1,6 @@
-
 <!DOCTYPE html>
-<html lang="es"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
 <head>
     <meta charset="UTF-8">
@@ -18,204 +16,181 @@
 
 <body>
 
-<div class="app">
+    <div class="app">
 
-    <aside class="sidebar">
+        <aside class="sidebar">
 
-        <div class="brand">
-            <div class="brand-icon">U</div>
-            <div>
-                <h2>Préstamo de equipos</h2>
-                <p>UPIICSA · IPN</p>
+            <div class="brand">
+                <div class="brand-icon">U</div>
+                <div>
+                    <h2>Préstamo de equipos</h2>
+                    <p>UPIICSA · IPN</p>
+                </div>
             </div>
-        </div>
 
-        <p class="menu-label">MENÚ PRINCIPAL</p>
+            <p class="menu-label">MENÚ PRINCIPAL</p>
 
-        <nav class="menu">
+            <nav class="menu">
 
-            <a th:href="@{/inicio}" class="menu-item">
-                <span>⌂</span>
-                <span>Inicio</span>
-            </a>
+                <a th:href="@{/inicio}" class="menu-item">
+                    <span>⌂</span>
+                    <span>Inicio</span>
+                </a>
 
-            <a th:href="@{/inventario}" class="menu-item">
-                <span>▦</span>
-                <span>Inventario</span>
-            </a>
+                <a th:href="@{/inventario}" class="menu-item">
+                    <span>▦</span>
+                    <span>Inventario</span>
+                </a>
 
-            <a th:href="@{/prestamos}" class="menu-item">
-                <span>⇄</span>
-                <span>Préstamos y devoluciones</span>
-            </a>
+                <a th:href="@{/prestamos}" class="menu-item">
+                    <span>⇄</span>
+                    <span>Préstamos y devoluciones</span>
+                </a>
+                <a th:href="@{/bloqueos}" class="menu-item">
+                    <span>⊘</span>
+                    <span>Bloqueos administrativos</span>
+                </a>
 
-            <a th:href="@{/personas}" class="menu-item active">
-                <span>♙</span>
-                <span>Alumnos</span>
-            </a>
+                <a th:href="@{/personas}" class="menu-item active">
+                    <span>♙</span>
+                    <span>Alumnos</span>
+                </a>
 
-            <a th:href="@{/encargados}" class="menu-item"
-               sec:authorize="hasRole('ADMIN')">
-                <span>⚙</span>
-                <span>Administrar encargados</span>
-            </a>
+                <a th:href="@{/encargados}" class="menu-item" sec:authorize="hasRole('ADMIN')">
+                    <span>⚙</span>
+                    <span>Administrar encargados</span>
+                </a>
 
-        </nav>
+            </nav>
 
-        <div class="sidebar-footer">
-            <form th:action="@{/logout}" method="post">
-                <button type="submit" class="btn-logout">
-                    <span aria-hidden="true">⇥</span>
-                    Cerrar sesión
-                </button>
-            </form>
-        </div>
-
-    </aside>
-
-    <main class="main-content">
-
-        <header class="topbar">
-            <div class="topbar-heading">
-                <p class="breadcrumb">Sistema / Alumnos</p>
-                <h1>Alumnos</h1>
-                <p class="topbar-description">
-                    Administra los registros y cuentas de los alumnos.
-                </p>
+            <div class="sidebar-footer">
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn-logout">
+                        <span aria-hidden="true">⇥</span>
+                        Cerrar sesión
+                    </button>
+                </form>
             </div>
-        </header>
 
-        <section class="welcome">
-            <div class="welcome-content">
-                <p class="eyebrow">GESTIÓN DE ALUMNOS</p>
-                <h2>Registro de alumnos</h2>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+                <div class="topbar-heading">
+                    <p class="breadcrumb">Sistema / Alumnos</p>
+                    <h1>Alumnos</h1>
+                    <p class="topbar-description">
+                        Administra los registros y cuentas de los alumnos.
+                    </p>
+                </div>
+            </header>
+
+            <section class="welcome">
+                <div class="welcome-content">
+                    <p class="eyebrow">GESTIÓN DE ALUMNOS</p>
+                    <h2>Registro de alumnos</h2>
+                    <p>
+                        Registra alumnos y envía un enlace a su correo
+                        para que activen su cuenta y establezcan su contraseña.
+                    </p>
+                </div>
+
+                <div class="welcome-icon">♙</div>
+            </section>
+
+            <section class="card">
+
+                <h2>Registrar alumno</h2>
+
                 <p>
-                    Registra alumnos y envía un enlace a su correo
-                    para que activen su cuenta y establezcan su contraseña.
+                    El alumno recibirá un correo electrónico con un enlace
+                    para activar su cuenta y crear su contraseña.
                 </p>
-            </div>
 
-            <div class="welcome-icon">♙</div>
-        </section>
+                <form id="formPersona">
 
-        <section class="card">
+                    <label for="nombre">Nombre completo</label>
 
-            <h2>Registrar alumno</h2>
+                    <input id="nombre" name="nombre" type="text" required maxlength="150" autocomplete="name"
+                        placeholder="Nombre y apellidos">
 
-            <p>
-                El alumno recibirá un correo electrónico con un enlace
-                para activar su cuenta y crear su contraseña.
-            </p>
+                    <label for="identificador">
+                        Número de boleta
+                    </label>
 
-            <form id="formPersona">
+                    <input id="identificador" name="identificador" type="text" required maxlength="10"
+                        pattern="[0-9]{10}" inputmode="numeric" autocomplete="off" placeholder="Ej. 2024630001">
 
-                <label for="nombre">Nombre completo</label>
+                    <small>
+                        Ingresa los 10 dígitos de la boleta.
+                    </small>
 
-                <input
-                    id="nombre"
-                    name="nombre"
-                    type="text"
-                    required
-                    maxlength="150"
-                    autocomplete="name"
-                    placeholder="Nombre y apellidos">
+                    <label for="correo">
+                        Correo electrónico
+                    </label>
 
-                <label for="identificador">
-                    Número de boleta
-                </label>
+                    <input id="correo" name="correo" type="email" required maxlength="254" autocomplete="email"
+                        placeholder="alumno@ejemplo.com">
 
-                <input
-                    id="identificador"
-                    name="identificador"
-                    type="text"
-                    required
-                    maxlength="10"
-                    pattern="[0-9]{10}"
-                    inputmode="numeric"
-                    autocomplete="off"
-                    placeholder="Ej. 2024630001">
+                    <small>
+                        Revisa que el correo esté escrito correctamente.
+                        Ahí se enviará el enlace de activación.
+                    </small>
 
-                <small>
-                    Ingresa los 10 dígitos de la boleta.
-                </small>
+                    <button id="botonRegistrar" type="submit" class="btn-primary">
+                        Registrar alumno
+                    </button>
 
-                <label for="correo">
-                    Correo electrónico
-                </label>
+                    <p id="mensaje" role="status" aria-live="polite"></p>
 
-                <input
-                    id="correo"
-                    name="correo"
-                    type="email"
-                    required
-                    maxlength="254"
-                    autocomplete="email"
-                    placeholder="alumno@ejemplo.com">
+                </form>
 
-                <small>
-                    Revisa que el correo esté escrito correctamente.
-                    Ahí se enviará el enlace de activación.
-                </small>
+            </section>
 
-                <button id="botonRegistrar"
-                        type="submit"
-                        class="btn-primary">
-                    Registrar alumno
-                </button>
+            <section class="card">
 
-                <p id="mensaje"
-                   role="status"
-                   aria-live="polite"></p>
+                <h2>Alumnos registrados</h2>
 
-            </form>
+                <input id="buscarPersona" type="search" placeholder="Buscar por ID, nombre, boleta o correo"
+                    aria-label="Buscar alumnos">
 
-        </section>
+                <div class="table-container">
 
-        <section class="card">
+                    <table>
 
-            <h2>Alumnos registrados</h2>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Boleta</th>
+                                <th>Correo electrónico</th>
+                                <th>Estado de cuenta</th>
+                            </tr>
+                        </thead>
 
-            <input
-                id="buscarPersona"
-                type="search"
-                placeholder="Buscar por ID, nombre, boleta o correo"
-                aria-label="Buscar alumnos">
+                        <tbody id="tablaPersonas">
+                            <tr>
+                                <td colspan="5">Cargando alumnos...</td>
+                            </tr>
+                        </tbody>
 
-            <div class="table-container">
+                    </table>
 
-                <table>
+                </div>
 
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Boleta</th>
-                            <th>Correo electrónico</th>
-                            <th>Estado de cuenta</th>
-                        </tr>
-                    </thead>
+            </section>
 
-                    <tbody id="tablaPersonas">
-                        <tr>
-                            <td colspan="5">Cargando alumnos...</td>
-                        </tr>
-                    </tbody>
+            <footer class="page-footer">
+                Sistema de préstamo de equipos · UPIICSA · IPN
+            </footer>
 
-                </table>
+        </main>
 
-            </div>
+    </div>
 
-        </section>
-
-        <footer class="page-footer">
-            Sistema de préstamo de equipos · UPIICSA · IPN
-        </footer>
-
-    </main>
-
-</div>
-
-<script th:src="@{/personas.js}" defer></script>
+    <script th:src="@{/personas.js}" defer></script>
 
 </body>
+
 </html>

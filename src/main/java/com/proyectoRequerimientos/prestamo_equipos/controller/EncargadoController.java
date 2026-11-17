@@ -1,6 +1,7 @@
 
 package com.proyectoRequerimientos.prestamo_equipos.controller;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -26,10 +27,18 @@ public class EncargadoController {
         this.encargadoService = encargadoService;
     }
 
+    // =====================================================
+    // LISTAR ENCARGADOS
+    // =====================================================
+
     @GetMapping
     public List<Encargado> listarEncargados() {
         return encargadoService.listarEncargados();
     }
+
+    // =====================================================
+    // REGISTRAR ENCARGADO
+    // =====================================================
 
     @PostMapping
     public Map<String, Object> crearEncargado(
@@ -52,24 +61,62 @@ public class EncargadoController {
             return Map.of(
                     "mensaje",
                     "Encargado registrado. Se ha enviado un enlace de activación a su correo.",
-
-                    "id",
-                    encargado.getId(),
-
-                    "nombre",
-                    encargado.getNombre(),
-
-                    "usuario",
-                    encargado.getUsuario(),
-
-                    "correo",
-                    encargado.getCorreo(),
-
+                    "id", encargado.getId(),
+                    "nombre", encargado.getNombre(),
+                    "usuario", encargado.getUsuario(),
+                    "correo", encargado.getCorreo(),
                     "correoVerificado",
                     Boolean.TRUE.equals(encargado.getCorreoVerificado()),
+                    "rol", encargado.getRol()
+            );
 
-                    "rol",
-                    encargado.getRol()
+        } catch (IllegalArgumentException e) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    e.getMessage()
+            );
+        }
+    }
+
+    // =====================================================
+    // REGISTRAR OTRO ADMINISTRADOR
+    // =====================================================
+
+    @PostMapping("/administradores")
+    public Map<String, Object> crearAdministrador(
+            @RequestBody CrearEncargadoRequest solicitud,
+            Principal principal) {
+
+        if (solicitud == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Debes enviar los datos del administrador.");
+        }
+
+        if (principal == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Debes iniciar sesión.");
+        }
+
+        try {
+
+            Encargado administrador = encargadoService.crearAdministrador(
+                    solicitud.usuario(),
+                    solicitud.nombre(),
+                    solicitud.correo(),
+                    principal.getName()
+            );
+
+            return Map.of(
+                    "mensaje",
+                    "Administrador registrado. Se ha enviado un enlace de activación a su correo.",
+                    "id", administrador.getId(),
+                    "nombre", administrador.getNombre(),
+                    "usuario", administrador.getUsuario(),
+                    "correo", administrador.getCorreo(),
+                    "rol", administrador.getRol()
             );
 
         } catch (IllegalArgumentException e) {

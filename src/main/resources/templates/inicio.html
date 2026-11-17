@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
     xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
@@ -7,6 +8,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inicio | Préstamo de equipos UPIICSA</title>
     <link rel="stylesheet" th:href="@{/estilos.css}">
+
+    <style>
+        .estado-restriccion {
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            background: #fff;
+        }
+
+        .estado-restriccion h3 {
+            margin: 0 0 10px;
+        }
+
+        .estado-restriccion p {
+            margin: 6px 0;
+        }
+
+        .estado-restriccion.bloqueado {
+            border-left: 5px solid #dc3545;
+            background: #fff7f7;
+        }
+
+        .estado-restriccion.suspendido {
+            border-left: 5px solid #e6a23c;
+            background: #fffaf1;
+        }
+
+        .estado-restriccion.disponible {
+            border-left: 5px solid #28a745;
+            background: #f5fff7;
+        }
+
+        .estado-restriccion.error {
+            border-left: 5px solid #777;
+        }
+
+        .estado-etiqueta {
+            display: inline-block;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .etiqueta-bloqueo {
+            color: #a71d2a;
+            background: #f8d7da;
+        }
+
+        .etiqueta-suspension {
+            color: #856404;
+            background: #fff0c2;
+        }
+
+        .etiqueta-disponible {
+            color: #155724;
+            background: #d4edda;
+        }
+    </style>
 </head>
 
 <body>
@@ -43,6 +105,11 @@
                     <span>Préstamos y devoluciones</span>
                 </a>
 
+                <a th:href="@{/bloqueos}" class="menu-item">
+                    <span>⊘</span>
+                    <span>Bloqueos administrativos</span>
+                </a>
+
                 <a th:href="@{/personas}" class="menu-item">
                     <span>♙</span>
                     <span>Alumnos</span>
@@ -55,7 +122,6 @@
 
             </nav>
 
-            <!-- CERRAR SESIÓN -->
             <div class="sidebar-footer">
                 <form th:action="@{/logout}" method="post">
                     <button type="submit" class="btn-logout">
@@ -68,8 +134,8 @@
         </aside>
 
 
-        <!-- MENÚ DE ALUMNOS Y PROFESORES -->
-        <aside class="sidebar" sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
+        <!-- MENÚ DE ALUMNOS -->
+        <aside class="sidebar" sec:authorize="hasRole('ALUMNO')">
 
             <div class="brand">
                 <div class="brand-icon">U</div>
@@ -105,7 +171,6 @@
 
             </nav>
 
-            <!-- CERRAR SESIÓN -->
             <div class="sidebar-footer">
                 <form th:action="@{/logout}" method="post">
                     <button type="submit" class="btn-logout">
@@ -134,8 +199,8 @@
             </header>
 
 
-            <!-- ENCABEZADO DEL ALUMNO O PROFESOR -->
-            <header class="topbar" sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
+            <!-- ENCABEZADO DEL ALUMNO -->
+            <header class="topbar" sec:authorize="hasRole('ALUMNO')">
 
                 <div class="topbar-heading">
                     <p class="breadcrumb">Mi cuenta / Inicio</p>
@@ -200,7 +265,7 @@
                         <article class="resumen-item">
                             <div class="resumen-icon resumen-icon-purple">♙</div>
                             <div class="resumen-data">
-                                <h3>Personas registradas</h3>
+                                <h3>Alumnos registrados</h3>
                                 <p id="totalPersonas">—</p>
                             </div>
                         </article>
@@ -214,8 +279,8 @@
             </div>
 
 
-            <!-- CONTENIDO DEL ALUMNO O PROFESOR -->
-            <div sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
+            <!-- CONTENIDO DEL ALUMNO -->
+            <div sec:authorize="hasRole('ALUMNO')">
 
                 <section class="welcome">
                     <div class="welcome-content">
@@ -227,6 +292,23 @@
                         </p>
                     </div>
                 </section>
+
+                <!-- ESTADO DE BLOQUEOS Y SUSPENSIONES -->
+                <section class="dashboard-section">
+
+                    <div class="section-heading">
+                        <div>
+                            <h2>Estado de mi cuenta</h2>
+                            <p>Consulta si tienes alguna restricción para solicitar préstamos.</p>
+                        </div>
+                    </div>
+
+                    <div id="estadoRestriccion" class="estado-restriccion">
+                        <p>Consultando el estado de tu cuenta...</p>
+                    </div>
+
+                </section>
+
 
                 <section class="dashboard-section">
 
@@ -278,8 +360,8 @@
 
     </div>
 
-    <!-- El JavaScript del panel solo se carga para personal administrativo -->
     <script sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')" th:src="@{/inicio.js}"></script>
+    <script sec:authorize="hasRole('ALUMNO')" th:src="@{/inicio-alumno.js}"></script>
 
 </body>
 

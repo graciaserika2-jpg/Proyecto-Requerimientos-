@@ -6,6 +6,41 @@ document.addEventListener("DOMContentLoaded", () => {
     const lista = document.getElementById("listaEncargados");
     const botonActualizar = document.getElementById("btnActualizar");
     const botonCrear = document.getElementById("btnCrearEncargado");
+    const tipoCuenta = document.getElementById("tipoCuenta");
+
+    // =====================================================
+    // ACTUALIZAR TEXTO DEL BOTÓN SEGÚN EL TIPO DE CUENTA
+    // =====================================================
+
+    function actualizarBoton() {
+
+        if (tipoCuenta.value === "ADMIN") {
+            botonCrear.textContent = "Registrar administrador";
+        } else {
+            botonCrear.textContent = "Registrar encargado";
+        }
+    }
+
+    tipoCuenta.addEventListener("change", actualizarBoton);
+
+
+    // =====================================================
+    // MOSTRAR MENSAJE EN LA TABLA
+    // =====================================================
+
+    function mostrarMensajeTabla(texto) {
+
+        lista.replaceChildren();
+
+        const fila = document.createElement("tr");
+        const celda = document.createElement("td");
+
+        celda.colSpan = 5;
+        celda.textContent = texto;
+
+        fila.appendChild(celda);
+        lista.appendChild(fila);
+    }
 
 
     // =====================================================
@@ -14,34 +49,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function cargarEncargados() {
 
-        lista.replaceChildren();
+        mostrarMensajeTabla("Cargando encargados...");
 
         try {
 
-            const respuesta = await fetch("/api/encargados");
+            const respuesta = await fetch("/api/encargados", {
+                method: "GET",
+                credentials: "same-origin"
+            });
 
             if (!respuesta.ok) {
                 throw new Error(
-                    "No se pudo consultar la lista de encargados."
+                    `No se pudo consultar la lista de encargados (HTTP ${respuesta.status}).`
                 );
             }
 
             const encargados = await respuesta.json();
 
+            if (!Array.isArray(encargados)) {
+                throw new Error(
+                    "La respuesta del servidor no tiene el formato esperado."
+                );
+            }
+
             if (encargados.length === 0) {
 
-                const fila = document.createElement("tr");
-                const celda = document.createElement("td");
-
-                celda.colSpan = 5;
-                celda.textContent =
-                    "Todavía no hay encargados registrados.";
-
-                fila.appendChild(celda);
-                lista.appendChild(fila);
+                mostrarMensajeTabla(
+                    "Todavía no hay encargados registrados."
+                );
 
                 return;
             }
+
+            lista.replaceChildren();
 
             encargados.forEach(encargado => {
 
@@ -74,13 +114,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (error) {
 
-            mensaje.textContent = error.message;
+            mostrarMensajeTabla(
+                "Error al cargar los encargados: " + error.message
+            );
         }
     }
 
 
     // =====================================================
-    // REGISTRAR ENCARGADO
+    // REGISTRAR ENCARGADO O ADMINISTRADOR
     // =====================================================
 
     formulario.addEventListener("submit", async evento => {
@@ -97,6 +139,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             correo: formulario.correo.value.trim()
         };
+
+        const esAdministrador = tipoCuenta.value === "ADMIN";
+
+        const endpoint = esAdministrador
+            ? "/api/encargados/administradores"
+            : "/api/encargados";
 
         botonCrear.disabled = true;
         botonCrear.textContent = "Registrando...";
@@ -118,9 +166,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
 
-            const respuesta = await fetch("/api/encargados", {
+            const respuesta = await fetch(endpoint, {
 
                 method: "POST",
+
+                credentials: "same-origin",
 
                 headers: {
 
@@ -140,16 +190,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     resultado.detail ||
                     resultado.message ||
                     resultado.error ||
-                    `No se pudo registrar el encargado (HTTP ${respuesta.status}).`
+                    `No se pudo registrar la cuenta (HTTP ${respuesta.status}).`
                 );
             }
 
             mensaje.textContent = resultado.mensaje ||
-                "Encargado registrado correctamente.";
+                "Cuenta registrada correctamente.";
 
             formulario.reset();
 
-            await cargarEncargados();
+            tipoCuenta.value = "ENCARGADO";
+            actualizarBoton();
+
+            // La lista solo contiene encargados.
+            if (!esAdministrador) {
+                await cargarEncargados();
+            }
 
         } catch (error) {
 
@@ -158,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } finally {
 
             botonCrear.disabled = false;
-            botonCrear.textContent = "Registrar encargado";
+            actualizarBoton();
         }
     });
 
@@ -174,6 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // CARGA INICIAL
     // =====================================================
 
+    actualizarBoton();
     cargarEncargados();
 
 });

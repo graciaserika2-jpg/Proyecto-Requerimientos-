@@ -1,0 +1,316 @@
+
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
+    <title>Configuración inicial | Préstamo UPIICSA</title>
+
+    <link rel="stylesheet" href="/estilos.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+            background: #f3f5f9;
+            font-family: Arial, sans-serif;
+        }
+
+        .contenedor {
+            width: 100%;
+            max-width: 480px;
+            padding: 35px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .encabezado {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .encabezado h1 {
+            margin-bottom: 10px;
+            color: #17365d;
+            font-size: 25px;
+        }
+
+        .encabezado p {
+            color: #667085;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .campo {
+            margin-bottom: 18px;
+        }
+
+        .campo label {
+            display: block;
+            margin-bottom: 7px;
+            color: #344054;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .campo input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d0d5dd;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        .campo input:focus {
+            outline: none;
+            border-color: #245b9e;
+            box-shadow: 0 0 0 3px rgba(36, 91, 158, 0.12);
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 7px;
+            background: #173f70;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #245b9e;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .mensaje {
+            display: none;
+            margin-top: 18px;
+            padding: 12px;
+            border-radius: 7px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .mensaje.exito {
+            display: block;
+            color: #17633a;
+            background: #e8f7ee;
+        }
+
+        .mensaje.error {
+            display: block;
+            color: #a12626;
+            background: #fdecec;
+        }
+
+        .configurado {
+            display: none;
+            text-align: center;
+            color: #344054;
+            line-height: 1.6;
+        }
+
+        .configurado h2 {
+            color: #17365d;
+        }
+
+        .configurado a {
+            display: inline-block;
+            margin-top: 15px;
+            color: #245b9e;
+            font-weight: bold;
+        }
+
+        .volver {
+            display: block;
+            margin-top: 22px;
+            text-align: center;
+            color: #667085;
+            font-size: 13px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <div class="encabezado">
+        <h1>Configuración inicial</h1>
+        <p>
+            Registra la cuenta del administrador principal
+            del sistema de préstamo de equipos UPIICSA.
+        </p>
+    </div>
+
+    <form id="formularioAdministrador">
+
+        <div class="campo">
+            <label for="nombre">Nombre completo</label>
+            <input type="text"
+                   id="nombre"
+                   name="nombre"
+                   maxlength="150"
+                   required>
+        </div>
+
+        <div class="campo">
+            <label for="usuario">Nombre de usuario</label>
+            <input type="text"
+                   id="usuario"
+                   name="usuario"
+                   maxlength="80"
+                   required>
+        </div>
+
+        <div class="campo">
+            <label for="correo">Correo electrónico</label>
+            <input type="email"
+                   id="correo"
+                   name="correo"
+                   maxlength="150"
+                   required>
+        </div>
+
+        <button type="submit" id="botonRegistrar">
+            Registrar administrador
+        </button>
+
+    </form>
+
+    <div id="mensaje" class="mensaje"></div>
+
+    <div id="yaConfigurado" class="configurado">
+        <h2>El sistema ya está configurado</h2>
+        <p>
+            Ya existe un administrador registrado.
+            Para ingresar al sistema, utiliza la página de inicio de sesión.
+        </p>
+        <a href="/login">Ir al inicio de sesión</a>
+    </div>
+
+    <a href="/login" class="volver">Volver al inicio de sesión</a>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const formulario = document.getElementById("formularioAdministrador");
+    const boton = document.getElementById("botonRegistrar");
+    const mensaje = document.getElementById("mensaje");
+    const yaConfigurado = document.getElementById("yaConfigurado");
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    function mostrarMensaje(texto, tipo) {
+        mensaje.textContent = texto;
+        mensaje.className = "mensaje " + tipo;
+    }
+
+    async function consultarEstado() {
+        try {
+            const respuesta = await fetch("/api/configuracion-inicial/estado");
+
+            if (!respuesta.ok) {
+                throw new Error("No se pudo consultar el estado del sistema.");
+            }
+
+            const datos = await respuesta.json();
+
+            if (datos.configurado) {
+                formulario.style.display = "none";
+                yaConfigurado.style.display = "block";
+            }
+
+        } catch (error) {
+            mostrarMensaje(error.message, "error");
+        }
+    }
+
+    formulario.addEventListener("submit", async (evento) => {
+
+        evento.preventDefault();
+
+        boton.disabled = true;
+        boton.textContent = "Registrando...";
+
+        mensaje.className = "mensaje";
+
+        const datos = {
+            nombre: document.getElementById("nombre").value.trim(),
+            usuario: document.getElementById("usuario").value.trim(),
+            correo: document.getElementById("correo").value.trim()
+        };
+
+        try {
+
+            const encabezados = {
+                "Content-Type": "application/json"
+            };
+
+            if (csrfToken && csrfHeader) {
+                encabezados[csrfHeader] = csrfToken;
+            }
+
+            const respuesta = await fetch("/api/configuracion-inicial", {
+                method: "POST",
+                headers: encabezados,
+                body: JSON.stringify(datos)
+            });
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(
+                    resultado.message ||
+                    resultado.detail ||
+                    "No se pudo registrar al administrador."
+                );
+            }
+
+            formulario.style.display = "none";
+
+            mostrarMensaje(
+                resultado.mensaje +
+                " Revisa tu correo para activar la cuenta y establecer tu contraseña.",
+                "exito"
+            );
+
+        } catch (error) {
+
+            mostrarMensaje(error.message, "error");
+
+            boton.disabled = false;
+            boton.textContent = "Registrar administrador";
+        }
+    });
+
+    consultarEstado();
+});
+</script>
+
+</body>
+</html>

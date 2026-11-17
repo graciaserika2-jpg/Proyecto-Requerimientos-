@@ -1939,3 +1939,32 @@ body:has(#formPrestamo) #mensajePrestamo {
         padding: 10px;
     }
 }
+
+/* =========================================
+   PÁGINA DE BLOQUEOS ADMINISTRATIVOS
+   ========================================= */
+
+body:has(#tablaBloqueosActivos) .table-container table {
+    min-width: 850px;
+}
+
+body:has(#tablaHistorialBloqueos) .table-container table {
+    min-width: 1100px;
+}
+
+body:has(#tablaBloqueosActivos) .card,
+body:has(#tablaHistorialBloqueos) .card {
+    margin-bottom: 25px;
+}
+
+body:has(#tablaBloqueosActivos) .card > p,
+body:has(#tablaHistorialBloqueos) .card > p {
+    margin-bottom: 18px;
+}
+
+body:has(#tablaBloqueosActivos) #mensajeBloqueosActivos,
+body:has(#tablaHistorialBloqueos) #mensajeHistorialBloqueos {
+    margin-top: 12px;
+    color: var(--text-light);
+    font-size: 12px;
+}

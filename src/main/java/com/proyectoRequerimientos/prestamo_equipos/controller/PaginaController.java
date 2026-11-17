@@ -32,6 +32,11 @@ public class PaginaController {
         return "prestamos";
     }
 
+    @GetMapping("/bloqueos")
+    public String mostrarBloqueos() {
+        return "bloqueos";
+    }
+
     @GetMapping("/encargados")
     public String mostrarEncargados() {
         return "encargados";
@@ -52,21 +57,24 @@ public class PaginaController {
         return "mi-historial";
     }
 
-    // Activación de cuentas.
     @GetMapping("/activar-cuenta")
     public String mostrarActivarCuenta() {
         return "activar-cuenta";
     }
 
-    // Solicitud de recuperación de contraseña.
     @GetMapping("/olvide-password")
     public String mostrarOlvidePassword() {
         return "olvide-password";
     }
 
-    // Formulario para establecer una contraseña nueva.
     @GetMapping("/restablecer-password")
     public String mostrarRestablecerPassword() {
         return "restablecer-password";
+    }
+
+    // Configuración inicial del primer administrador.
+    @GetMapping("/configuracion-inicial")
+    public String mostrarConfiguracionInicial() {
+        return "configuracion-inicial";
     }
 }

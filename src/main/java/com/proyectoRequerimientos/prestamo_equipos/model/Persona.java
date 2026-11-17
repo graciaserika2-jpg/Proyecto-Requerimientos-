@@ -2,6 +2,7 @@
 package com.proyectoRequerimientos.prestamo_equipos.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDate;
 
 @Entity
@@ -12,65 +13,39 @@ public class Persona {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String nombre;
 
-    @Column(nullable = false)
-    private String tipo;
+    private String tipo = "Alumno";
 
-    @Column(nullable = false)
     private String identificador;
 
-    @Column(nullable = false)
     private Boolean activo = true;
 
-    // Fecha hasta la que estará suspendida la persona.
     private LocalDate fechaFinSuspension;
 
     public Persona() {
     }
 
     @PrePersist
-    @PreUpdate
-    private void validarDatos() {
+    public void validarDatos() {
+
         if (nombre == null || nombre.isBlank()) {
             throw new IllegalArgumentException(
-                    "El nombre de la persona es obligatorio.");
+                    "El nombre del alumno es obligatorio."
+            );
         }
 
-        if (tipo == null || tipo.isBlank()) {
+        if (tipo == null || !tipo.equalsIgnoreCase("Alumno")) {
             throw new IllegalArgumentException(
-                    "El tipo de persona es obligatorio.");
+                    "El tipo de persona debe ser Alumno."
+            );
         }
 
-        if (identificador == null || identificador.isBlank()) {
+        if (identificador == null
+                || !identificador.matches("[0-9]{10}")) {
             throw new IllegalArgumentException(
-                    "El identificador de la persona es obligatorio.");
-        }
-
-        String tipoNormalizado = tipo.trim();
-
-        if (tipoNormalizado.equalsIgnoreCase("Alumno")) {
-            if (!identificador.matches("[0-9]{10}")) {
-                throw new IllegalArgumentException(
-                        "La boleta del estudiante debe contener exactamente 10 dígitos, sin letras, espacios ni símbolos.");
-            }
-        } else if (tipoNormalizado.equalsIgnoreCase("Profesor")) {
-            if (identificador.trim().isEmpty()) {
-                throw new IllegalArgumentException(
-                        "El número de empleado del profesor es obligatorio.");
-            }
-        } else {
-            throw new IllegalArgumentException(
-                    "El tipo de persona debe ser Alumno o Profesor.");
-        }
-
-        nombre = nombre.trim();
-        tipo = tipoNormalizado;
-        identificador = identificador.trim();
-
-        if (activo == null) {
-            activo = true;
+                    "La boleta debe contener exactamente 10 dígitos."
+            );
         }
     }
 

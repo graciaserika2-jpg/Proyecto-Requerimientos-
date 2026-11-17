@@ -1,4 +1,3 @@
-
 package com.proyectoRequerimientos.prestamo_equipos.model;
 
 import jakarta.persistence.*;
@@ -29,6 +28,9 @@ public class Prestamo {
     private String estado;
 
     private String observaciones;
+
+    // Información de quién entregó el equipo
+    private String entregadoPor;
 
     // Información de la devolución
     private String condicionDevolucion;
@@ -111,6 +113,14 @@ public class Prestamo {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public String getEntregadoPor() {
+        return entregadoPor;
+    }
+
+    public void setEntregadoPor(String entregadoPor) {
+        this.entregadoPor = entregadoPor;
     }
 
     public String getCondicionDevolucion() {

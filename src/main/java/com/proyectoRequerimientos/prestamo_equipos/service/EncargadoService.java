@@ -3,6 +3,7 @@ package com.proyectoRequerimientos.prestamo_equipos.service;
 
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -10,11 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.proyectoRequerimientos.prestamo_equipos.model.Encargado;
 import com.proyectoRequerimientos.prestamo_equipos.repository.EncargadoRepository;
+import com.proyectoRequerimientos.prestamo_equipos.repository.CuentaPersonaRepository;
 
 @Service
 public class EncargadoService {
 
     private final EncargadoRepository encargadoRepository;
+    private final CuentaPersonaRepository cuentaPersonaRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenCuentaService tokenCuentaService;
     private final CorreoService correoService;
@@ -26,26 +29,34 @@ public class EncargadoService {
 
     public EncargadoService(
             EncargadoRepository encargadoRepository,
+            CuentaPersonaRepository cuentaPersonaRepository,
             PasswordEncoder passwordEncoder,
             TokenCuentaService tokenCuentaService,
             CorreoService correoService) {
 
         this.encargadoRepository = encargadoRepository;
+        this.cuentaPersonaRepository = cuentaPersonaRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenCuentaService = tokenCuentaService;
         this.correoService = correoService;
     }
+
+    // =====================================================
+    // LISTAR ENCARGADOS
+    // =====================================================
 
     public List<Encargado> listarEncargados() {
 
         return encargadoRepository.findAll()
                 .stream()
                 .filter(Encargado::isActivo)
+                .filter(encargado ->
+                        "ENCARGADO".equalsIgnoreCase(encargado.getRol()))
                 .toList();
     }
 
     // =====================================================
-    // REGISTRAR ENCARGADO Y ENVIAR ACTIVACIÓN
+    // REGISTRAR ENCARGADO
     // =====================================================
 
     @Transactional
@@ -53,6 +64,80 @@ public class EncargadoService {
             String usuario,
             String nombre,
             String correo) {
+
+        return crearCuentaAdministrativa(
+                usuario, nombre, correo, "ENCARGADO");
+    }
+
+    // =====================================================
+    // REGISTRAR EL PRIMER ADMINISTRADOR
+    // =====================================================
+
+    @Transactional
+    public Encargado crearPrimerAdministrador(
+            String usuario,
+            String nombre,
+            String correo) {
+
+        if (encargadoRepository.existsByRolIgnoreCase("ADMIN")) {
+            throw new IllegalArgumentException(
+                    "La configuración inicial ya fue realizada. "
+                    + "Ya existe un administrador.");
+        }
+
+        return crearCuentaAdministrativa(
+                usuario, nombre, correo, "ADMIN");
+    }
+
+    // =====================================================
+    // REGISTRAR OTRO ADMINISTRADOR
+    // =====================================================
+
+    @Transactional
+    public Encargado crearAdministrador(
+            String usuario,
+            String nombre,
+            String correo,
+            String usuarioSolicitante) {
+
+        validarAdministradorSolicitante(usuarioSolicitante);
+
+        return crearCuentaAdministrativa(
+                usuario, nombre, correo, "ADMIN");
+    }
+
+    // =====================================================
+    // VERIFICAR QUE QUIEN SOLICITA SEA ADMIN
+    // =====================================================
+
+    private void validarAdministradorSolicitante(String usuarioSolicitante) {
+
+        if (usuarioSolicitante == null || usuarioSolicitante.isBlank()) {
+            throw new IllegalArgumentException(
+                    "No se pudo identificar al administrador que realiza la operación.");
+        }
+
+        Encargado solicitante = encargadoRepository
+                .findByUsuarioIgnoreCase(usuarioSolicitante.trim())
+                .filter(Encargado::isActivo)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "La cuenta que realiza la operación no existe o está inactiva."));
+
+        if (!"ADMIN".equalsIgnoreCase(solicitante.getRol())) {
+            throw new IllegalArgumentException(
+                    "No tienes permisos para registrar administradores.");
+        }
+    }
+
+    // =====================================================
+    // CREAR CUENTA Y ENVIAR ACTIVACIÓN
+    // =====================================================
+
+    private Encargado crearCuentaAdministrativa(
+            String usuario,
+            String nombre,
+            String correo,
+            String rol) {
 
         if (usuario == null || usuario.isBlank()) {
             throw new IllegalArgumentException(
@@ -71,7 +156,7 @@ public class EncargadoService {
 
         String usuarioLimpio = usuario.trim();
         String nombreLimpio = nombre.trim();
-        String correoLimpio = correo.trim().toLowerCase();
+        String correoLimpio = correo.trim().toLowerCase(Locale.ROOT);
 
         if (!correoLimpio.matches(
                 "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
@@ -95,16 +180,22 @@ public class EncargadoService {
                     "Ese correo ya está registrado en otra cuenta.");
         }
 
+        if (cuentaPersonaRepository
+                .existsByCorreoIgnoreCase(correoLimpio)) {
+
+            throw new IllegalArgumentException(
+                    "Ese correo ya está registrado en una cuenta de alumno.");
+        }
+
         Encargado encargado = new Encargado();
 
         encargado.setUsuario(usuarioLimpio);
         encargado.setNombre(nombreLimpio);
 
-        // Se guarda una contraseña aleatoria que nadie conoce.
         encargado.setPasswordHash(
                 passwordEncoder.encode(generarPasswordAleatoria()));
 
-        encargado.setRol("ENCARGADO");
+        encargado.setRol(rol);
         encargado.setActivo(true);
         encargado.setDebeCambiarPassword(true);
 
@@ -114,16 +205,13 @@ public class EncargadoService {
         Encargado encargadoGuardado =
                 encargadoRepository.save(encargado);
 
-        // Crear enlace de activación.
         String token = tokenCuentaService
                 .crearTokenActivacion(encargadoGuardado);
 
-        // Enviar correo al encargado.
         correoService.enviarActivacion(
                 correoLimpio,
                 nombreLimpio,
-                token
-        );
+                token);
 
         return encargadoGuardado;
     }

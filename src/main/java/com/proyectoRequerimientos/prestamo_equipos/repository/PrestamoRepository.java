@@ -26,6 +26,11 @@ public interface PrestamoRepository extends JpaRepository<Prestamo, Long> {
     boolean existsByPersona_IdAndEstadoIn(
             Long personaId, List<String> estados);
 
+    // Préstamos cuya fecha prevista es anterior a la fecha indicada.
     List<Prestamo> findByEstadoAndFechaDevolucionPrevistaBefore(
+            String estado, LocalDate fecha);
+
+    // Préstamos cuya fecha prevista es igual o anterior a la fecha indicada.
+    List<Prestamo> findByEstadoAndFechaDevolucionPrevistaLessThanEqual(
             String estado, LocalDate fecha);
 }

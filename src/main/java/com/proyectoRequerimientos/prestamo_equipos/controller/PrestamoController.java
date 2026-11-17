@@ -3,7 +3,9 @@ package com.proyectoRequerimientos.prestamo_equipos.controller;
 
 import com.proyectoRequerimientos.prestamo_equipos.dto.CrearPrestamoRequest;
 import com.proyectoRequerimientos.prestamo_equipos.dto.MiPrestamoResponse;
+import com.proyectoRequerimientos.prestamo_equipos.model.BloqueoAdministrativo;
 import com.proyectoRequerimientos.prestamo_equipos.model.Prestamo;
+import com.proyectoRequerimientos.prestamo_equipos.service.BloqueoAdministrativoService;
 import com.proyectoRequerimientos.prestamo_equipos.service.PrestamoService;
 
 import org.springframework.security.core.Authentication;
@@ -18,13 +20,19 @@ import java.util.List;
 public class PrestamoController {
 
     private final PrestamoService prestamoService;
+    private final BloqueoAdministrativoService bloqueoService;
 
-    public PrestamoController(PrestamoService prestamoService) {
+    public PrestamoController(
+            PrestamoService prestamoService,
+            BloqueoAdministrativoService bloqueoService) {
+
         this.prestamoService = prestamoService;
+        this.bloqueoService = bloqueoService;
     }
 
     @GetMapping
     public List<PrestamoResponse> listarPrestamos() {
+
         return prestamoService.listarPrestamos()
                 .stream()
                 .map(this::convertirRespuesta)
@@ -41,9 +49,13 @@ public class PrestamoController {
 
     @PostMapping
     public PrestamoResponse crearPrestamo(
-            @RequestBody CrearPrestamoRequest solicitud) {
+            @RequestBody CrearPrestamoRequest solicitud,
+            Authentication authentication) {
 
-        Prestamo prestamo = prestamoService.crearPrestamo(solicitud);
+        Prestamo prestamo = prestamoService.crearPrestamo(
+                solicitud,
+                authentication.getName()
+        );
 
         return convertirRespuesta(prestamo);
     }
@@ -80,6 +92,79 @@ public class PrestamoController {
         return convertirRespuesta(prestamo);
     }
 
+    // ==========================================
+    // BLOQUEOS ADMINISTRATIVOS
+    // ==========================================
+
+    @GetMapping("/bloqueos/activos")
+    public List<BloqueoResponse> listarBloqueosActivos() {
+
+        return bloqueoService.listarBloqueosActivos()
+                .stream()
+                .map(this::convertirBloqueoRespuesta)
+                .toList();
+    }
+
+    @GetMapping("/bloqueos/historial")
+    public List<BloqueoResponse> listarHistorialBloqueos() {
+
+        return bloqueoService.listarHistorialBloqueos()
+                .stream()
+                .map(this::convertirBloqueoRespuesta)
+                .toList();
+    }
+
+    @PostMapping("/bloqueos/{id}/levantar")
+    public BloqueoResponse levantarBloqueo(
+            @PathVariable Long id,
+            @RequestBody LevantarBloqueoRequest solicitud,
+            Authentication authentication) {
+
+        BloqueoAdministrativo bloqueo =
+                bloqueoService.levantarBloqueo(
+                        id,
+                        solicitud.motivoLevantamiento(),
+                        authentication.getName()
+                );
+
+        return convertirBloqueoRespuesta(bloqueo);
+    }
+
+    private BloqueoResponse convertirBloqueoRespuesta(
+            BloqueoAdministrativo bloqueo) {
+
+        PersonaBloqueoResumen persona =
+                bloqueo.getPersona() == null
+                        ? null
+                        : new PersonaBloqueoResumen(
+                                bloqueo.getPersona().getNombre(),
+                                bloqueo.getPersona().getIdentificador()
+                        );
+
+        String equipo = null;
+
+        if (bloqueo.getPrestamo() != null
+                && bloqueo.getPrestamo().getEquipo() != null) {
+
+            equipo = bloqueo.getPrestamo()
+                    .getEquipo()
+                    .getNombre();
+        }
+
+        return new BloqueoResponse(
+                bloqueo.getId(),
+                persona,
+                equipo,
+                bloqueo.getMotivo(),
+                bloqueo.getFechaBloqueo(),
+                bloqueo.getBloqueadoPor(),
+                bloqueo.isActivo(),
+                bloqueo.getFechaLevantamiento(),
+                bloqueo.getLevantadoPor(),
+                bloqueo.getMotivoLevantamiento()
+        );
+    }
+
     private PrestamoResponse convertirRespuesta(Prestamo prestamo) {
 
         PersonaResumen persona = prestamo.getPersona() == null
@@ -106,6 +191,7 @@ public class PrestamoController {
                 prestamo.getFechaDevolucionReal(),
                 prestamo.getEstado(),
                 prestamo.getObservaciones(),
+                prestamo.getEntregadoPor(),
                 prestamo.getCondicionDevolucion(),
                 prestamo.getDetallesDanio(),
                 prestamo.getRecibidoPor(),
@@ -127,6 +213,11 @@ public class PrestamoController {
     ) {
     }
 
+    public record LevantarBloqueoRequest(
+            String motivoLevantamiento
+    ) {
+    }
+
     public record PrestamoResponse(
             Long id,
             PersonaResumen persona,
@@ -136,6 +227,7 @@ public class PrestamoController {
             LocalDateTime fechaDevolucionReal,
             String estado,
             String observaciones,
+            String entregadoPor,
             String condicionDevolucion,
             String detallesDanio,
             String recibidoPor,
@@ -156,6 +248,26 @@ public class PrestamoController {
     public record EquipoResumen(
             Long id,
             String nombre
+    ) {
+    }
+
+    public record BloqueoResponse(
+            Long id,
+            PersonaBloqueoResumen persona,
+            String equipo,
+            String motivo,
+            LocalDateTime fechaBloqueo,
+            String bloqueadoPor,
+            boolean activo,
+            LocalDateTime fechaLevantamiento,
+            String levantadoPor,
+            String motivoLevantamiento
+    ) {
+    }
+
+    public record PersonaBloqueoResumen(
+            String nombre,
+            String identificador
     ) {
     }
 }

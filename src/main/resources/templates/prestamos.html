@@ -16,7 +16,7 @@
     <link rel="stylesheet" th:href="@{/estilos.css}">
 
     <style>
-        /* VENTANA MODAL */
+        /* VENTANAS MODALES */
         .modal-devolucion {
             width: min(420px, calc(100% - 32px));
             max-width: 420px;
@@ -117,6 +117,61 @@
         #grupoDetallesDanio[hidden] {
             display: none;
         }
+
+        .btn-revision-mantenimiento {
+            margin-top: 6px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 7px;
+            background: #d97706;
+            color: white;
+            cursor: pointer;
+        }
+
+        .btn-revision-mantenimiento:hover {
+            background: #b45309;
+        }
+
+        .btn-revision-mantenimiento:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .estado-mantenimiento-atendido {
+            color: #15803d;
+            font-weight: 600;
+        }
+
+        .estado-mantenimiento-pendiente {
+            color: #b45309;
+            font-weight: 600;
+        }
+
+        /* ACCIÓN DE DEVOLUCIÓN */
+        .btn-registrar-devolucion {
+            display: inline-block;
+            padding: 9px 13px;
+            border: none;
+            border-radius: 7px;
+            background: #2563eb;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-registrar-devolucion:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-registrar-devolucion:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .acciones-prestamo {
+            min-width: 150px;
+        }
     </style>
 </head>
 
@@ -148,17 +203,29 @@
                 <span>Inventario</span>
             </a>
 
-            <a th:href="@{/prestamos}" class="menu-item active">
+            <a th:href="@{/prestamos}"
+               class="menu-item active"
+               sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
                 <span>⇄</span>
                 <span>Préstamos y devoluciones</span>
             </a>
 
-            <a th:href="@{/personas}" class="menu-item">
+            <a th:href="@{/bloqueos}"
+               class="menu-item"
+               sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
+                <span>⊘</span>
+                <span>Bloqueos administrativos</span>
+            </a>
+
+            <a th:href="@{/personas}"
+               class="menu-item"
+               sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
                 <span>♙</span>
                 <span>Alumnos</span>
             </a>
 
-            <a th:href="@{/encargados}" class="menu-item"
+            <a th:href="@{/encargados}"
+               class="menu-item"
                sec:authorize="hasRole('ADMIN')">
                 <span>⚙</span>
                 <span>Administrar encargados</span>
@@ -308,6 +375,11 @@
 
             <h2>Préstamos registrados</h2>
 
+            <p>
+                Consulta el estado de los préstamos y registra la devolución
+                cuando recibas el equipo.
+            </p>
+
             <label for="filtroPrestamos">Filtrar préstamos</label>
 
             <select id="filtroPrestamos">
@@ -329,9 +401,9 @@
                             <th>Boleta (alumnos)</th>
                             <th>Equipo</th>
                             <th>Fecha de préstamo</th>
-                            <th>Fecha y hora de devolución</th>
+                            <th>Fecha de devolución</th>
                             <th>Estado</th>
-                            <th>Acción</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
 
@@ -411,6 +483,59 @@
                     type="submit"
                     class="btn-primary">
                     Confirmar devolución
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</dialog>
+
+
+<!-- VENTANA DE REVISIÓN DE MANTENIMIENTO -->
+<dialog id="modalRevision" class="modal-devolucion">
+
+    <div class="modal-contenido">
+
+        <h2>Revisión de mantenimiento</h2>
+
+        <p class="modal-descripcion">
+            Describe la revisión o reparación realizada al equipo.
+            Esta información quedará registrada en el historial.
+        </p>
+
+        <form id="formRevision">
+
+            <label for="revisionMantenimiento">
+                Descripción de la revisión
+            </label>
+
+            <textarea
+                id="revisionMantenimiento"
+                rows="5"
+                maxlength="1000"
+                required
+                placeholder="Describe qué se revisó, qué daños se encontraron y qué reparación se realizó...">
+            </textarea>
+
+            <small class="modal-ayuda">
+                Al confirmar, se registrará automáticamente tu usuario y la fecha de revisión.
+            </small>
+
+            <div class="modal-acciones">
+
+                <button
+                    type="button"
+                    id="cancelarRevision">
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn-primary">
+                    Guardar revisión
                 </button>
 
             </div>

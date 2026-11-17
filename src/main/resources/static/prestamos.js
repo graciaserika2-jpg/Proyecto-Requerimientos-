@@ -28,6 +28,12 @@ const grupoDetallesDanio = document.getElementById("grupoDetallesDanio");
 const detallesDanio = document.getElementById("detallesDanio");
 const cancelarDevolucion = document.getElementById("cancelarDevolucion");
 
+// Elementos del formulario de mantenimiento
+const modalRevision = document.getElementById("modalRevision");
+const formularioRevision = document.getElementById("formRevision");
+const revisionMantenimiento = document.getElementById("revisionMantenimiento");
+const cancelarRevision = document.getElementById("cancelarRevision");
+
 const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
 const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
 
@@ -38,7 +44,7 @@ let temporizadorPersona;
 let solicitudPersona = 0;
 
 let prestamoDevolucionId = null;
-let botonDevolucionActual = null;
+let prestamoRevisionId = null;
 
 
 // -------------------------
@@ -63,6 +69,14 @@ async function consultarLista(url) {
     }
 
     return respuesta.json();
+}
+
+async function obtenerMensajeError(respuesta, mensajePredeterminado) {
+    const error = await respuesta.json().catch(() => ({}));
+
+    return error.error ||
+        error.message ||
+        mensajePredeterminado;
 }
 
 function mostrarMensajeBusqueda(contenedor, mensaje) {
@@ -415,12 +429,11 @@ formularioPrestamo.addEventListener("submit", async evento => {
         });
 
         if (!respuesta.ok) {
-            const error = await respuesta.json().catch(() => ({}));
-
             throw new Error(
-                error.error ||
-                error.message ||
-                "No se pudo registrar el préstamo."
+                await obtenerMensajeError(
+                    respuesta,
+                    "No se pudo registrar el préstamo."
+                )
             );
         }
 
@@ -505,8 +518,8 @@ function mostrarPrestamos() {
         fila.insertCell().textContent =
             prestamo.persona?.nombre || "Sin nombre";
 
-        // Solo mostrar la boleta numérica de los alumnos.
         const celdaIdentificador = fila.insertCell();
+
         const esAlumno =
             prestamo.persona?.tipo?.toLowerCase() === "alumno";
 
@@ -535,17 +548,51 @@ function mostrarPrestamos() {
         fila.insertCell().textContent = prestamo.estado;
 
         const celdaAccion = fila.insertCell();
+        celdaAccion.className = "acciones-prestamo";
 
         if (["Activo", "Vencido"].includes(prestamo.estado)) {
-            const boton = document.createElement("button");
-            boton.type = "button";
-            boton.textContent = "Registrar devolución";
 
-            boton.addEventListener("click", () =>
-                abrirFormularioDevolucion(prestamo.id, boton)
+            const botonDevolucion = document.createElement("button");
+            botonDevolucion.type = "button";
+            botonDevolucion.className = "btn-registrar-devolucion";
+            botonDevolucion.textContent = "Registrar devolución";
+
+            botonDevolucion.addEventListener("click", () =>
+                abrirFormularioDevolucion(prestamo.id)
             );
 
-            celdaAccion.appendChild(boton);
+            celdaAccion.appendChild(botonDevolucion);
+
+        } else if (
+            prestamo.estado === "Devuelto" &&
+            prestamo.condicionDevolucion === "CON_DANOS"
+        ) {
+
+            if (prestamo.mantenimientoAtendido === true) {
+
+                const estado = document.createElement("span");
+                estado.className = "estado-mantenimiento-atendido";
+                estado.textContent = "Mantenimiento atendido";
+
+                celdaAccion.appendChild(estado);
+
+            } else {
+
+                const estado = document.createElement("span");
+                estado.className = "estado-mantenimiento-pendiente";
+                estado.textContent = "Pendiente de revisión";
+
+                const botonRevision = document.createElement("button");
+                botonRevision.type = "button";
+                botonRevision.className = "btn-revision-mantenimiento";
+                botonRevision.textContent = "Registrar revisión";
+
+                botonRevision.addEventListener("click", () =>
+                    abrirFormularioRevision(prestamo.id)
+                );
+
+                celdaAccion.append(estado, botonRevision);
+            }
 
         } else {
             celdaAccion.textContent = "Sin acciones";
@@ -575,9 +622,8 @@ async function cargarPrestamos() {
 // Formulario de devolución
 // -------------------------
 
-function abrirFormularioDevolucion(id, boton) {
+function abrirFormularioDevolucion(id) {
     prestamoDevolucionId = id;
-    botonDevolucionActual = boton;
 
     formularioDevolucion.reset();
 
@@ -600,11 +646,13 @@ condicionDevolucion.addEventListener("change", () => {
 
 cancelarDevolucion.addEventListener("click", () => {
     modalDevolucion.close();
+    prestamoDevolucionId = null;
 });
 
 modalDevolucion.addEventListener("click", evento => {
     if (evento.target === modalDevolucion) {
         modalDevolucion.close();
+        prestamoDevolucionId = null;
     }
 });
 
@@ -652,12 +700,11 @@ formularioDevolucion.addEventListener("submit", async evento => {
         );
 
         if (!respuesta.ok) {
-            const error = await respuesta.json().catch(() => ({}));
-
             throw new Error(
-                error.error ||
-                error.message ||
-                "No se pudo registrar la devolución."
+                await obtenerMensajeError(
+                    respuesta,
+                    "No se pudo registrar la devolución."
+                )
             );
         }
 
@@ -669,7 +716,6 @@ formularioDevolucion.addEventListener("submit", async evento => {
                 : "Devolución registrada. El equipo volvió a estar Disponible.";
 
         prestamoDevolucionId = null;
-        botonDevolucionActual = null;
 
         await Promise.all([
             cargarPrestamos(),
@@ -682,6 +728,97 @@ formularioDevolucion.addEventListener("submit", async evento => {
     } finally {
         botonGuardar.disabled = false;
         cancelarDevolucion.disabled = false;
+    }
+});
+
+
+// -------------------------
+// Formulario de revisión de mantenimiento
+// -------------------------
+
+function abrirFormularioRevision(id) {
+    prestamoRevisionId = id;
+
+    formularioRevision.reset();
+
+    modalRevision.showModal();
+}
+
+cancelarRevision.addEventListener("click", () => {
+    modalRevision.close();
+    prestamoRevisionId = null;
+});
+
+modalRevision.addEventListener("click", evento => {
+    if (evento.target === modalRevision) {
+        modalRevision.close();
+        prestamoRevisionId = null;
+    }
+});
+
+formularioRevision.addEventListener("submit", async evento => {
+    evento.preventDefault();
+
+    if (!prestamoRevisionId) {
+        return;
+    }
+
+    const descripcion = revisionMantenimiento.value.trim();
+
+    if (!descripcion) {
+        alert("Describe la revisión realizada.");
+        revisionMantenimiento.focus();
+        return;
+    }
+
+    const botonGuardar = formularioRevision.querySelector(
+        'button[type="submit"]'
+    );
+
+    botonGuardar.disabled = true;
+    cancelarRevision.disabled = true;
+
+    try {
+        const respuesta = await fetch(
+            `/api/prestamos/${prestamoRevisionId}/revision-mantenimiento`,
+            {
+                method: "POST",
+                headers: obtenerHeaders({
+                    "Content-Type": "application/json"
+                }),
+                body: JSON.stringify({
+                    revisionMantenimiento: descripcion
+                })
+            }
+        );
+
+        if (!respuesta.ok) {
+            throw new Error(
+                await obtenerMensajeError(
+                    respuesta,
+                    "No se pudo registrar la revisión de mantenimiento."
+                )
+            );
+        }
+
+        modalRevision.close();
+
+        prestamoRevisionId = null;
+
+        mensajePrestamo.textContent =
+            "Revisión registrada correctamente. Se actualizó el historial del préstamo.";
+
+        await Promise.all([
+            cargarPrestamos(),
+            cargarEquiposDisponibles()
+        ]);
+
+    } catch (error) {
+        mensajePrestamo.textContent = error.message;
+
+    } finally {
+        botonGuardar.disabled = false;
+        cancelarRevision.disabled = false;
     }
 });
 

@@ -1,8 +1,10 @@
 
 async function cargarResumen() {
+
     const mensaje = document.getElementById("mensajeInicio");
 
     try {
+
         const [respuestaEquipos, respuestaPrestamos, respuestaPersonas] =
             await Promise.all([
                 fetch("/api/equipos"),
@@ -13,6 +15,7 @@ async function cargarResumen() {
         if (!respuestaEquipos.ok ||
             !respuestaPrestamos.ok ||
             !respuestaPersonas.ok) {
+
             throw new Error("No se pudo cargar el resumen del sistema.");
         }
 
@@ -26,14 +29,23 @@ async function cargarResumen() {
         document.getElementById("equiposDisponibles").textContent =
             equipos.filter(e => e.estado === "Disponible").length;
 
+        // Cuenta los préstamos que todavía no han sido devueltos.
+        // Incluye los estados Activo y Vencido.
+
+        const prestamosSinDevolver = prestamos.filter(p =>
+            p.estado === "Activo" || p.estado === "Vencido"
+        );
+
         document.getElementById("prestamosActivos").textContent =
-            prestamos.filter(p => p.estado === "Activo").length;
+            prestamosSinDevolver.length;
 
         document.getElementById("totalPersonas").textContent =
             personas.length;
 
         mensaje.textContent = "";
+
     } catch (error) {
+
         mensaje.textContent = error.message;
     }
 }

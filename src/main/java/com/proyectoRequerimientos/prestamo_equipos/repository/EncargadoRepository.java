@@ -1,3 +1,4 @@
+
 package com.proyectoRequerimientos.prestamo_equipos.repository;
 
 import java.util.Optional;
@@ -11,8 +12,10 @@ public interface EncargadoRepository
 
     Optional<Encargado> findByUsuarioIgnoreCase(String usuario);
 
-    // Consultas por correo electrónico
     boolean existsByCorreoIgnoreCase(String correo);
 
     Optional<Encargado> findByCorreoIgnoreCase(String correo);
+
+    // Comprobar si ya existe una cuenta con determinado rol.
+    boolean existsByRolIgnoreCase(String rol);
 }
