@@ -245,7 +245,7 @@ function mostrarEquipos() {
         const tieneReportes =
             reportesDelEquipo !== null && reportesDelEquipo.length > 0;
 
-        // Si el historial no se pudo consultar, no afirmamos que no existen reportes.
+        // Si no se pudo consultar el historial, indicamos que no está disponible.
         if (historialPrestamos === null) {
 
             const mensaje = document.createElement("span");
@@ -254,8 +254,9 @@ function mostrarEquipos() {
 
             celdaReportes.appendChild(mensaje);
 
-        } else if (tieneReportes || equipo.estado === "Mantenimiento") {
+        } else if (tieneReportes) {
 
+            // Mostrar el botón únicamente si existen reportes reales.
             const botonReportes = document.createElement("button");
 
             botonReportes.textContent = "Ver reportes";
@@ -271,8 +272,14 @@ function mostrarEquipos() {
         } else {
 
             const mensaje = document.createElement("span");
-            mensaje.className = "sin-reportes";
-            mensaje.textContent = "Sin reportes";
+
+            if ((equipo.estado || "").toLowerCase() === "mantenimiento") {
+                mensaje.className = "sin-reportes";
+                mensaje.textContent = "En mantenimiento";
+            } else {
+                mensaje.className = "sin-reportes";
+                mensaje.textContent = "Sin reportes";
+            }
 
             celdaReportes.appendChild(mensaje);
         }

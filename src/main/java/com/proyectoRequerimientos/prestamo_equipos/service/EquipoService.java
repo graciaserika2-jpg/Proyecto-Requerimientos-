@@ -4,6 +4,7 @@ package com.proyectoRequerimientos.prestamo_equipos.service;
 import com.proyectoRequerimientos.prestamo_equipos.dto.EquipoDisponibilidad;
 import com.proyectoRequerimientos.prestamo_equipos.model.Equipo;
 import com.proyectoRequerimientos.prestamo_equipos.repository.EquipoRepository;
+import com.proyectoRequerimientos.prestamo_equipos.repository.PrestamoRepository;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import java.util.Set;
 public class EquipoService {
 
     private final EquipoRepository equipoRepository;
+    private final PrestamoRepository prestamoRepository;
 
     private static final Set<String> TIPOS_PERMITIDOS = Set.of(
             "Cómputo",
@@ -33,8 +35,12 @@ public class EquipoService {
             "Mantenimiento"
     );
 
-    public EquipoService(EquipoRepository equipoRepository) {
+    public EquipoService(
+            EquipoRepository equipoRepository,
+            PrestamoRepository prestamoRepository) {
+
         this.equipoRepository = equipoRepository;
+        this.prestamoRepository = prestamoRepository;
     }
 
     public List<Equipo> buscarDisponiblesParaPrestamo(String texto) {
@@ -92,16 +98,22 @@ public class EquipoService {
             );
         }
 
-        // Un artículo en mantenimiento solo puede volver a Disponible
-        // mediante el proceso de revisión de sus reportes de daños.
+        // Si el equipo está en mantenimiento y se quiere habilitar,
+        // primero se comprueba que no existan reportes pendientes.
         if ("Mantenimiento".equals(existente.getEstado())
                 && "Disponible".equals(equipo.getEstado())) {
 
-            throw new IllegalArgumentException(
-                    "No puedes cambiar directamente un artículo de "
-                    + "Mantenimiento a Disponible. Primero debes atender "
-                    + "sus reportes de daños desde la revisión de mantenimiento."
-            );
+            boolean tieneReportesPendientes =
+                    prestamoRepository.tieneReportesPendientes(id);
+
+            if (tieneReportesPendientes) {
+                throw new IllegalArgumentException(
+                        "No puedes cambiar el artículo a Disponible "
+                        + "porque todavía tiene reportes de daños pendientes. "
+                        + "Primero debes atenderlos desde la revisión "
+                        + "de mantenimiento."
+                );
+            }
         }
 
         existente.setNombre(equipo.getNombre());

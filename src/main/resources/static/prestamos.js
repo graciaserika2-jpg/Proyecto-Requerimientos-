@@ -416,8 +416,7 @@ formularioPrestamo.addEventListener("submit", async evento => {
 
         const datos = {
             personaId: Number(selectorPersona.value),
-            equipoId: Number(selectorEquipo.value),
-            observaciones: campoObservaciones.value.trim()
+            equipoId: Number(selectorEquipo.value)
         };
 
         const respuesta = await fetch("/api/prestamos", {
