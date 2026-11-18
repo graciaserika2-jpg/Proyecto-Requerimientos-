@@ -3,17 +3,21 @@ package com.proyectoRequerimientos.prestamo_equipos.service;
 
 import java.nio.charset.StandardCharsets;
 import java.net.URLEncoder;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
 @Service
 public class CorreoService {
 
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
+    private final RestClient restClient;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -21,9 +25,17 @@ public class CorreoService {
     @Value("${app.mail.from:}")
     private String correoRemitente;
 
+    @Value("${RESEND_API_KEY:}")
+    private String resendApiKey;
+
+    @Value("${RESEND_FROM:onboarding@resend.dev}")
+    private String resendFrom;
+
     public CorreoService(
             ObjectProvider<JavaMailSender> mailSenderProvider) {
+
         this.mailSenderProvider = mailSenderProvider;
+        this.restClient = RestClient.create();
     }
 
     public void enviarActivacion(
@@ -88,6 +100,40 @@ public class CorreoService {
     }
 
     private void enviar(
+            String destinatario,
+            String asunto,
+            String contenido) {
+
+        // En Render se utiliza Resend.
+        if (resendApiKey != null && !resendApiKey.isBlank()) {
+            enviarConResend(destinatario, asunto, contenido);
+            return;
+        }
+
+        // Localmente se conserva Gmail SMTP.
+        enviarConGmail(destinatario, asunto, contenido);
+    }
+
+    private void enviarConResend(
+            String destinatario,
+            String asunto,
+            String contenido) {
+
+        restClient.post()
+                .uri("https://api.resend.com/emails")
+                .header("Authorization", "Bearer " + resendApiKey)
+                .header("Content-Type", "application/json")
+                .body(Map.of(
+                        "from", resendFrom,
+                        "to", List.of(destinatario),
+                        "subject", asunto,
+                        "text", contenido
+                ))
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    private void enviarConGmail(
             String destinatario,
             String asunto,
             String contenido) {
