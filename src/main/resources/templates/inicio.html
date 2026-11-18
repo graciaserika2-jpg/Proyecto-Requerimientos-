@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
     xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
@@ -68,6 +67,43 @@
             color: #155724;
             background: #d4edda;
         }
+
+
+        /* Opciones del portal del alumno */
+        .opciones-alumno .opcion-alumno {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .opciones-alumno .opcion-alumno:hover {
+            text-decoration: none;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .opciones-alumno .opcion-alumno:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .opcion-alumno .resumen-data h3 {
+            color: #243247;
+        }
+
+        .opcion-alumno .resumen-data p {
+            color: #64748b;
+        }
+
+        .opcion-indicador {
+            display: inline-block;
+            margin-top: 10px;
+            color: #2563eb;
+            font-size: 13px;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -117,7 +153,7 @@
 
                 <a th:href="@{/encargados}" class="menu-item" sec:authorize="hasRole('ADMIN')">
                     <span>⚙</span>
-                    <span>Administrar encargados</span>
+                    <span>Administración de cuentas de admin y encargados</span>
                 </a>
 
             </nav>
@@ -319,33 +355,38 @@
                         </div>
                     </div>
 
-                    <div class="resumen-grid">
 
-                        <a th:href="@{/disponibilidad}" class="resumen-item">
+                    <div class="resumen-grid opciones-alumno">
+
+                        <a th:href="@{/disponibilidad}" class="resumen-item opcion-alumno">
                             <div class="resumen-icon resumen-icon-green">▦</div>
                             <div class="resumen-data">
                                 <h3>Disponibilidad de equipos</h3>
                                 <p>Consulta qué equipos puedes solicitar.</p>
+                                <span class="opcion-indicador">Consultar equipos →</span>
                             </div>
                         </a>
 
-                        <a th:href="@{/mi-historial}" class="resumen-item">
+                        <a th:href="@{/mi-historial}" class="resumen-item opcion-alumno">
                             <div class="resumen-icon resumen-icon-blue">◷</div>
                             <div class="resumen-data">
                                 <h3>Mi historial de préstamos</h3>
                                 <p>Consulta tus préstamos anteriores y activos.</p>
+                                <span class="opcion-indicador">Ver mi historial →</span>
                             </div>
                         </a>
 
-                        <a th:href="@{/cambiar-password}" class="resumen-item">
+                        <a th:href="@{/cambiar-password}" class="resumen-item opcion-alumno">
                             <div class="resumen-icon resumen-icon-purple">⚙</div>
                             <div class="resumen-data">
                                 <h3>Cambiar contraseña</h3>
                                 <p>Actualiza la contraseña de tu cuenta.</p>
+                                <span class="opcion-indicador">Actualizar contraseña →</span>
                             </div>
                         </a>
 
                     </div>
+
 
                 </section>
 

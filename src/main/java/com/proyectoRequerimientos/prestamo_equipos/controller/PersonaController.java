@@ -9,6 +9,9 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,15 +29,18 @@ public class PersonaController {
     private final PersonaService personaService;
     private final CuentaPersonaRepository cuentaPersonaRepository;
     private final BloqueoAdministrativoRepository bloqueoRepository;
+    private final SessionRegistry sessionRegistry;
 
     public PersonaController(
             PersonaService personaService,
             CuentaPersonaRepository cuentaPersonaRepository,
-            BloqueoAdministrativoRepository bloqueoRepository) {
+            BloqueoAdministrativoRepository bloqueoRepository,
+            SessionRegistry sessionRegistry) {
 
         this.personaService = personaService;
         this.cuentaPersonaRepository = cuentaPersonaRepository;
         this.bloqueoRepository = bloqueoRepository;
+        this.sessionRegistry = sessionRegistry;
     }
 
     @GetMapping
@@ -112,7 +118,7 @@ public class PersonaController {
     @GetMapping("/estado-cuentas")
     public List<PersonaConCuenta> listarPersonasConEstadoCuenta() {
 
-        return personaService.listarPersonas()
+        return personaService.listarTodasLasPersonas()
                 .stream()
                 .map(persona -> cuentaPersonaRepository
                         .findByPersona_Id(persona.getId())
@@ -123,7 +129,9 @@ public class PersonaController {
                                 persona.getIdentificador(),
                                 true,
                                 cuenta.getCorreo(),
-                                cuenta.getCorreoVerificado()
+                                cuenta.getCorreoVerificado(),
+                                !Boolean.FALSE.equals(persona.getActivo()),
+                                cuenta.isActivo()
                         ))
                         .orElseGet(() -> new PersonaConCuenta(
                                 persona.getId(),
@@ -132,6 +140,8 @@ public class PersonaController {
                                 persona.getIdentificador(),
                                 false,
                                 null,
+                                null,
+                                !Boolean.FALSE.equals(persona.getActivo()),
                                 null
                         )))
                 .toList();
@@ -142,6 +152,112 @@ public class PersonaController {
             @RequestParam String texto) {
 
         return personaService.buscarParaPrestamo(texto);
+    }
+
+    // ==========================================
+    // EDITAR ALUMNO
+    // ==========================================
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editarAlumno(
+            @PathVariable Long id,
+            @RequestBody EditarAlumnoRequest solicitud) {
+
+        try {
+
+            Persona persona = personaService.editarAlumno(
+                    id,
+                    solicitud.nombre(),
+                    solicitud.identificador()
+            );
+
+            return ResponseEntity.ok(persona);
+
+        } catch (IllegalArgumentException e) {
+
+            return ResponseEntity.badRequest()
+                    .body(new Respuesta(e.getMessage()));
+        }
+    }
+
+    // ==========================================
+    // DAR DE BAJA ALUMNO
+    // ==========================================
+
+    @PatchMapping("/{id}/baja")
+    public ResponseEntity<?> darDeBajaAlumno(
+            @PathVariable Long id) {
+
+        try {
+
+            String usuario = cuentaPersonaRepository
+                    .findByPersona_Id(id)
+                    .map(CuentaPersona::getUsuario)
+                    .orElse(null);
+
+            personaService.darDeBajaAlumno(id);
+
+            if (usuario != null) {
+                expirarSesiones(usuario);
+            }
+
+            return ResponseEntity.ok(
+                    new Respuesta(
+                            "El alumno fue dado de baja correctamente."
+                    )
+            );
+
+        } catch (IllegalArgumentException e) {
+
+            return ResponseEntity.badRequest()
+                    .body(new Respuesta(e.getMessage()));
+        }
+    }
+
+    // ==========================================
+    // REACTIVAR ALUMNO
+    // ==========================================
+
+    @PatchMapping("/{id}/reactivar")
+    public ResponseEntity<?> reactivarAlumno(
+            @PathVariable Long id) {
+
+        try {
+
+            personaService.reactivarAlumno(id);
+
+            return ResponseEntity.ok(
+                    new Respuesta(
+                            "El alumno fue reactivado correctamente."
+                    )
+            );
+
+        } catch (IllegalArgumentException e) {
+
+            return ResponseEntity.badRequest()
+                    .body(new Respuesta(e.getMessage()));
+        }
+    }
+
+    // ==========================================
+    // CERRAR SESIONES DEL ALUMNO
+    // ==========================================
+
+    private void expirarSesiones(String usuario) {
+
+        for (Object principal : sessionRegistry.getAllPrincipals()) {
+
+            if (principal instanceof UserDetails userDetails
+                    && userDetails.getUsername().equalsIgnoreCase(usuario)) {
+
+                List<SessionInformation> sesiones =
+                        sessionRegistry.getAllSessions(principal, false);
+
+                for (SessionInformation sesion : sesiones) {
+                    sesion.expireNow();
+                }
+            }
+        }
     }
 
     // ==========================================
@@ -198,6 +314,12 @@ public class PersonaController {
     ) {
     }
 
+    public record EditarAlumnoRequest(
+            String nombre,
+            String identificador
+    ) {
+    }
+
     public record PersonaConCuenta(
             Long id,
             String nombre,
@@ -205,7 +327,9 @@ public class PersonaController {
             String identificador,
             boolean tieneCuenta,
             String correo,
-            Boolean correoVerificado
+            Boolean correoVerificado,
+            boolean activo,
+            Boolean cuentaActiva
     ) {
     }
 

@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.proyectoRequerimientos.prestamo_equipos.model.CuentaPersona;
 import com.proyectoRequerimientos.prestamo_equipos.repository.CuentaPersonaRepository;
 import com.proyectoRequerimientos.prestamo_equipos.repository.EncargadoRepository;
 
@@ -14,6 +15,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 public class CambioPasswordObligatorioFilter extends OncePerRequestFilter {
 
@@ -59,11 +61,36 @@ public class CambioPasswordObligatorioFilter extends OncePerRequestFilter {
 
                 var cuenta = cuentaPersonaRepository
                         .findByUsuarioIgnoreCase(usuario)
-                        .filter(persona -> persona.isActivo());
+                        .filter(CuentaPersona::isActivo);
 
                 if (cuenta.isPresent()) {
+
+                    CuentaPersona cuentaPersona = cuenta.get();
+
+                    boolean personaActiva =
+                            cuentaPersona.getPersona() != null
+                            && !Boolean.FALSE.equals(
+                                    cuentaPersona.getPersona().getActivo());
+
+                    if (!personaActiva) {
+
+                        SecurityContextHolder.clearContext();
+
+                        HttpSession session = request.getSession(false);
+
+                        if (session != null) {
+                            session.invalidate();
+                        }
+
+                        response.sendRedirect(
+                                request.getContextPath() + "/login?inactiva"
+                        );
+
+                        return;
+                    }
+
                     debeCambiarPassword =
-                            cuenta.get().isDebeCambiarPassword();
+                            cuentaPersona.isDebeCambiarPassword();
                 }
             }
 

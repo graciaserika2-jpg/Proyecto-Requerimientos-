@@ -4,6 +4,7 @@ package com.proyectoRequerimientos.prestamo_equipos.service;
 import com.proyectoRequerimientos.prestamo_equipos.model.CuentaPersona;
 import com.proyectoRequerimientos.prestamo_equipos.model.Persona;
 import com.proyectoRequerimientos.prestamo_equipos.repository.PersonaRepository;
+import com.proyectoRequerimientos.prestamo_equipos.repository.CuentaPersonaRepository;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -12,23 +13,34 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class PersonaService {
 
     private final PersonaRepository personaRepository;
+    private final CuentaPersonaRepository cuentaPersonaRepository;
     private final CuentaPersonaService cuentaPersonaService;
 
     public PersonaService(
             PersonaRepository personaRepository,
+            CuentaPersonaRepository cuentaPersonaRepository,
             CuentaPersonaService cuentaPersonaService) {
 
         this.personaRepository = personaRepository;
+        this.cuentaPersonaRepository = cuentaPersonaRepository;
         this.cuentaPersonaService = cuentaPersonaService;
     }
 
     public List<Persona> listarPersonas() {
         return personaRepository.findByActivoTrueOrActivoIsNull();
+    }
+
+    public List<Persona> listarTodasLasPersonas() {
+        return personaRepository.findAll()
+                .stream()
+                .filter(p -> "Alumno".equals(p.getTipo()))
+                .toList();
     }
 
     public List<Persona> buscarParaPrestamo(String texto) {
@@ -50,6 +62,125 @@ public class PersonaService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Persona no encontrada"));
+    }
+
+    @Transactional
+    public Persona editarAlumno(
+            Long id,
+            String nombre,
+            String identificador) {
+
+        Persona persona = buscarPorId(id);
+        validarDatosAlumno(nombre, identificador);
+
+        String nombreNormalizado = nombre.trim();
+        String boletaNormalizada = identificador.trim();
+
+        boolean boletaDuplicada = personaRepository.findAll()
+                .stream()
+                .anyMatch(p ->
+                        !p.getId().equals(id)
+                        && p.getIdentificador() != null
+                        && p.getIdentificador().equalsIgnoreCase(
+                                boletaNormalizada));
+
+        if (boletaDuplicada) {
+            throw new IllegalArgumentException(
+                    "Esa boleta ya está registrada en otro alumno.");
+        }
+
+        persona.setNombre(nombreNormalizado);
+        persona.setIdentificador(boletaNormalizada);
+
+        CuentaPersona cuenta = cuentaPersonaRepository
+                .findByPersona_Id(id)
+                .orElse(null);
+
+        if (cuenta != null) {
+            cuenta.setUsuario(
+                    boletaNormalizada.toLowerCase(Locale.ROOT)
+            );
+            cuentaPersonaRepository.save(cuenta);
+        }
+
+        return personaRepository.save(persona);
+    }
+
+    @Transactional
+    public void darDeBajaAlumno(Long id) {
+
+        Persona persona = buscarPorId(id);
+
+        if (Boolean.FALSE.equals(persona.getActivo())) {
+            throw new IllegalArgumentException(
+                    "El alumno ya se encuentra dado de baja.");
+        }
+
+        persona.setActivo(false);
+        personaRepository.save(persona);
+
+        cuentaPersonaRepository.findByPersona_Id(id)
+                .ifPresent(cuenta -> {
+                    cuenta.setActivo(false);
+                    cuentaPersonaRepository.save(cuenta);
+                });
+    }
+
+    @Transactional
+    public void reactivarAlumno(Long id) {
+
+        Persona persona = buscarPorId(id);
+
+        if (!Boolean.FALSE.equals(persona.getActivo())) {
+            throw new IllegalArgumentException(
+                    "El alumno ya se encuentra activo.");
+        }
+
+        persona.setActivo(true);
+        personaRepository.save(persona);
+
+        cuentaPersonaRepository.findByPersona_Id(id)
+                .ifPresent(cuenta -> {
+                    cuenta.setActivo(true);
+                    cuentaPersonaRepository.save(cuenta);
+                });
+    }
+
+    private Persona buscarPorId(Long id) {
+
+        Persona persona = personaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Alumno no encontrado."));
+
+        if (!"Alumno".equals(persona.getTipo())) {
+            throw new IllegalArgumentException(
+                    "Esta operación solamente está disponible para alumnos.");
+        }
+
+        return persona;
+    }
+
+    private void validarDatosAlumno(
+            String nombre,
+            String identificador) {
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El nombre del alumno es obligatorio.");
+        }
+
+        if (nombre.trim().length() > 150) {
+            throw new IllegalArgumentException(
+                    "El nombre no puede superar los 150 caracteres.");
+        }
+
+        if (identificador == null
+                || !identificador.trim().matches("[0-9]{10}")) {
+
+            throw new IllegalArgumentException(
+                    "La boleta debe contener exactamente 10 dígitos.");
+        }
     }
 
     @Transactional

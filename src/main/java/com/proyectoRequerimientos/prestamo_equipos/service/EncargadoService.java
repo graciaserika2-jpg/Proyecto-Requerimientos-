@@ -42,7 +42,7 @@ public class EncargadoService {
     }
 
     // =====================================================
-    // LISTAR ENCARGADOS
+    // LISTAR ENCARGADOS Y ADMINISTRADORES
     // =====================================================
 
     public List<Encargado> listarEncargados() {
@@ -51,12 +51,13 @@ public class EncargadoService {
                 .stream()
                 .filter(Encargado::isActivo)
                 .filter(encargado ->
-                        "ENCARGADO".equalsIgnoreCase(encargado.getRol()))
+                        "ENCARGADO".equalsIgnoreCase(encargado.getRol())
+                        || "ADMIN".equalsIgnoreCase(encargado.getRol()))
                 .toList();
     }
 
     // =====================================================
-    // REGISTRAR ENCARGADO
+    // CREAR ENCARGADO
     // =====================================================
 
     @Transactional
@@ -70,11 +71,11 @@ public class EncargadoService {
     }
 
     // =====================================================
-    // REGISTRAR EL PRIMER ADMINISTRADOR
+    // CREAR PRIMER ADMINISTRADOR
     // =====================================================
 
     @Transactional
-    public Encargado crearPrimerAdministrador(
+    public synchronized Encargado crearPrimerAdministrador(
             String usuario,
             String nombre,
             String correo) {
@@ -90,7 +91,7 @@ public class EncargadoService {
     }
 
     // =====================================================
-    // REGISTRAR OTRO ADMINISTRADOR
+    // CREAR ADMINISTRADOR DESDE OTRO ADMINISTRADOR
     // =====================================================
 
     @Transactional
@@ -107,7 +108,7 @@ public class EncargadoService {
     }
 
     // =====================================================
-    // VERIFICAR QUE QUIEN SOLICITA SEA ADMIN
+    // VALIDAR QUIÉN SOLICITA CREAR UN ADMINISTRADOR
     // =====================================================
 
     private void validarAdministradorSolicitante(String usuarioSolicitante) {
@@ -130,7 +131,7 @@ public class EncargadoService {
     }
 
     // =====================================================
-    // CREAR CUENTA Y ENVIAR ACTIVACIÓN
+    // MÉTODO GENERAL PARA CREAR CUENTAS ADMINISTRATIVAS
     // =====================================================
 
     private Encargado crearCuentaAdministrativa(
@@ -158,6 +159,22 @@ public class EncargadoService {
         String nombreLimpio = nombre.trim();
         String correoLimpio = correo.trim().toLowerCase(Locale.ROOT);
 
+        if (usuarioLimpio.length() > 80) {
+            throw new IllegalArgumentException(
+                    "El nombre de usuario no puede superar los 80 caracteres.");
+        }
+
+        if (nombreLimpio.length() > 120) {
+            throw new IllegalArgumentException(
+                    "El nombre completo no puede superar los 120 caracteres.");
+        }
+
+        if (correoLimpio.length() > 254) {
+            throw new IllegalArgumentException(
+                    "El correo electrónico es demasiado largo.");
+        }
+
+        // Validar formato del correo electrónico.
         if (!correoLimpio.matches(
                 "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
 
@@ -166,23 +183,18 @@ public class EncargadoService {
         }
 
         if (encargadoRepository
-                .findByUsuarioIgnoreCase(usuarioLimpio)
-                .isPresent()) {
+                .findByUsuarioIgnoreCase(usuarioLimpio).isPresent()) {
 
             throw new IllegalArgumentException(
                     "Ese nombre de usuario ya está registrado.");
         }
 
-        if (encargadoRepository
-                .existsByCorreoIgnoreCase(correoLimpio)) {
-
+        if (encargadoRepository.existsByCorreoIgnoreCase(correoLimpio)) {
             throw new IllegalArgumentException(
-                    "Ese correo ya está registrado en otra cuenta.");
+                    "Ese correo ya está registrado en otra cuenta administrativa.");
         }
 
-        if (cuentaPersonaRepository
-                .existsByCorreoIgnoreCase(correoLimpio)) {
-
+        if (cuentaPersonaRepository.existsByCorreoIgnoreCase(correoLimpio)) {
             throw new IllegalArgumentException(
                     "Ese correo ya está registrado en una cuenta de alumno.");
         }
@@ -191,22 +203,17 @@ public class EncargadoService {
 
         encargado.setUsuario(usuarioLimpio);
         encargado.setNombre(nombreLimpio);
-
         encargado.setPasswordHash(
                 passwordEncoder.encode(generarPasswordAleatoria()));
-
         encargado.setRol(rol);
         encargado.setActivo(true);
         encargado.setDebeCambiarPassword(true);
-
         encargado.setCorreo(correoLimpio);
         encargado.setCorreoVerificado(false);
 
-        Encargado encargadoGuardado =
-                encargadoRepository.save(encargado);
+        Encargado encargadoGuardado = encargadoRepository.save(encargado);
 
-        String token = tokenCuentaService
-                .crearTokenActivacion(encargadoGuardado);
+        String token = tokenCuentaService.crearTokenActivacion(encargadoGuardado);
 
         correoService.enviarActivacion(
                 correoLimpio,

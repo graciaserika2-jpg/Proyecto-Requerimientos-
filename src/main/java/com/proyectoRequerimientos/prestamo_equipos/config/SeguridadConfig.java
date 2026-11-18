@@ -64,6 +64,9 @@ public class SeguridadConfig {
             var cuentaPersona = cuentaPersonaRepository
                     .findByUsuarioIgnoreCase(usuario)
                     .filter(cuenta -> cuenta.isActivo())
+                    .filter(cuenta -> cuenta.getPersona() != null)
+                    .filter(cuenta -> !Boolean.FALSE.equals(
+                            cuenta.getPersona().getActivo()))
                     .filter(cuenta -> !Boolean.FALSE.equals(
                             cuenta.getCorreoVerificado()));
 
@@ -124,13 +127,15 @@ public class SeguridadConfig {
                         "/favicon.ico")
                 .permitAll()
 
-                // Administración de encargados: solo ADMIN.
+                // Administración de encargados y administradores: solo ADMIN.
                 .requestMatchers(
                         "/encargados",
                         "/encargados/**",
                         "/api/encargados",
                         "/api/encargados/**")
                 .hasRole("ADMIN")
+
+                
 
                 // Consulta del estado de la cuenta del alumno.
                 .requestMatchers("/api/personas/mi-estado")

@@ -1,6 +1,10 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    // ==========================================
+    // ELEMENTOS DEL HTML
+    // ==========================================
+
     const formPersona = document.getElementById("formPersona");
     const tablaPersonas = document.getElementById("tablaPersonas");
     const mensaje = document.getElementById("mensaje");
@@ -8,7 +12,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const identificador = document.getElementById("identificador");
     const botonRegistrar = document.getElementById("botonRegistrar");
 
+    // Elementos del modal de edición
+    const modalEditarAlumno = document.getElementById("modalEditarAlumno");
+    const formEditarAlumno = document.getElementById("formEditarAlumno");
+    const editarIdAlumno = document.getElementById("editarIdAlumno");
+    const editarNombre = document.getElementById("editarNombre");
+    const editarBoleta = document.getElementById("editarBoleta");
+    const cerrarModalEditar = document.getElementById("cerrarModalEditar");
+    const cancelarEdicion = document.getElementById("cancelarEdicion");
+    const guardarEdicion = document.getElementById("guardarEdicion");
+    const mensajeEditarAlumno = document.getElementById("mensajeEditarAlumno");
+
     let personas = [];
+    let alumnoEnEdicion = null;
+
+    // ==========================================
+    // HEADERS Y MENSAJES
+    // ==========================================
 
     function obtenerHeaders() {
 
@@ -31,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!mensaje) return;
 
         mensaje.textContent = texto;
+
         mensaje.className = esError
             ? "mensaje error"
             : "mensaje exito";
@@ -38,22 +59,17 @@ document.addEventListener("DOMContentLoaded", () => {
         mensaje.style.display = "block";
     }
 
-    function validarBoleta() {
+    function mostrarMensajeModal(texto, esError = false) {
 
-        const valor = identificador.value.trim();
+        if (!mensajeEditarAlumno) return;
 
-        if (!/^\d{10}$/.test(valor)) {
+        mensajeEditarAlumno.textContent = texto;
 
-            mostrarMensaje(
-                "La boleta debe contener exactamente 10 dígitos.",
-                true
-            );
+        mensajeEditarAlumno.className = esError
+            ? "mensaje error"
+            : "mensaje exito";
 
-            identificador.focus();
-            return false;
-        }
-
-        return true;
+        mensajeEditarAlumno.style.display = "block";
     }
 
     async function leerError(respuesta) {
@@ -72,6 +88,33 @@ document.addEventListener("DOMContentLoaded", () => {
             return "Ocurrió un error al procesar la solicitud.";
         }
     }
+
+    // ==========================================
+    // VALIDACIONES
+    // ==========================================
+
+    function validarBoleta() {
+
+        const valor = identificador.value.trim();
+
+        if (!/^\d{10}$/.test(valor)) {
+
+            mostrarMensaje(
+                "La boleta debe contener exactamente 10 dígitos.",
+                true
+            );
+
+            identificador.focus();
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // ==========================================
+    // CARGAR ALUMNOS
+    // ==========================================
 
     async function cargarPersonas() {
 
@@ -102,10 +145,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // ==========================================
+    // ESTADOS
+    // ==========================================
+
     function obtenerEstadoCuenta(persona) {
 
         if (!persona.tieneCuenta) {
             return "Sin cuenta";
+        }
+
+        if (persona.cuentaActiva === false) {
+            return "Inactiva";
         }
 
         if (persona.correoVerificado === true) {
@@ -118,6 +169,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return "Cuenta anterior";
     }
+
+    function obtenerEstadoAlumno(persona) {
+
+        return persona.activo
+            ? "Activo"
+            : "Dado de baja";
+    }
+
+    // ==========================================
+    // CREAR BOTONES
+    // ==========================================
+
+    function crearBoton(texto, clase, accion) {
+
+        const boton = document.createElement("button");
+
+        boton.type = "button";
+        boton.textContent = texto;
+        boton.className = clase;
+
+        boton.addEventListener("click", accion);
+
+        return boton;
+    }
+
+    // ==========================================
+    // MOSTRAR ALUMNOS
+    // ==========================================
 
     function mostrarPersonas() {
 
@@ -133,9 +212,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const id = String(persona.id ?? "");
             const nombre = (persona.nombre || "").toLowerCase();
+
             const boleta = String(
                 persona.identificador || ""
             ).toLowerCase();
+
             const correo = (persona.correo || "").toLowerCase();
 
             return id.includes(texto) ||
@@ -148,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             tablaPersonas.innerHTML = `
                 <tr>
-                    <td colspan="5">No se encontraron alumnos.</td>
+                    <td colspan="7">No se encontraron alumnos.</td>
                 </tr>
             `;
 
@@ -172,20 +253,315 @@ document.addEventListener("DOMContentLoaded", () => {
             const celdaCorreo = document.createElement("td");
             celdaCorreo.textContent = persona.correo || "—";
 
-            const celdaEstado = document.createElement("td");
-            celdaEstado.textContent = obtenerEstadoCuenta(persona);
+            const celdaEstadoAlumno = document.createElement("td");
+            celdaEstadoAlumno.textContent =
+                obtenerEstadoAlumno(persona);
+
+            const celdaEstadoCuenta = document.createElement("td");
+            celdaEstadoCuenta.textContent =
+                obtenerEstadoCuenta(persona);
+
+            const celdaAcciones = document.createElement("td");
+
+            const contenedorAcciones = document.createElement("div");
+            contenedorAcciones.className = "acciones-alumno";
+
+            if (persona.activo) {
+
+                const botonEditar = crearBoton(
+                    "Editar",
+                    "btn-accion btn-editar",
+                    () => abrirModalEdicion(persona)
+                );
+
+                const botonBaja = crearBoton(
+                    "Dar de baja",
+                    "btn-accion btn-baja",
+                    () => darDeBajaAlumno(persona)
+                );
+
+                contenedorAcciones.append(
+                    botonEditar,
+                    botonBaja
+                );
+
+            } else {
+
+                const botonReactivar = crearBoton(
+                    "Reactivar",
+                    "btn-accion btn-reactivar",
+                    () => reactivarAlumno(persona)
+                );
+
+                contenedorAcciones.appendChild(botonReactivar);
+            }
+
+            celdaAcciones.appendChild(contenedorAcciones);
 
             fila.append(
                 celdaId,
                 celdaNombre,
                 celdaBoleta,
                 celdaCorreo,
-                celdaEstado
+                celdaEstadoAlumno,
+                celdaEstadoCuenta,
+                celdaAcciones
             );
 
             tablaPersonas.appendChild(fila);
         });
     }
+
+    // ==========================================
+    // ABRIR MODAL DE EDICIÓN
+    // ==========================================
+
+    function abrirModalEdicion(persona) {
+
+        if (!modalEditarAlumno || !formEditarAlumno) {
+            mostrarMensaje(
+                "No se encontró la ventana de edición en el HTML.",
+                true
+            );
+            return;
+        }
+
+        alumnoEnEdicion = persona;
+
+        // Llenar los campos con los datos actuales
+        editarIdAlumno.value = persona.id;
+        editarNombre.value = persona.nombre || "";
+        editarBoleta.value = persona.identificador || "";
+
+        // Limpiar mensajes anteriores
+        formEditarAlumno.reset();
+
+        editarIdAlumno.value = persona.id;
+        editarNombre.value = persona.nombre || "";
+        editarBoleta.value = persona.identificador || "";
+
+        if (mensajeEditarAlumno) {
+            mensajeEditarAlumno.textContent = "";
+            mensajeEditarAlumno.style.display = "none";
+        }
+
+        // Mostrar modal
+        modalEditarAlumno.hidden = false;
+
+        // Colocar el cursor en el nombre
+        editarNombre.focus();
+    }
+
+    // ==========================================
+    // CERRAR MODAL DE EDICIÓN
+    // ==========================================
+
+    function cerrarModalEdicion() {
+
+        if (!modalEditarAlumno) return;
+
+        modalEditarAlumno.hidden = true;
+
+        if (formEditarAlumno) {
+            formEditarAlumno.reset();
+        }
+
+        if (mensajeEditarAlumno) {
+            mensajeEditarAlumno.textContent = "";
+            mensajeEditarAlumno.style.display = "none";
+        }
+
+        alumnoEnEdicion = null;
+    }
+
+    // ==========================================
+    // GUARDAR CAMBIOS DEL ALUMNO
+    // ==========================================
+
+    async function guardarCambiosAlumno(evento) {
+
+        evento.preventDefault();
+
+        if (!alumnoEnEdicion) {
+            mostrarMensajeModal(
+                "No se encontró el alumno que deseas editar.",
+                true
+            );
+            return;
+        }
+
+        const nuevoNombre = editarNombre.value.trim();
+        const nuevaBoleta = editarBoleta.value.trim();
+
+        if (!nuevoNombre) {
+
+            mostrarMensajeModal(
+                "El nombre del alumno es obligatorio.",
+                true
+            );
+
+            editarNombre.focus();
+
+            return;
+        }
+
+        if (nuevoNombre.length > 150) {
+
+            mostrarMensajeModal(
+                "El nombre no puede superar los 150 caracteres.",
+                true
+            );
+
+            editarNombre.focus();
+
+            return;
+        }
+
+        if (!/^\d{10}$/.test(nuevaBoleta)) {
+
+            mostrarMensajeModal(
+                "La boleta debe contener exactamente 10 dígitos.",
+                true
+            );
+
+            editarBoleta.focus();
+
+            return;
+        }
+
+        guardarEdicion.disabled = true;
+        guardarEdicion.textContent = "Guardando...";
+
+        try {
+
+            const respuesta = await fetch(
+                `/api/personas/${alumnoEnEdicion.id}`,
+                {
+                    method: "PUT",
+                    headers: obtenerHeaders(),
+                    body: JSON.stringify({
+                        nombre: nuevoNombre,
+                        identificador: nuevaBoleta
+                    })
+                }
+            );
+
+            if (!respuesta.ok) {
+                throw new Error(await leerError(respuesta));
+            }
+
+            const nombreAnterior = alumnoEnEdicion.nombre;
+
+            cerrarModalEdicion();
+
+            await cargarPersonas();
+
+            mostrarMensaje(
+                `Los datos de ${nombreAnterior} fueron actualizados correctamente.`
+            );
+
+        } catch (error) {
+
+            mostrarMensajeModal(
+                error.message || "No se pudo editar al alumno.",
+                true
+            );
+
+        } finally {
+
+            guardarEdicion.disabled = false;
+            guardarEdicion.textContent = "Guardar cambios";
+        }
+    }
+
+    // ==========================================
+    // DAR DE BAJA
+    // ==========================================
+
+    async function darDeBajaAlumno(persona) {
+
+        const confirmar = confirm(
+            `¿Estás seguro de dar de baja a ${persona.nombre}?\n\n` +
+            "Su cuenta quedará desactivada y no podrá iniciar sesión. " +
+            "Su historial de préstamos se conservará."
+        );
+
+        if (!confirmar) return;
+
+        try {
+
+            const respuesta = await fetch(
+                `/api/personas/${persona.id}/baja`,
+                {
+                    method: "PATCH",
+                    headers: obtenerHeaders()
+                }
+            );
+
+            if (!respuesta.ok) {
+                throw new Error(await leerError(respuesta));
+            }
+
+            await cargarPersonas();
+
+            mostrarMensaje(
+                `El alumno ${persona.nombre} fue dado de baja correctamente.`
+            );
+
+        } catch (error) {
+
+            mostrarMensaje(
+                error.message || "No se pudo dar de baja al alumno.",
+                true
+            );
+        }
+    }
+
+    // ==========================================
+    // REACTIVAR
+    // ==========================================
+
+    async function reactivarAlumno(persona) {
+
+        const confirmar = confirm(
+            `¿Deseas reactivar a ${persona.nombre}?\n\n` +
+            "Su cuenta volverá a estar habilitada."
+        );
+
+        if (!confirmar) return;
+
+        try {
+
+            const respuesta = await fetch(
+                `/api/personas/${persona.id}/reactivar`,
+                {
+                    method: "PATCH",
+                    headers: obtenerHeaders()
+                }
+            );
+
+            if (!respuesta.ok) {
+                throw new Error(await leerError(respuesta));
+            }
+
+            await cargarPersonas();
+
+            mostrarMensaje(
+                `El alumno ${persona.nombre} fue reactivado correctamente.`
+            );
+
+        } catch (error) {
+
+            mostrarMensaje(
+                error.message || "No se pudo reactivar al alumno.",
+                true
+            );
+        }
+    }
+
+    // ==========================================
+    // REGISTRAR ALUMNO
+    // ==========================================
 
     async function registrarPersona(evento) {
 
@@ -264,6 +640,57 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // ==========================================
+    // EVENTOS DEL MODAL
+    // ==========================================
+
+    if (formEditarAlumno) {
+        formEditarAlumno.addEventListener(
+            "submit",
+            guardarCambiosAlumno
+        );
+    }
+
+    if (cerrarModalEditar) {
+        cerrarModalEditar.addEventListener(
+            "click",
+            cerrarModalEdicion
+        );
+    }
+
+    if (cancelarEdicion) {
+        cancelarEdicion.addEventListener(
+            "click",
+            cerrarModalEdicion
+        );
+    }
+
+    if (modalEditarAlumno) {
+
+        // Cerrar al pulsar fuera de la ventana
+        modalEditarAlumno.addEventListener("click", evento => {
+
+            if (evento.target === modalEditarAlumno) {
+                cerrarModalEdicion();
+            }
+        });
+
+        // Cerrar al pulsar Escape
+        document.addEventListener("keydown", evento => {
+
+            if (
+                evento.key === "Escape" &&
+                !modalEditarAlumno.hidden
+            ) {
+                cerrarModalEdicion();
+            }
+        });
+    }
+
+    // ==========================================
+    // EVENTOS GENERALES
+    // ==========================================
+
     if (formPersona) {
         formPersona.addEventListener(
             "submit",
@@ -277,6 +704,10 @@ document.addEventListener("DOMContentLoaded", () => {
             mostrarPersonas
         );
     }
+
+    // ==========================================
+    // INICIO
+    // ==========================================
 
     cargarPersonas();
 

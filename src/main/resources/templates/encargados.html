@@ -8,7 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Administrar encargados | Préstamo UPIICSA</title>
+    <title>Administración de cuentas de admins y encargados | Préstamo UPIICSA</title>
 
     <link rel="stylesheet" th:href="@{/estilos.css}">
 
@@ -22,7 +22,7 @@
 
 <div class="app">
 
-    <!-- MENÚ LATERAL ADMINISTRATIVO -->
+    <!-- MENÚ LATERAL -->
 
     <aside class="sidebar">
 
@@ -68,7 +68,7 @@
                class="menu-item active"
                sec:authorize="hasRole('ADMIN')">
                 <span>⚙</span>
-                <span>Administrar encargados</span>
+                <span>Administración de cuentas de admin y encargados</span>
             </a>
 
         </nav>
@@ -97,7 +97,7 @@
                 <h1>Administración de cuentas</h1>
 
                 <p class="topbar-description">
-                    Registro de encargados y administradores del sistema.
+                    Registro y consulta de administradores y encargados del sistema.
                 </p>
             </div>
 
@@ -111,9 +111,9 @@
             <h2>Registrar nueva cuenta</h2>
 
             <p>
-                Registra los datos de la persona. Se enviará un correo
-                electrónico con un enlace para activar su cuenta y
-                establecer una contraseña.
+                Selecciona el tipo de cuenta e ingresa los datos de la persona.
+                Se enviará un correo electrónico con un enlace para activar
+                su cuenta y establecer una contraseña.
             </p>
 
             <form id="formularioEncargado">
@@ -145,6 +145,7 @@
                         name="nombre"
                         maxlength="120"
                         placeholder="Nombre completo"
+                        autocomplete="name"
                         required>
                 </div>
 
@@ -157,6 +158,7 @@
                         name="usuario"
                         maxlength="80"
                         placeholder="Nombre de usuario"
+                        autocomplete="username"
                         required>
                 </div>
 
@@ -169,6 +171,7 @@
                         name="correo"
                         maxlength="254"
                         placeholder="ejemplo@correo.com"
+                        autocomplete="email"
                         required>
                 </div>
 
@@ -190,17 +193,18 @@
         </section>
 
 
-        <!-- LISTA DE ENCARGADOS -->
+        <!-- LISTA DE CUENTAS -->
 
         <section class="card">
 
             <div class="encabezado-seccion">
 
                 <div>
-                    <h2>Encargados registrados</h2>
+                    <h2>Cuentas registradas</h2>
 
                     <p>
-                        Consulta las cuentas de los encargados del sistema.
+                        Consulta los administradores y encargados,
+                        así como el estado de activación de sus cuentas.
                     </p>
                 </div>
 
@@ -231,7 +235,7 @@
 
                         <tr>
                             <td colspan="5">
-                                Cargando encargados...
+                                Cargando cuentas...
                             </td>
                         </tr>
 

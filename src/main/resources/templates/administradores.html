@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administradores | Préstamo UPIICSA</title>
+    <link rel="stylesheet" th:href="@{/estilos.css}">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+</head>
+
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">U</div>
+            <div>
+                <h2>Préstamo UPIICSA</h2>
+                <p>Sistema de gestión</p>
+            </div>
+        </div>
+
+        <p class="menu-label">MENÚ PRINCIPAL</p>
+
+        <nav class="menu">
+            <a href="/inicio" class="menu-item">
+                <span>⌂</span> Inicio
+            </a>
+
+            <a href="/inventario" class="menu-item">
+                <span>▣</span> Inventario
+            </a>
+
+            <a href="/prestamos" class="menu-item">
+                <span>⇄</span> Préstamos y devoluciones
+            </a>
+
+            <a href="/bloqueos" class="menu-item">
+                <span>⊘</span> Bloqueos administrativos
+            </a>
+
+            <a href="/personas" class="menu-item">
+                <span>♙</span> Alumnos
+            </a>
+
+            <a href="/encargados" class="menu-item">
+                <span>♧</span> Administrar encargados
+            </a>
+
+            <a href="/administradores" class="menu-item active">
+                <span>♙</span> Administrar administradores
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn-logout">
+                    <span>⇥</span> Cerrar sesión
+                </button>
+            </form>
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="topbar-heading">
+                <p class="breadcrumb">Administración / Cuentas</p>
+                <h1>Administradores</h1>
+                <p class="topbar-description">
+                    Registra y consulta las cuentas de administradores del sistema.
+                </p>
+            </div>
+        </header>
+
+        <section class="card">
+
+            <h2>Registrar administrador</h2>
+
+            <p>
+                Registra una nueva cuenta. La persona recibirá un correo
+                electrónico para activar su cuenta y establecer su contraseña.
+            </p>
+
+            <form id="formularioAdministrador">
+
+                <label for="nombre">Nombre completo</label>
+                <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    maxlength="120"
+                    placeholder="Nombre completo"
+                    autocomplete="name"
+                    required>
+
+                <label for="usuario">Nombre de usuario</label>
+                <input
+                    type="text"
+                    id="usuario"
+                    name="usuario"
+                    maxlength="80"
+                    placeholder="Nombre de usuario"
+                    autocomplete="username"
+                    required>
+
+                <label for="correo">Correo electrónico</label>
+                <input
+                    type="email"
+                    id="correo"
+                    name="correo"
+                    maxlength="254"
+                    placeholder="correo@ejemplo.com"
+                    autocomplete="email"
+                    required>
+
+                <small>
+                    Se enviará un enlace de activación al correo indicado.
+                </small>
+
+                <button type="submit" class="btn-primary" id="btnCrearAdministrador">
+                    Registrar administrador
+                </button>
+
+                <p id="mensajeAdministrador" class="form-message" role="status" aria-live="polite"></p>
+
+            </form>
+
+        </section>
+
+        <section class="card">
+
+            <div class="section-heading">
+                <div>
+                    <h2>Administradores registrados</h2>
+                    <p>Consulta el estado de activación de cada cuenta.</p>
+                </div>
+
+                <button type="button" class="btn-secondary" id="btnActualizarAdministradores">
+                    ↻ Actualizar
+                </button>
+            </div>
+
+            <div class="table-container">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Correo electrónico</th>
+                            <th>Estado de cuenta</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="listaAdministradores">
+                        <tr>
+                            <td colspan="4" class="table-message">
+                                Cargando administradores...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+        </section>
+
+        <footer class="page-footer">
+            Sistema de Préstamo de Equipos UPIICSA
+        </footer>
+
+    </main>
+
+</div>
+
+<script th:src="@{/administradores.js}"></script>
+
+</body>
+</html>

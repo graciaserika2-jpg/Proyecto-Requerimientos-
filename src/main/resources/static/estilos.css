@@ -1968,3 +1968,518 @@ body:has(#tablaHistorialBloqueos) #mensajeHistorialBloqueos {
     color: var(--text-light);
     font-size: 12px;
 }
+
+
+/* ==========================================
+   PÁGINA DE ALUMNOS
+   Acciones y ventana modal de edición
+   ========================================== */
+
+.acciones-alumno {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-width: 190px;
+}
+
+.btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background .2s, border-color .2s;
+}
+
+.btn-editar {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-editar:hover {
+    background: var(--primary-hover);
+}
+
+.btn-baja {
+    background: #fff0f0;
+    color: #c62828;
+    border-color: #f2c5c5;
+}
+
+.btn-baja:hover {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+}
+
+.btn-reactivar {
+    background: #e1f5e9;
+    color: #198754;
+    border-color: #b8e2c7;
+}
+
+.btn-reactivar:hover {
+    background: #198754;
+    border-color: #198754;
+    color: #fff;
+}
+
+/* Ventana modal */
+
+.modal-edicion {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, .58);
+    backdrop-filter: blur(3px);
+}
+
+.modal-edicion[hidden] {
+    display: none;
+}
+
+.modal-contenido {
+    width: 100%;
+    max-width: 480px;
+    padding: 28px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    box-shadow: 0 18px 55px rgba(0, 0, 0, .20);
+    animation: modalEntrada .2s ease-out;
+}
+
+.modal-encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 8px;
+}
+
+.modal-encabezado h2 {
+    font-size: 20px;
+}
+
+.modal-descripcion {
+    color: var(--text-light);
+    font-size: 13px;
+    margin-bottom: 23px;
+}
+
+.modal-cerrar {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    background: #f1f3f7;
+    color: #526075;
+    font-size: 21px;
+    line-height: 1;
+}
+
+.modal-cerrar:hover {
+    background: #e4e8ef;
+}
+
+.modal-formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-formulario label {
+    color: #344054;
+    font-weight: 600;
+    margin-top: 7px;
+}
+
+.modal-formulario input {
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 12px;
+    border: 1px solid #dce2ec;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+}
+
+.modal-formulario input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(49, 87, 213, .12);
+}
+
+.modal-ayuda {
+    color: var(--text-light);
+    font-size: 11px;
+}
+
+.modal-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.modal-acciones .btn-primary,
+.modal-acciones .btn-secondary {
+    min-width: 125px;
+}
+
+@keyframes modalEntrada {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-contenido {
+        padding: 21px;
+    }
+
+    .modal-acciones {
+        flex-direction: column-reverse;
+    }
+
+    .modal-acciones button {
+        width: 100%;
+    }
+
+    .acciones-alumno {
+        min-width: 170px;
+    }
+}
+
+
+/* =========================================================
+   IDENTIDAD INSTITUCIONAL IPN - UPIICSA
+   Ajustes generales de color y menú móvil
+   ========================================================= */
+
+:root {
+    --primary: #681B36;
+    --primary-hover: #4F1429;
+    --background: #f5f5f7;
+    --surface: #ffffff;
+    --text: #202b3c;
+    --text-light: #778397;
+    --border: #e6e6eb;
+    --sidebar: #351020;
+    --sidebar-hover: #512039;
+    --success: #198754;
+    --warning: #d97706;
+    --danger: #dc3545;
+    --radius: 12px;
+    --shadow: 0 3px 12px rgba(22, 34, 56, .04);
+}
+
+/* Colores institucionales en elementos que antes eran azules */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline-color: rgba(104, 27, 54, .35);
+}
+
+h1,
+h2 {
+    color: #351020;
+}
+
+.welcome {
+    background: linear-gradient(115deg, #501329, #792743);
+    box-shadow: 0 8px 22px rgba(80, 19, 41, .12);
+}
+
+.stat-icon.blue {
+    background: #f4e7ec;
+    color: #681B36;
+}
+
+.resumen-icon-blue,
+.acceso-icon {
+    color: #681B36;
+    background: #f4e7ec;
+}
+
+.acceso-item:hover {
+    border-color: #d9b7c4;
+}
+
+.acceso-item:hover .acceso-arrow {
+    color: #681B36;
+}
+
+.menu-item.active,
+.sidebar nav a.active {
+    background: #681B36;
+    border-color: #8a405b;
+}
+
+.btn-editar {
+    background: #681B36;
+    border-color: #681B36;
+}
+
+button.btn-editar {
+    background: #681B36;
+    border-color: #681B36;
+}
+
+button.btn-editar:hover,
+.btn-editar:hover {
+    background: #4F1429;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #8a405b;
+    box-shadow: 0 0 0 3px rgba(104, 27, 54, .12);
+}
+
+.type-badge {
+    background: #f4e7ec;
+    color: #681B36;
+}
+
+body:has(#formPrestamo) .persona-seleccionada,
+body:has(#formPrestamo) .equipo-seleccionado {
+    border-left-color: #681B36;
+}
+
+/* =========================================================
+   MENÚ HAMBURGUESA
+   ========================================================= */
+
+.menu-toggle {
+    display: none;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    padding: 9px;
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 9px;
+    background: rgba(255,255,255,.10);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.menu-toggle span {
+    display: block;
+    width: 21px;
+    height: 2px;
+    border-radius: 2px;
+    background: #fff;
+    transition: transform .2s, opacity .2s;
+}
+
+.menu-toggle[aria-expanded="true"] span:first-child {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.menu-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-toggle[aria-expanded="true"] span:last-child {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* =========================================================
+   RESPONSIVE GENERAL
+   ========================================================= */
+
+@media (max-width: 680px) {
+    .app {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar,
+    body:has(#formPersona) .sidebar {
+        position: relative;
+        top: auto;
+        z-index: 50;
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        min-height: 0;
+        flex: 0 0 auto;
+        overflow: visible;
+        padding: 14px 16px;
+    }
+
+    .sidebar .brand {
+        margin: 0;
+        padding: 0;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .sidebar .brand h2 {
+        font-size: 15px;
+    }
+
+    .sidebar .menu-toggle {
+        display: flex;
+    }
+
+    .sidebar .menu-label {
+        display: none;
+    }
+
+    .sidebar .menu,
+    .sidebar nav {
+        display: none;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 6px;
+        width: 100%;
+        margin-top: 16px;
+    }
+
+    .sidebar.menu-open .menu,
+    .sidebar.menu-open nav {
+        display: flex;
+    }
+
+    .sidebar .menu-item,
+    .sidebar nav a {
+        flex: none;
+        width: 100%;
+        min-height: 43px;
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .sidebar .sidebar-footer {
+        display: none;
+        margin-top: 14px;
+        padding: 12px 0 0;
+    }
+
+    .sidebar.menu-open .sidebar-footer {
+        display: block;
+    }
+
+    .sidebar .sidebar-footer .btn-logout {
+        justify-content: center;
+    }
+
+    .main-content,
+    body:has(#formPersona) .main-content {
+        width: 100%;
+        min-width: 0;
+        padding: 20px 15px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .resumen-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .accesos-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .welcome {
+        padding: 21px;
+    }
+
+    .welcome-icon {
+        display: none;
+    }
+
+    .panel-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .panel-header .btn-primary {
+        width: 100%;
+    }
+
+    .filters {
+        padding: 0 16px 18px;
+    }
+
+    .search-box {
+        flex: 1 1 100%;
+    }
+
+    .filters select {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .table-container,
+    .tabla-contenedor {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modal {
+        padding: 10px;
+    }
+
+    .modal-content,
+    .modal-contenido {
+        max-height: 94vh;
+        padding: 19px;
+    }
+
+    .formulario-seguridad {
+        padding: 18px;
+    }
+}
+
+@media (max-width: 420px) {
+    .resumen-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .main-content {
+        padding: 17px 12px;
+    }
+
+    h1 {
+        font-size: 21px;
+    }
+
+    .welcome h2 {
+        font-size: 19px;
+    }
+
+    .stat-card {
+        padding: 15px;
+    }
+
+    .table-footer {
+        flex-wrap: wrap;
+    }
+}

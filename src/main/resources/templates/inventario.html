@@ -136,19 +136,31 @@
 
     <div class="app">
 
+
         <aside class="sidebar">
 
-            <div class="brand">
-                <div class="brand-icon">U</div>
-                <div>
-                    <h2>Préstamo de equipos</h2>
-                    <p>UPIICSA · IPN</p>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+
+                <div class="brand">
+                    <div class="brand-icon">U</div>
+                    <div>
+                        <h2>Préstamo de equipos</h2>
+                        <p>UPIICSA · IPN</p>
+                    </div>
                 </div>
+
+                <button type="button" class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false"
+                    aria-controls="menuInventario">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
             </div>
 
             <p class="menu-label">MENÚ PRINCIPAL</p>
 
-            <nav class="menu">
+            <nav class="menu" id="menuInventario">
 
                 <a th:href="@{/inicio}" class="menu-item">
                     <span>⌂</span>
@@ -164,6 +176,7 @@
                     <span>⇄</span>
                     <span>Préstamos y devoluciones</span>
                 </a>
+
                 <a th:href="@{/bloqueos}" class="menu-item">
                     <span>⊘</span>
                     <span>Bloqueos administrativos</span>
@@ -176,7 +189,7 @@
 
                 <a th:href="@{/encargados}" class="menu-item" sec:authorize="hasRole('ADMIN')">
                     <span>⚙</span>
-                    <span>Administrar encargados</span>
+                    <span>Administración de cuentas de admin y encargados</span>
                 </a>
 
             </nav>
@@ -191,6 +204,7 @@
             </div>
 
         </aside>
+
 
 
         <main class="main-content">
@@ -431,6 +445,34 @@
         </section>
 
     </div>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const sidebar = document.querySelector(".sidebar");
+            const menuToggle = document.getElementById("menuToggle");
+
+            if (!sidebar || !menuToggle) return;
+
+            menuToggle.addEventListener("click", () => {
+                const abierto = sidebar.classList.toggle("menu-open");
+
+                menuToggle.setAttribute("aria-expanded", String(abierto));
+                menuToggle.setAttribute(
+                    "aria-label",
+                    abierto ? "Cerrar menú" : "Abrir menú"
+                );
+            });
+
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape") {
+                    sidebar.classList.remove("menu-open");
+                    menuToggle.setAttribute("aria-expanded", "false");
+                    menuToggle.setAttribute("aria-label", "Abrir menú");
+                }
+            });
+        });
+    </script>
 
 </body>
 

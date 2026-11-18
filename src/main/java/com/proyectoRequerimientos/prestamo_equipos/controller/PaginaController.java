@@ -72,7 +72,6 @@ public class PaginaController {
         return "restablecer-password";
     }
 
-    // Configuración inicial del primer administrador.
     @GetMapping("/configuracion-inicial")
     public String mostrarConfiguracionInicial() {
         return "configuracion-inicial";

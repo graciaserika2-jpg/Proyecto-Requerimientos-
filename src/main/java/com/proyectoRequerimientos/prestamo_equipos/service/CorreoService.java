@@ -23,7 +23,6 @@ public class CorreoService {
 
     public CorreoService(
             ObjectProvider<JavaMailSender> mailSenderProvider) {
-
         this.mailSenderProvider = mailSenderProvider;
     }
 
@@ -32,10 +31,7 @@ public class CorreoService {
             String nombre,
             String token) {
 
-        String enlace = construirEnlace(
-                "/activar-cuenta",
-                token
-        );
+        String enlace = construirEnlace("/activar-cuenta", token);
 
         String asunto = "Activa tu cuenta - Préstamo UPIICSA";
 
@@ -60,11 +56,10 @@ public class CorreoService {
             String token) {
 
         String enlace = construirEnlace(
-                "/restablecer-password",
-                token
-        );
+                "/restablecer-password", token);
 
-        String asunto = "Recuperación de contraseña - Préstamo UPIICSA";
+        String asunto =
+                "Recuperación de contraseña - Préstamo UPIICSA";
 
         String mensaje =
                 "Hola " + nombre + ",\n\n" +
@@ -81,14 +76,10 @@ public class CorreoService {
         enviar(correo, asunto, mensaje);
     }
 
-    private String construirEnlace(
-            String ruta,
-            String token) {
+    private String construirEnlace(String ruta, String token) {
 
         String tokenCodificado = URLEncoder.encode(
-                token,
-                StandardCharsets.UTF_8
-        );
+                token, StandardCharsets.UTF_8);
 
         return baseUrl.replaceAll("/+$", "") +
                 ruta +
@@ -106,15 +97,13 @@ public class CorreoService {
 
         if (mailSender == null) {
             throw new IllegalStateException(
-                    "El servicio de correo todavía no está configurado."
-            );
+                    "El servicio de correo todavía no está configurado.");
         }
 
         SimpleMailMessage mensaje = new SimpleMailMessage();
 
         if (correoRemitente != null &&
                 !correoRemitente.isBlank()) {
-
             mensaje.setFrom(correoRemitente);
         }
 

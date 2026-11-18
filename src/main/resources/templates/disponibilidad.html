@@ -15,6 +15,7 @@
             padding: 25px;
         }
 
+        /* RESUMEN */
         .disponibilidad-resumen {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -23,6 +24,9 @@
         }
 
         .disponibilidad-resumen-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
             background: #fff;
             border: 1px solid #e5e7eb;
             border-radius: 12px;
@@ -30,19 +34,46 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
         }
 
-        .disponibilidad-resumen-card span {
+        .resumen-icono {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            font-size: 23px;
+            flex-shrink: 0;
+        }
+
+        .icono-total {
+            color: #1d4ed8;
+            background: #dbeafe;
+        }
+
+        .icono-disponible {
+            color: #15803d;
+            background: #dcfce7;
+        }
+
+        .icono-prestado {
+            color: #b45309;
+            background: #fef3c7;
+        }
+
+        .resumen-texto span {
             display: block;
             color: #6b7280;
             font-size: 14px;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
-        .disponibilidad-resumen-card strong {
+        .resumen-texto strong {
             display: block;
             color: #1f2937;
-            font-size: 28px;
+            font-size: 27px;
         }
 
+        /* FILTROS */
         .disponibilidad-filtros {
             display: grid;
             grid-template-columns: 2fr 1fr 1fr;
@@ -81,6 +112,7 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
         }
 
+        /* TABLA */
         .disponibilidad-tabla-contenedor {
             width: 100%;
             overflow-x: auto;
@@ -135,13 +167,24 @@
             white-space: nowrap;
         }
 
+        /* ESTADOS */
         .equipo-estado {
-            display: inline-block;
-            padding: 6px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 700;
             white-space: nowrap;
+        }
+
+        .equipo-estado::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
         }
 
         .equipo-estado.disponible {
@@ -159,20 +202,32 @@
             background: #fee2e2;
         }
 
+        .equipo-estado.sin-estado {
+            color: #4b5563;
+            background: #e5e7eb;
+        }
+
         .disponibilidad-mensaje {
-            padding: 30px 20px;
+            padding: 30px 20px !important;
             text-align: center;
-            color: #6b7280;
+            color: #6b7280 !important;
+        }
+
+        /* CERRAR SESIÓN EN EL MENÚ */
+        .sidebar-footer {
+            margin-top: auto;
+        }
+
+        @media (max-width: 900px) {
+            .disponibilidad-resumen {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
         }
 
         @media (max-width: 700px) {
             .disponibilidad-contenido {
                 padding: 16px;
-            }
-
-            .disponibilidad-resumen {
-                grid-template-columns: 1fr;
-                gap: 12px;
             }
 
             .disponibilidad-filtros {
@@ -222,6 +277,16 @@
             </a>
 
         </nav>
+
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn-logout">
+                    <span aria-hidden="true">⇥</span>
+                    Cerrar sesión
+                </button>
+            </form>
+        </div>
+
     </aside>
 
     <main class="main-content">
@@ -234,13 +299,6 @@
                     Consulta los equipos registrados y revisa su estado actual.
                 </p>
             </div>
-
-            <form th:action="@{/logout}" method="post" class="logout-form">
-                <button type="submit" class="btn-logout">
-                    <span aria-hidden="true">⇥</span>
-                    Cerrar sesión
-                </button>
-            </form>
         </header>
 
         <section class="disponibilidad-contenido">
@@ -248,18 +306,27 @@
             <div class="disponibilidad-resumen">
 
                 <article class="disponibilidad-resumen-card">
-                    <span>Total de equipos</span>
-                    <strong id="totalEquipos">0</strong>
+                    <div class="resumen-icono icono-total">▦</div>
+                    <div class="resumen-texto">
+                        <span>Total de equipos</span>
+                        <strong id="totalEquipos">0</strong>
+                    </div>
                 </article>
 
                 <article class="disponibilidad-resumen-card">
-                    <span>Equipos disponibles</span>
-                    <strong id="totalDisponibles">0</strong>
+                    <div class="resumen-icono icono-disponible">✓</div>
+                    <div class="resumen-texto">
+                        <span>Equipos disponibles</span>
+                        <strong id="totalDisponibles">0</strong>
+                    </div>
                 </article>
 
                 <article class="disponibilidad-resumen-card">
-                    <span>Equipos prestados</span>
-                    <strong id="totalPrestados">0</strong>
+                    <div class="resumen-icono icono-prestado">⇄</div>
+                    <div class="resumen-texto">
+                        <span>Equipos prestados</span>
+                        <strong id="totalPrestados">0</strong>
+                    </div>
                 </article>
 
             </div>

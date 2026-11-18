@@ -1,0 +1,405 @@
+
+/* =========================================
+   DISEÑO DE INICIO - PRÉSTAMO UPIICSA
+   Estilos exclusivos de la página de inicio
+   ========================================= */
+
+.main-content {
+    padding: 34px 38px 24px;
+}
+
+.topbar {
+    margin-bottom: 30px;
+}
+
+.topbar-heading .breadcrumb {
+    color: #64748b;
+    font-size: 12px;
+    margin-bottom: 7px;
+}
+
+.topbar-heading h1 {
+    color: #172b4d;
+    font-size: 29px;
+    font-weight: 750;
+    letter-spacing: -.6px;
+}
+
+.topbar-description {
+    color: #718096;
+    font-size: 13px;
+}
+
+/* Bienvenida */
+.welcome {
+    position: relative;
+    overflow: hidden;
+    min-height: 190px;
+    padding: 36px 40px;
+    margin-bottom: 34px;
+    border: 0;
+    border-radius: 18px;
+    background: linear-gradient(115deg, #172f65 0%, #3157b9 58%, #5278dc 100%);
+    box-shadow: 0 12px 30px rgba(38, 75, 160, .16);
+}
+
+.welcome::after {
+    content: "";
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    right: -65px;
+    top: -120px;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 28px rgba(255,255,255,.045),
+        0 0 0 58px rgba(255,255,255,.035);
+    pointer-events: none;
+}
+
+.welcome-content {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+}
+
+.welcome .eyebrow {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #cbd9ff;
+    margin-bottom: 13px;
+}
+
+.welcome h2 {
+    color: #fff;
+    font-size: 27px;
+    font-weight: 750;
+    margin-bottom: 10px;
+}
+
+.welcome p:last-child {
+    color: #e0e9ff;
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 570px;
+}
+
+/* Secciones */
+.dashboard-section {
+    margin-bottom: 34px;
+}
+
+.section-heading {
+    margin-bottom: 19px;
+}
+
+.section-heading h2 {
+    color: #1e3150;
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.section-heading p {
+    color: #7b8799;
+    font-size: 12px;
+}
+
+/* Tarjetas de estadísticas */
+.resumen-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.resumen-item {
+    position: relative;
+    min-height: 130px;
+    align-items: center;
+    padding: 22px 19px;
+    border: 1px solid #e7ebf2;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(20, 35, 60, .035);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.resumen-item:hover {
+    transform: translateY(-3px);
+    border-color: #d5def1;
+    box-shadow: 0 9px 22px rgba(20, 35, 60, .07);
+}
+
+.resumen-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    border-radius: 13px;
+    font-size: 22px;
+}
+
+.resumen-icon-blue {
+    color: #3157d5;
+    background: #edf1ff;
+}
+
+.resumen-icon-green {
+    color: #16834d;
+    background: #e8f7ee;
+}
+
+.resumen-icon-orange {
+    color: #c87912;
+    background: #fff4e5;
+}
+
+.resumen-icon-purple {
+    color: #7950b7;
+    background: #f3edff;
+}
+
+.resumen-data h3 {
+    color: #778397;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0 0 8px;
+}
+
+.resumen-data p {
+    color: #1d2f4c;
+    font-size: 30px;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+/* Mensajes */
+.dashboard-message {
+    margin-top: 15px;
+    color: #718096;
+    font-size: 12px;
+}
+
+/* Portal del alumno */
+.opciones-alumno {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.opciones-alumno .opcion-alumno {
+    min-height: 190px;
+    align-items: flex-start;
+    padding: 23px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.opciones-alumno .opcion-alumno:hover {
+    transform: translateY(-4px);
+    border-color: #cbd8f5;
+    box-shadow: 0 10px 25px rgba(20, 35, 60, .08);
+}
+
+.opcion-alumno .resumen-icon {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+}
+
+.opcion-alumno .resumen-data h3 {
+    color: #253754;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 2px 0 8px;
+}
+
+.opcion-alumno .resumen-data p {
+    color: #718096;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.6;
+}
+
+.opcion-indicador {
+    display: inline-block;
+    margin-top: 17px;
+    color: #3157d5;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* Estado de restricciones del alumno */
+.estado-restriccion {
+    padding: 20px 22px;
+    margin-bottom: 25px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #64748b;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(20, 35, 60, .035);
+}
+
+.estado-restriccion h3 {
+    color: #243650;
+    font-size: 15px;
+    margin: 0 0 8px;
+}
+
+.estado-restriccion p {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 6px 0;
+}
+
+.estado-restriccion.bloqueado {
+    border-left-color: #dc3545;
+    background: #fff8f8;
+}
+
+.estado-restriccion.suspendido {
+    border-left-color: #e6a23c;
+    background: #fffbf3;
+}
+
+.estado-restriccion.disponible {
+    border-left-color: #28a745;
+    background: #f6fff8;
+}
+
+.estado-restriccion.error {
+    border-left-color: #777;
+}
+
+.estado-etiqueta {
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.etiqueta-bloqueo {
+    color: #a71d2a;
+    background: #f8d7da;
+}
+
+.etiqueta-suspension {
+    color: #856404;
+    background: #fff0c2;
+}
+
+.etiqueta-disponible {
+    color: #155724;
+    background: #d4edda;
+}
+
+/* Pie */
+.page-footer {
+    padding: 24px 0 8px;
+    margin-top: 20px;
+    border-top: 1px solid #e8edf3;
+    color: #929caf;
+    font-size: 11px;
+    text-align: center;
+}
+
+/* Adaptación a tablet */
+@media (max-width: 1150px) {
+    .main-content {
+        padding: 28px 25px 22px;
+    }
+
+    .resumen-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .opciones-alumno {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Adaptación a móvil */
+@media (max-width: 680px) {
+    .main-content {
+        padding: 22px 16px;
+    }
+
+    .topbar {
+        margin-bottom: 22px;
+    }
+
+    .topbar-heading h1 {
+        font-size: 23px;
+    }
+
+    .welcome {
+        min-height: 0;
+        padding: 27px 23px;
+        margin-bottom: 26px;
+        border-radius: 14px;
+    }
+
+    .welcome h2 {
+        font-size: 21px;
+    }
+
+    .welcome p:last-child {
+        font-size: 12px;
+    }
+
+    .welcome::after {
+        right: -180px;
+    }
+
+    .section-heading h2 {
+        font-size: 17px;
+    }
+
+    .resumen-grid,
+    .opciones-alumno {
+        grid-template-columns: 1fr;
+        gap: 13px;
+    }
+
+    .resumen-item {
+        min-height: 105px;
+        padding: 18px;
+    }
+
+    .opciones-alumno .opcion-alumno {
+        min-height: 150px;
+        padding: 19px;
+    }
+
+    .resumen-data p {
+        font-size: 27px;
+    }
+
+    .estado-restriccion {
+        padding: 17px;
+    }
+}
+
+@media (max-width: 380px) {
+    .main-content {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .welcome {
+        padding: 22px 18px;
+    }
+
+    .resumen-item {
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .resumen-icon {
+        width: 42px;
+        height: 42px;
+        flex-basis: 42px;
+    }
+}
