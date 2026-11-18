@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
     xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
@@ -75,29 +74,15 @@
 
                     <label for="nombre">Nombre completo</label>
 
-                    <input
-                        id="nombre"
-                        name="nombre"
-                        type="text"
-                        required
-                        maxlength="150"
-                        autocomplete="name"
+                    <input id="nombre" name="nombre" type="text" required maxlength="150" autocomplete="name"
                         placeholder="Nombre y apellidos">
 
                     <label for="identificador">
                         Número de boleta
                     </label>
 
-                    <input
-                        id="identificador"
-                        name="identificador"
-                        type="text"
-                        required
-                        maxlength="10"
-                        pattern="[0-9]{10}"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        placeholder="Ej. 2024630001">
+                    <input id="identificador" name="identificador" type="text" required maxlength="10"
+                        pattern="[0-9]{10}" inputmode="numeric" autocomplete="off" placeholder="Ej. 2024630001">
 
                     <small>
                         Ingresa los 10 dígitos de la boleta.
@@ -107,24 +92,15 @@
                         Correo electrónico
                     </label>
 
-                    <input
-                        id="correo"
-                        name="correo"
-                        type="email"
-                        required
-                        maxlength="254"
-                        autocomplete="email"
-                        placeholder="alumno@ejemplo.com">
+                    <input id="correo" name="correo" type="text" required maxlength="254" inputmode="email"
+                        autocomplete="email" placeholder="alumno@ejemplo.com">
 
                     <small>
                         Revisa que el correo esté escrito correctamente.
                         Ahí se enviará el enlace de activación.
                     </small>
 
-                    <button
-                        id="botonRegistrar"
-                        type="submit"
-                        class="btn-primary">
+                    <button id="botonRegistrar" type="submit" class="btn-primary">
                         Registrar alumno
                     </button>
 
@@ -142,10 +118,7 @@
 
                 <h2>Alumnos registrados</h2>
 
-                <input
-                    id="buscarPersona"
-                    type="search"
-                    placeholder="Buscar por ID, nombre, boleta o correo"
+                <input id="buscarPersona" type="search" placeholder="Buscar por ID, nombre, boleta o correo"
                     aria-label="Buscar alumnos">
 
                 <div class="table-container">
@@ -184,10 +157,7 @@
                  MODAL PARA EDITAR ALUMNO
                  ========================================== -->
 
-            <div
-                id="modalEditarAlumno"
-                class="modal-edicion"
-                hidden>
+            <div id="modalEditarAlumno" class="modal-edicion" hidden>
 
                 <div class="modal-contenido">
 
@@ -195,11 +165,7 @@
 
                         <h2>Editar alumno</h2>
 
-                        <button
-                            type="button"
-                            id="cerrarModalEditar"
-                            class="modal-cerrar"
-                            aria-label="Cerrar ventana">
+                        <button type="button" id="cerrarModalEditar" class="modal-cerrar" aria-label="Cerrar ventana">
                             &times;
                         </button>
 
@@ -209,40 +175,23 @@
                         Modifica el nombre o el número de boleta del alumno.
                     </p>
 
-                    <form
-                        id="formEditarAlumno"
-                        class="modal-formulario">
+                    <form id="formEditarAlumno" class="modal-formulario">
 
-                        <input
-                            type="hidden"
-                            id="editarIdAlumno">
+                        <input type="hidden" id="editarIdAlumno">
 
                         <label for="editarNombre">
                             Nombre completo
                         </label>
 
-                        <input
-                            type="text"
-                            id="editarNombre"
-                            maxlength="150"
-                            required
-                            autocomplete="off"
+                        <input type="text" id="editarNombre" maxlength="150" required autocomplete="off"
                             placeholder="Nombre y apellidos">
 
                         <label for="editarBoleta">
                             Número de boleta
                         </label>
 
-                        <input
-                            type="text"
-                            id="editarBoleta"
-                            maxlength="10"
-                            minlength="10"
-                            pattern="[0-9]{10}"
-                            inputmode="numeric"
-                            required
-                            autocomplete="off"
-                            placeholder="Ej. 2024630001">
+                        <input type="text" id="editarBoleta" maxlength="10" minlength="10" pattern="[0-9]{10}"
+                            inputmode="numeric" required autocomplete="off" placeholder="Ej. 2024630001">
 
                         <small class="modal-ayuda">
                             La boleta debe contener exactamente 10 dígitos.
@@ -250,26 +199,17 @@
 
                         <div class="modal-acciones">
 
-                            <button
-                                type="button"
-                                id="cancelarEdicion"
-                                class="btn-secondary">
+                            <button type="button" id="cancelarEdicion" class="btn-secondary">
                                 Cancelar
                             </button>
 
-                            <button
-                                type="submit"
-                                id="guardarEdicion"
-                                class="btn-primary">
+                            <button type="submit" id="guardarEdicion" class="btn-primary">
                                 Guardar cambios
                             </button>
 
                         </div>
 
-                        <p
-                            id="mensajeEditarAlumno"
-                            role="status"
-                            aria-live="polite">
+                        <p id="mensajeEditarAlumno" role="status" aria-live="polite">
                         </p>
 
                     </form>

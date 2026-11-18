@@ -49,7 +49,6 @@ public class EncargadoService {
 
         return encargadoRepository.findAll()
                 .stream()
-                .filter(Encargado::isActivo)
                 .filter(encargado ->
                         "ENCARGADO".equalsIgnoreCase(encargado.getRol())
                         || "ADMIN".equalsIgnoreCase(encargado.getRol()))
@@ -108,10 +107,11 @@ public class EncargadoService {
     }
 
     // =====================================================
-    // VALIDAR QUIÉN SOLICITA CREAR UN ADMINISTRADOR
+    // VALIDAR ADMINISTRADOR SOLICITANTE
     // =====================================================
 
-    private void validarAdministradorSolicitante(String usuarioSolicitante) {
+    private Encargado validarAdministradorSolicitante(
+            String usuarioSolicitante) {
 
         if (usuarioSolicitante == null || usuarioSolicitante.isBlank()) {
             throw new IllegalArgumentException(
@@ -126,8 +126,261 @@ public class EncargadoService {
 
         if (!"ADMIN".equalsIgnoreCase(solicitante.getRol())) {
             throw new IllegalArgumentException(
-                    "No tienes permisos para registrar administradores.");
+                    "No tienes permisos para realizar esta operación.");
         }
+
+        return solicitante;
+    }
+
+    // =====================================================
+    // EDITAR CUENTA ADMINISTRATIVA
+    // =====================================================
+
+    @Transactional
+    public Encargado editarCuenta(
+            Long id,
+            String usuario,
+            String nombre,
+            String correo,
+            String usuarioSolicitante) {
+
+        Encargado solicitante =
+                validarAdministradorSolicitante(usuarioSolicitante);
+
+        Encargado encargado = encargadoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "La cuenta que deseas editar no existe."));
+
+        validarCuentaAdministrativa(encargado);
+
+        if (encargado.getId().equals(solicitante.getId())) {
+            throw new IllegalArgumentException(
+                    "No puedes editar tu propia cuenta desde esta sección.");
+        }
+
+        String usuarioLimpio = validarUsuario(usuario);
+        String nombreLimpio = validarNombre(nombre);
+        String correoLimpio = validarCorreo(correo);
+
+        encargadoRepository.findByUsuarioIgnoreCase(usuarioLimpio)
+                .filter(otraCuenta ->
+                        !otraCuenta.getId().equals(encargado.getId()))
+                .ifPresent(otraCuenta -> {
+                    throw new IllegalArgumentException(
+                            "Ese nombre de usuario ya está registrado.");
+                });
+
+        encargadoRepository.findByCorreoIgnoreCase(correoLimpio)
+                .filter(otraCuenta ->
+                        !otraCuenta.getId().equals(encargado.getId()))
+                .ifPresent(otraCuenta -> {
+                    throw new IllegalArgumentException(
+                            "Ese correo ya está registrado en otra cuenta administrativa.");
+                });
+
+        if (cuentaPersonaRepository.existsByCorreoIgnoreCase(correoLimpio)) {
+            throw new IllegalArgumentException(
+                    "Ese correo ya está registrado en una cuenta de alumno.");
+        }
+
+        boolean cambioCorreo =
+                encargado.getCorreo() == null
+                || !encargado.getCorreo().equalsIgnoreCase(correoLimpio);
+
+        encargado.setUsuario(usuarioLimpio);
+        encargado.setNombre(nombreLimpio);
+        encargado.setCorreo(correoLimpio);
+
+        if (cambioCorreo) {
+
+            encargado.setCorreoVerificado(false);
+            encargado.setFechaActivacion(null);
+
+            Encargado encargadoGuardado =
+                    encargadoRepository.save(encargado);
+
+            String token =
+                    tokenCuentaService.crearTokenActivacion(encargadoGuardado);
+
+            correoService.enviarActivacion(
+                    correoLimpio,
+                    nombreLimpio,
+                    token);
+
+            return encargadoGuardado;
+        }
+
+        return encargadoRepository.save(encargado);
+    }
+
+    // =====================================================
+    // DAR DE BAJA UNA CUENTA ADMINISTRATIVA
+    // =====================================================
+
+    @Transactional
+    public void desactivarCuenta(
+            Long id,
+            String usuarioSolicitante) {
+
+        Encargado solicitante =
+                validarAdministradorSolicitante(usuarioSolicitante);
+
+        Encargado encargado = encargadoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "La cuenta que deseas desactivar no existe."));
+
+        validarCuentaAdministrativa(encargado);
+
+        if (encargado.getId().equals(solicitante.getId())) {
+            throw new IllegalArgumentException(
+                    "No puedes dar de baja tu propia cuenta.");
+        }
+
+        if (!encargado.isActivo()) {
+            throw new IllegalArgumentException(
+                    "Esta cuenta ya se encuentra inactiva.");
+        }
+
+        if ("ADMIN".equalsIgnoreCase(encargado.getRol())) {
+
+            long administradoresActivos =
+                    encargadoRepository
+                            .findAllByRolIgnoreCaseAndActivoTrue("ADMIN")
+                            .size();
+
+            if (administradoresActivos <= 1) {
+                throw new IllegalArgumentException(
+                        "No puedes dar de baja al último administrador activo.");
+            }
+        }
+
+        encargado.setActivo(false);
+
+        encargadoRepository.save(encargado);
+    }
+
+    // =====================================================
+    // REACTIVAR UNA CUENTA ADMINISTRATIVA
+    // =====================================================
+
+    @Transactional
+    public Encargado reactivarCuenta(
+            Long id,
+            String usuarioSolicitante) {
+
+        validarAdministradorSolicitante(usuarioSolicitante);
+
+        Encargado encargado = encargadoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "La cuenta que deseas reactivar no existe."));
+
+        validarCuentaAdministrativa(encargado);
+
+        if (encargado.isActivo()) {
+            throw new IllegalArgumentException(
+                    "Esta cuenta ya se encuentra activa.");
+        }
+
+        encargado.setActivo(true);
+
+        Encargado encargadoGuardado =
+                encargadoRepository.save(encargado);
+
+        if (!Boolean.TRUE.equals(encargadoGuardado.getCorreoVerificado())) {
+
+            if (encargadoGuardado.getCorreo() == null
+                    || encargadoGuardado.getCorreo().isBlank()) {
+
+                throw new IllegalArgumentException(
+                        "La cuenta no tiene un correo electrónico válido para su activación.");
+            }
+
+            String token =
+                    tokenCuentaService.crearTokenActivacion(encargadoGuardado);
+
+            correoService.enviarActivacion(
+                    encargadoGuardado.getCorreo(),
+                    encargadoGuardado.getNombre(),
+                    token);
+        }
+
+        return encargadoGuardado;
+    }
+
+    // =====================================================
+    // VALIDAR QUE SEA UNA CUENTA ADMINISTRATIVA
+    // =====================================================
+
+    private void validarCuentaAdministrativa(Encargado encargado) {
+
+        if (!"ADMIN".equalsIgnoreCase(encargado.getRol())
+                && !"ENCARGADO".equalsIgnoreCase(encargado.getRol())) {
+
+            throw new IllegalArgumentException(
+                    "La cuenta seleccionada no es una cuenta administrativa.");
+        }
+    }
+
+    // =====================================================
+    // VALIDACIONES DE DATOS
+    // =====================================================
+
+    private String validarUsuario(String usuario) {
+
+        if (usuario == null || usuario.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El nombre de usuario es obligatorio.");
+        }
+
+        String limpio = usuario.trim();
+
+        if (limpio.length() > 80) {
+            throw new IllegalArgumentException(
+                    "El nombre de usuario no puede superar los 80 caracteres.");
+        }
+
+        return limpio;
+    }
+
+    private String validarNombre(String nombre) {
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El nombre completo es obligatorio.");
+        }
+
+        String limpio = nombre.trim();
+
+        if (limpio.length() > 120) {
+            throw new IllegalArgumentException(
+                    "El nombre completo no puede superar los 120 caracteres.");
+        }
+
+        return limpio;
+    }
+
+    private String validarCorreo(String correo) {
+
+        if (correo == null || correo.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El correo electrónico es obligatorio.");
+        }
+
+        String limpio = correo.trim().toLowerCase(Locale.ROOT);
+
+        if (limpio.length() > 254) {
+            throw new IllegalArgumentException(
+                    "El correo electrónico es demasiado largo.");
+        }
+
+        if (!limpio.matches(
+                "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+
+            throw new IllegalArgumentException(
+                    "Escribe un correo electrónico válido.");
+        }
+
+        return limpio;
     }
 
     // =====================================================
@@ -140,47 +393,9 @@ public class EncargadoService {
             String correo,
             String rol) {
 
-        if (usuario == null || usuario.isBlank()) {
-            throw new IllegalArgumentException(
-                    "El nombre de usuario es obligatorio.");
-        }
-
-        if (nombre == null || nombre.isBlank()) {
-            throw new IllegalArgumentException(
-                    "El nombre completo es obligatorio.");
-        }
-
-        if (correo == null || correo.isBlank()) {
-            throw new IllegalArgumentException(
-                    "El correo electrónico es obligatorio.");
-        }
-
-        String usuarioLimpio = usuario.trim();
-        String nombreLimpio = nombre.trim();
-        String correoLimpio = correo.trim().toLowerCase(Locale.ROOT);
-
-        if (usuarioLimpio.length() > 80) {
-            throw new IllegalArgumentException(
-                    "El nombre de usuario no puede superar los 80 caracteres.");
-        }
-
-        if (nombreLimpio.length() > 120) {
-            throw new IllegalArgumentException(
-                    "El nombre completo no puede superar los 120 caracteres.");
-        }
-
-        if (correoLimpio.length() > 254) {
-            throw new IllegalArgumentException(
-                    "El correo electrónico es demasiado largo.");
-        }
-
-        // Validar formato del correo electrónico.
-        if (!correoLimpio.matches(
-                "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
-
-            throw new IllegalArgumentException(
-                    "Escribe un correo electrónico válido.");
-        }
+        String usuarioLimpio = validarUsuario(usuario);
+        String nombreLimpio = validarNombre(nombre);
+        String correoLimpio = validarCorreo(correo);
 
         if (encargadoRepository
                 .findByUsuarioIgnoreCase(usuarioLimpio).isPresent()) {
@@ -213,7 +428,8 @@ public class EncargadoService {
 
         Encargado encargadoGuardado = encargadoRepository.save(encargado);
 
-        String token = tokenCuentaService.crearTokenActivacion(encargadoGuardado);
+        String token =
+                tokenCuentaService.crearTokenActivacion(encargadoGuardado);
 
         correoService.enviarActivacion(
                 correoLimpio,

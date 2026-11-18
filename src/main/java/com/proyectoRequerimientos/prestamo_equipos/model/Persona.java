@@ -35,6 +35,20 @@ public class Persona {
             );
         }
 
+        nombre = nombre.trim();
+
+        if (!nombre.matches("^[\\p{L}]+(?: +[\\p{L}]+)*$")) {
+            throw new IllegalArgumentException(
+                    "El nombre solamente puede contener letras y espacios. No se permiten números ni símbolos."
+            );
+        }
+
+        if (nombre.length() > 150) {
+            throw new IllegalArgumentException(
+                    "El nombre no puede superar los 150 caracteres."
+            );
+        }
+
         if (tipo == null || !tipo.equalsIgnoreCase("Alumno")) {
             throw new IllegalArgumentException(
                     "El tipo de persona debe ser Alumno."

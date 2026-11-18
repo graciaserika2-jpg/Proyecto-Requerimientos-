@@ -71,6 +71,7 @@ public class PersonaService {
             String identificador) {
 
         Persona persona = buscarPorId(id);
+
         validarDatosAlumno(nombre, identificador);
 
         String nombreNormalizado = nombre.trim();
@@ -161,19 +162,38 @@ public class PersonaService {
         return persona;
     }
 
-    private void validarDatosAlumno(
-            String nombre,
-            String identificador) {
+    // ==========================================
+    // VALIDACIONES DE ALUMNOS
+    // ==========================================
+
+    private void validarNombreAlumno(String nombre) {
 
         if (nombre == null || nombre.isBlank()) {
             throw new IllegalArgumentException(
                     "El nombre del alumno es obligatorio.");
         }
 
-        if (nombre.trim().length() > 150) {
+        String nombreNormalizado = nombre.trim();
+
+        if (nombreNormalizado.length() > 150) {
             throw new IllegalArgumentException(
                     "El nombre no puede superar los 150 caracteres.");
         }
+
+        if (!nombreNormalizado.matches(
+                "^[\\p{L}]+(?:\\s+[\\p{L}]+)*$")) {
+
+            throw new IllegalArgumentException(
+                    "El nombre solamente puede contener letras y espacios. " +
+                    "No se permiten números ni símbolos.");
+        }
+    }
+
+    private void validarDatosAlumno(
+            String nombre,
+            String identificador) {
+
+        validarNombreAlumno(nombre);
 
         if (identificador == null
                 || !identificador.trim().matches("[0-9]{10}")) {
@@ -182,6 +202,10 @@ public class PersonaService {
                     "La boleta debe contener exactamente 10 dígitos.");
         }
     }
+
+    // ==========================================
+    // REGISTRO COMPLETO DE ALUMNO Y CUENTA
+    // ==========================================
 
     @Transactional
     public RegistroConCuenta registrarPersonaConCuenta(
@@ -213,12 +237,7 @@ public class PersonaService {
                     "Los datos del alumno son obligatorios.");
         }
 
-        if (persona.getNombre() == null
-                || persona.getNombre().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "El nombre del alumno es obligatorio.");
-        }
+        validarNombreAlumno(persona.getNombre());
 
         if (!"Alumno".equals(persona.getTipo())) {
             throw new IllegalArgumentException(

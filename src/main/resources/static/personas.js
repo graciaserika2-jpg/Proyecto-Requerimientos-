@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const mensaje = document.getElementById("mensaje");
     const buscarPersona = document.getElementById("buscarPersona");
     const identificador = document.getElementById("identificador");
+    const nombre = document.getElementById("nombre");
+    const correo = document.getElementById("correo");
     const botonRegistrar = document.getElementById("botonRegistrar");
 
     // Elementos del modal de edición
@@ -93,23 +95,84 @@ document.addEventListener("DOMContentLoaded", () => {
     // VALIDACIONES
     // ==========================================
 
-    function validarBoleta() {
+    function validarNombre(valor) {
 
-        const valor = identificador.value.trim();
+        const nombreNormalizado = valor.trim();
 
-        if (!/^\d{10}$/.test(valor)) {
-
-            mostrarMensaje(
-                "La boleta debe contener exactamente 10 dígitos.",
-                true
-            );
-
-            identificador.focus();
-
-            return false;
+        if (!nombreNormalizado) {
+            return "Debes ingresar el nombre del alumno.";
         }
 
-        return true;
+        if (nombreNormalizado.length > 150) {
+            return "El nombre no puede superar los 150 caracteres.";
+        }
+
+        if (!/^[\p{L}]+(?: +[\p{L}]+)*$/u.test(nombreNormalizado)) {
+            return "El nombre solamente puede contener letras y espacios. No se permiten números ni símbolos.";
+        }
+
+        return null;
+    }
+
+    function validarBoleta(valor) {
+
+        if (!/^\d{10}$/.test(valor.trim())) {
+            return "La boleta debe contener exactamente 10 dígitos.";
+        }
+
+        return null;
+    }
+
+    function validarCorreo(valor) {
+
+        if (!valor || !valor.trim()) {
+            return "Debes ingresar el correo electrónico.";
+        }
+
+        const correoNormalizado = valor.trim().toLowerCase();
+
+        if (correoNormalizado.length > 254) {
+            return "El correo electrónico es demasiado largo.";
+        }
+
+        const posicionArroba = correoNormalizado.indexOf("@");
+
+        if (posicionArroba === 0) {
+            return "Escribe el nombre de usuario antes de @.";
+        }
+
+        if (posicionArroba === -1) {
+            return "El correo debe contener el símbolo @.";
+        }
+
+        if (posicionArroba !== correoNormalizado.lastIndexOf("@")) {
+            return "El correo solamente puede contener un símbolo @.";
+        }
+
+        const usuario = correoNormalizado.substring(0, posicionArroba);
+        const dominio = correoNormalizado.substring(posicionArroba + 1);
+
+        if (!dominio) {
+            return "Escribe un dominio después de @.";
+        }
+
+        if (usuario.length > 64) {
+            return "El nombre de usuario del correo es demasiado largo.";
+        }
+
+        if (!/^[A-Za-z0-9_%+-]+(?:\.[A-Za-z0-9_%+-]+)*$/.test(usuario)) {
+            return "El correo contiene caracteres no permitidos o tiene puntos mal colocados.";
+        }
+
+        if (!dominio.includes(".")) {
+            return "El dominio del correo parece incompleto. Por ejemplo: usuario@gmail.com.";
+        }
+
+        if (!/^(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/.test(dominio)) {
+            return "El dominio del correo no tiene un formato válido.";
+        }
+
+        return null;
     }
 
     // ==========================================
@@ -211,18 +274,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const filtradas = personas.filter(persona => {
 
             const id = String(persona.id ?? "");
-            const nombre = (persona.nombre || "").toLowerCase();
+            const nombrePersona = (persona.nombre || "").toLowerCase();
 
             const boleta = String(
                 persona.identificador || ""
             ).toLowerCase();
 
-            const correo = (persona.correo || "").toLowerCase();
+            const correoPersona = (persona.correo || "").toLowerCase();
 
             return id.includes(texto) ||
-                nombre.includes(texto) ||
+                nombrePersona.includes(texto) ||
                 boleta.includes(texto) ||
-                correo.includes(texto);
+                correoPersona.includes(texto);
         });
 
         if (filtradas.length === 0) {
@@ -328,12 +391,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         alumnoEnEdicion = persona;
 
-        // Llenar los campos con los datos actuales
-        editarIdAlumno.value = persona.id;
-        editarNombre.value = persona.nombre || "";
-        editarBoleta.value = persona.identificador || "";
-
-        // Limpiar mensajes anteriores
         formEditarAlumno.reset();
 
         editarIdAlumno.value = persona.id;
@@ -345,10 +402,8 @@ document.addEventListener("DOMContentLoaded", () => {
             mensajeEditarAlumno.style.display = "none";
         }
 
-        // Mostrar modal
         modalEditarAlumno.hidden = false;
 
-        // Colocar el cursor en el nombre
         editarNombre.focus();
     }
 
@@ -393,37 +448,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const nuevoNombre = editarNombre.value.trim();
         const nuevaBoleta = editarBoleta.value.trim();
 
-        if (!nuevoNombre) {
+        const errorNombre = validarNombre(nuevoNombre);
 
-            mostrarMensajeModal(
-                "El nombre del alumno es obligatorio.",
-                true
-            );
+        if (errorNombre) {
 
+            mostrarMensajeModal(errorNombre, true);
             editarNombre.focus();
 
             return;
         }
 
-        if (nuevoNombre.length > 150) {
+        const errorBoleta = validarBoleta(nuevaBoleta);
 
-            mostrarMensajeModal(
-                "El nombre no puede superar los 150 caracteres.",
-                true
-            );
+        if (errorBoleta) {
 
-            editarNombre.focus();
-
-            return;
-        }
-
-        if (!/^\d{10}$/.test(nuevaBoleta)) {
-
-            mostrarMensajeModal(
-                "La boleta debe contener exactamente 10 dígitos.",
-                true
-            );
-
+            mostrarMensajeModal(errorBoleta, true);
             editarBoleta.focus();
 
             return;
@@ -567,34 +606,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
         evento.preventDefault();
 
-        if (!validarBoleta()) return;
+        const nuevoNombre = nombre.value.trim();
+        const nuevaBoleta = identificador.value.trim();
+        const nuevoCorreo = correo.value.trim();
+
+        const errorNombre = validarNombre(nuevoNombre);
+
+        if (errorNombre) {
+
+            mostrarMensaje(errorNombre, true);
+            nombre.focus();
+
+            return;
+        }
+
+        const errorBoleta = validarBoleta(nuevaBoleta);
+
+        if (errorBoleta) {
+
+            mostrarMensaje(errorBoleta, true);
+            identificador.focus();
+
+            return;
+        }
+
+        const errorCorreo = validarCorreo(nuevoCorreo);
+
+        if (errorCorreo) {
+
+            mostrarMensaje(errorCorreo, true);
+            correo.focus();
+
+            return;
+        }
 
         const datos = {
-            nombre: document.getElementById("nombre").value.trim(),
+            nombre: nuevoNombre,
             tipo: "Alumno",
-            identificador: identificador.value.trim(),
-            correo: document.getElementById("correo").value.trim()
+            identificador: nuevaBoleta,
+            correo: nuevoCorreo
         };
-
-        if (!datos.nombre) {
-
-            mostrarMensaje(
-                "Debes ingresar el nombre del alumno.",
-                true
-            );
-
-            return;
-        }
-
-        if (!datos.correo) {
-
-            mostrarMensaje(
-                "Debes ingresar el correo electrónico.",
-                true
-            );
-
-            return;
-        }
 
         botonRegistrar.disabled = true;
         botonRegistrar.textContent = "Registrando...";
@@ -667,7 +718,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (modalEditarAlumno) {
 
-        // Cerrar al pulsar fuera de la ventana
         modalEditarAlumno.addEventListener("click", evento => {
 
             if (evento.target === modalEditarAlumno) {
@@ -675,7 +725,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        // Cerrar al pulsar Escape
         document.addEventListener("keydown", evento => {
 
             if (

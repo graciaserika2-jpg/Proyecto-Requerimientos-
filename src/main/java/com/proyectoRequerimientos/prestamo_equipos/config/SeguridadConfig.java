@@ -23,190 +23,189 @@ import com.proyectoRequerimientos.prestamo_equipos.security.CambioPasswordObliga
 @Configuration
 public class SeguridadConfig {
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public SessionRegistry sessionRegistry() {
-        return new SessionRegistryImpl();
-    }
+        @Bean
+        public SessionRegistry sessionRegistry() {
+                return new SessionRegistryImpl();
+        }
 
-    @Bean
-    public HttpSessionEventPublisher httpSessionEventPublisher() {
-        return new HttpSessionEventPublisher();
-    }
+        @Bean
+        public HttpSessionEventPublisher httpSessionEventPublisher() {
+                return new HttpSessionEventPublisher();
+        }
 
-    @Bean
-    public UserDetailsService userDetailsService(
-            EncargadoRepository encargadoRepository,
-            CuentaPersonaRepository cuentaPersonaRepository) {
+        @Bean
+        public UserDetailsService userDetailsService(
+                        EncargadoRepository encargadoRepository,
+                        CuentaPersonaRepository cuentaPersonaRepository) {
 
-        return usuario -> {
+                return usuario -> {
 
-            var encargado = encargadoRepository
-                    .findByUsuarioIgnoreCase(usuario)
-                    .filter(empleado -> empleado.isActivo())
-                    .filter(empleado -> !Boolean.FALSE.equals(
-                            empleado.getCorreoVerificado()));
+                        var encargado = encargadoRepository
+                                        .findByUsuarioIgnoreCase(usuario)
+                                        .filter(empleado -> empleado.isActivo())
+                                        .filter(empleado -> !Boolean.FALSE.equals(
+                                                        empleado.getCorreoVerificado()));
 
-            if (encargado.isPresent()) {
+                        if (encargado.isPresent()) {
 
-                var empleado = encargado.get();
+                                var empleado = encargado.get();
 
-                return User.withUsername(empleado.getUsuario())
-                        .password(empleado.getPasswordHash())
-                        .roles(empleado.getRol())
-                        .build();
-            }
+                                return User.withUsername(empleado.getUsuario())
+                                                .password(empleado.getPasswordHash())
+                                                .roles(empleado.getRol())
+                                                .build();
+                        }
 
-            var cuentaPersona = cuentaPersonaRepository
-                    .findByUsuarioIgnoreCase(usuario)
-                    .filter(cuenta -> cuenta.isActivo())
-                    .filter(cuenta -> cuenta.getPersona() != null)
-                    .filter(cuenta -> !Boolean.FALSE.equals(
-                            cuenta.getPersona().getActivo()))
-                    .filter(cuenta -> !Boolean.FALSE.equals(
-                            cuenta.getCorreoVerificado()));
+                        var cuentaPersona = cuentaPersonaRepository
+                                        .findByUsuarioIgnoreCase(usuario)
+                                        .filter(cuenta -> cuenta.isActivo())
+                                        .filter(cuenta -> cuenta.getPersona() != null)
+                                        .filter(cuenta -> !Boolean.FALSE.equals(
+                                                        cuenta.getPersona().getActivo()))
+                                        .filter(cuenta -> !Boolean.FALSE.equals(
+                                                        cuenta.getCorreoVerificado()));
 
-            if (cuentaPersona.isPresent()) {
+                        if (cuentaPersona.isPresent()) {
 
-                var cuenta = cuentaPersona.get();
+                                var cuenta = cuentaPersona.get();
 
-                return User.withUsername(cuenta.getUsuario())
-                        .password(cuenta.getPasswordHash())
-                        .roles("ALUMNO")
-                        .build();
-            }
+                                return User.withUsername(cuenta.getUsuario())
+                                                .password(cuenta.getPasswordHash())
+                                                .roles("ALUMNO")
+                                                .build();
+                        }
 
-            throw new UsernameNotFoundException(
-                    "Cuenta no encontrada o inactiva");
-        };
-    }
+                        throw new UsernameNotFoundException(
+                                        "Cuenta no encontrada o inactiva");
+                };
+        }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            CuentaPersonaRepository cuentaPersonaRepository,
-            EncargadoRepository encargadoRepository,
-            SessionRegistry sessionRegistry)
-            throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http,
+                        CuentaPersonaRepository cuentaPersonaRepository,
+                        EncargadoRepository encargadoRepository,
+                        SessionRegistry sessionRegistry)
+                        throws Exception {
 
-        http.addFilterBefore(
-                new CambioPasswordObligatorioFilter(
-                        cuentaPersonaRepository,
-                        encargadoRepository),
-                AuthorizationFilter.class);
+                http.addFilterBefore(
+                                new CambioPasswordObligatorioFilter(
+                                                cuentaPersonaRepository,
+                                                encargadoRepository),
+                                AuthorizationFilter.class);
 
-        http.authorizeHttpRequests(auth -> auth
+                http.authorizeHttpRequests(auth -> auth
 
-                // Páginas y recursos públicos.
-                .requestMatchers(
-                        "/login",
-                        "/activar-cuenta",
-                        "/olvide-password",
-                        "/restablecer-password",
+                                // Páginas y recursos públicos.
+                                .requestMatchers(
+                                                "/login",
+                                                "/activar-cuenta",
+                                                "/olvide-password",
+                                                "/restablecer-password",
 
-                        // Configuración del primer administrador.
-                        "/configuracion-inicial",
-                        "/api/configuracion-inicial",
-                        "/api/configuracion-inicial/**",
+                                                // Configuración del primer administrador.
+                                                "/configuracion-inicial",
+                                                "/api/configuracion-inicial",
+                                                "/api/configuracion-inicial/**",
 
-                        "/api/cuentas/activar",
-                        "/api/cuentas/solicitar-recuperacion",
-                        "/api/cuentas/restablecer-password",
+                                                "/api/cuentas/activar",
+                                                "/api/cuentas/solicitar-recuperacion",
+                                                "/api/cuentas/restablecer-password",
 
-                        "/estilos.css",
-                        "/login.css",
+                                                "/estilos.css",
+                                                "/login.css",
 
-                        "/activar-cuenta.js",
-                        "/olvide-password.js",
-                        "/restablecer-password.js",
+                                                "/activar-cuenta.js",
+                                                "/olvide-password.js",
+                                                "/restablecer-password.js",
 
-                        "/favicon.ico")
-                .permitAll()
+                                                "/favicon.ico")
+                                .permitAll()
 
-                // Administración de encargados y administradores: solo ADMIN.
-                .requestMatchers(
-                        "/encargados",
-                        "/encargados/**",
-                        "/api/encargados",
-                        "/api/encargados/**")
-                .hasRole("ADMIN")
+                                // Administración de encargados y administradores: solo ADMIN.
+                                .requestMatchers(
+                                                "/encargados",
+                                                "/encargados/**",
+                                                "/api/encargados",
+                                                "/api/encargados/**")
+                                .hasRole("ADMIN")
 
-                
+                                // Consulta del estado de la cuenta del alumno.
+                                .requestMatchers("/api/personas/mi-estado")
+                                .hasRole("ALUMNO")
 
-                // Consulta del estado de la cuenta del alumno.
-                .requestMatchers("/api/personas/mi-estado")
-                .hasRole("ALUMNO")
+                                // Historial personal: solo alumnos.
+                                .requestMatchers(
+                                                "/mi-historial",
+                                                "/api/prestamos/mi-historial")
+                                .hasRole("ALUMNO")
 
-                // Historial personal: solo alumnos.
-                .requestMatchers(
-                        "/mi-historial",
-                        "/api/prestamos/mi-historial")
-                .hasRole("ALUMNO")
+                                // Operaciones administrativas de préstamos y bloqueos.
+                                .requestMatchers(
+                                                "/inventario",
+                                                "/inventario/**",
+                                                "/personas",
+                                                "/personas/**",
+                                                "/prestamos",
+                                                "/prestamos/**",
+                                                "/bloqueos",
+                                                "/bloqueos/**",
+                                                "/api/equipos",
+                                                "/api/equipos/**",
+                                                "/api/personas",
+                                                "/api/personas/**",
+                                                "/api/prestamos",
+                                                "/api/prestamos/**")
+                                .hasAnyRole("ADMIN", "ENCARGADO")
 
-                // Operaciones administrativas de préstamos y bloqueos.
-                .requestMatchers(
-                        "/inventario",
-                        "/inventario/**",
-                        "/personas",
-                        "/personas/**",
-                        "/prestamos",
-                        "/prestamos/**",
-                        "/bloqueos",
-                        "/bloqueos/**",
-                        "/api/equipos",
-                        "/api/equipos/**",
-                        "/api/personas",
-                        "/api/personas/**",
-                        "/api/prestamos",
-                        "/api/prestamos/**")
-                .hasAnyRole("ADMIN", "ENCARGADO")
+                                // Disponibilidad de equipos: solo alumnos.
+                                .requestMatchers(
+                                                "/disponibilidad",
+                                                "/api/disponibilidad",
+                                                "/api/disponibilidad/**")
+                                .hasRole("ALUMNO")
 
-                // Disponibilidad de equipos: solo alumnos.
-                .requestMatchers(
-                        "/disponibilidad",
-                        "/api/disponibilidad",
-                        "/api/disponibilidad/**")
-                .hasRole("ALUMNO")
+                                // Funciones disponibles para cualquier usuario autenticado.
+                                .requestMatchers(
+                                                "/cambiar-password",
+                                                "/api/mi-cuenta/**")
+                                .authenticated()
 
-                // Funciones disponibles para cualquier usuario autenticado.
-                .requestMatchers(
-                        "/cambiar-password",
-                        "/api/mi-cuenta/**")
-                .authenticated()
+                                .anyRequest().authenticated())
 
-                .anyRequest().authenticated())
+                                .formLogin(form -> form
+                                                .loginPage("/login")
+                                                .defaultSuccessUrl("/inicio", true)
+                                                .failureHandler((request, response, exception) -> {
 
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/inicio", true)
-                        .failureHandler((request, response, exception) -> {
+                                                        if (exception instanceof SessionAuthenticationException) {
+                                                                response.sendRedirect("/login?maxSessions");
+                                                        } else {
+                                                                response.sendRedirect("/login?error");
+                                                        }
 
-                            if (exception instanceof SessionAuthenticationException) {
-                                response.sendRedirect("/login?maxSessions");
-                            } else {
-                                response.sendRedirect("/login?error");
-                            }
+                                                })
+                                                .permitAll())
 
-                        })
-                        .permitAll())
+                                /// Una sola sesión activa por usuario.
+                                // Si inicia sesión nuevamente, la sesión anterior expira.
+                                .sessionManagement(session -> session
+                                                .maximumSessions(1)
+                                                .maxSessionsPreventsLogin(false)
+                                                .sessionRegistry(sessionRegistry)
+                                                .expiredUrl("/login?expired"))
 
-                // Una sola sesión activa por usuario.
-                .sessionManagement(session -> session
-                        .maximumSessions(1)
-                        .maxSessionsPreventsLogin(true)
-                        .sessionRegistry(sessionRegistry)
-                        .expiredUrl("/login?expired"))
+                                .logout(logout -> logout
+                                                .logoutSuccessUrl("/login?logout")
+                                                .invalidateHttpSession(true)
+                                                .deleteCookies("JSESSIONID")
+                                                .permitAll());
 
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/login?logout")
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
-                        .permitAll());
-
-        return http.build();
-    }
+                return http.build();
+        }
 }

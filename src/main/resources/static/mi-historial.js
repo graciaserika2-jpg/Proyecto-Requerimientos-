@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const fila = document.createElement("tr");
         const celda = document.createElement("td");
 
-        celda.colSpan = 6;
+        celda.colSpan = 5;
         celda.className = "historial-mensaje";
         celda.textContent = mensaje;
 
@@ -196,18 +196,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         celdaEstado.appendChild(estado);
 
-        // Observaciones.
-        const celdaObservaciones = document.createElement("td");
-        celdaObservaciones.className = "historial-observaciones";
-        celdaObservaciones.textContent =
-            prestamo.observaciones || "Sin observaciones";
-
         fila.appendChild(celdaEquipo);
         fila.appendChild(celdaFechaPrestamo);
         fila.appendChild(celdaFechaPrevista);
         fila.appendChild(celdaFechaReal);
         fila.appendChild(celdaEstado);
-        fila.appendChild(celdaObservaciones);
 
         return fila;
     }
