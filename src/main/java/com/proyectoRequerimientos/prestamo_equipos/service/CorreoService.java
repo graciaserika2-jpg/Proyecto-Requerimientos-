@@ -103,16 +103,13 @@ public class CorreoService {
             String asunto,
             String contenido) {
 
-        // Si existe una URL de Apps Script, utilizarla.
         if (appsScriptUrl != null && !appsScriptUrl.isBlank()) {
             enviarConGoogleAppsScript(
                     destinatario, asunto, contenido);
             return;
         }
 
-        // Alternativa para el entorno local.
-        enviarConGmail(
-                destinatario, asunto, contenido);
+        enviarConGmail(destinatario, asunto, contenido);
     }
 
     private void enviarConGoogleAppsScript(
@@ -139,11 +136,14 @@ public class CorreoService {
                 .retrieve()
                 .body(Map.class);
 
-        if (respuesta == null ||
+        // Google puede enviar el correo correctamente y devolver
+        // una respuesta sin cuerpo. En ese caso no se debe
+        // provocar el rollback del registro.
+        if (respuesta != null &&
                 !Boolean.TRUE.equals(respuesta.get("success"))) {
 
             throw new IllegalStateException(
-                    "Google Apps Script no pudo enviar el correo. " +
+                    "Google Apps Script reportó un error al enviar el correo. " +
                     "Respuesta: " + respuesta);
         }
     }
