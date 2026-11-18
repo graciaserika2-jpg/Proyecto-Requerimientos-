@@ -2483,3 +2483,19 @@ body:has(#formPrestamo) .equipo-seleccionado {
         flex-wrap: wrap;
     }
 }
+
+
+/* Encabezado del menú lateral en móvil */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 12px;
+}
+
+@media (max-width: 680px) {
+    .sidebar-header .brand {
+        margin: 0;
+    }
+}

@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<body>
+
+<aside class="sidebar" th:fragment="menu(paginaActiva)">
+
+    <!-- ENCABEZADO Y BOTÓN HAMBURGUESA -->
+    <div class="sidebar-header">
+
+        <div class="brand">
+            <div class="brand-icon">U</div>
+            <div>
+                <h2>Préstamo de equipos</h2>
+                <p>UPIICSA · IPN</p>
+            </div>
+        </div>
+
+        <button type="button"
+                class="menu-toggle"
+                aria-label="Abrir menú"
+                aria-expanded="false">
+
+            <span></span>
+            <span></span>
+            <span></span>
+
+        </button>
+
+    </div>
+
+    <!-- MENÚ PARA ADMINISTRADORES Y ENCARGADOS -->
+    <p class="menu-label"
+       sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
+        MENÚ PRINCIPAL
+    </p>
+
+    <nav class="menu"
+         sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO')">
+
+        <a th:href="@{/inicio}"
+           class="menu-item"
+           th:classappend="${paginaActiva == 'inicio'} ? ' active' : ''">
+            <span>⌂</span>
+            <span>Inicio</span>
+        </a>
+
+        <a th:href="@{/inventario}"
+           class="menu-item"
+           th:classappend="${paginaActiva == 'inventario'} ? ' active' : ''">
+            <span>▦</span>
+            <span>Inventario</span>
+        </a>
+
+        <a th:href="@{/prestamos}"
+           class="menu-item"
+           th:classappend="${paginaActiva == 'prestamos'} ? ' active' : ''">
+            <span>⇄</span>
+            <span>Préstamos y devoluciones</span>
+        </a>
+
+        <a th:href="@{/bloqueos}"
+           class="menu-item"
+           th:classappend="${paginaActiva == 'bloqueos'} ? ' active' : ''">
+            <span>⊘</span>
+            <span>Bloqueos administrativos</span>
+        </a>
+
+        <a th:href="@{/personas}"
+           class="menu-item"
+           th:classappend="${paginaActiva == 'personas'} ? ' active' : ''">
+            <span>♙</span>
+            <span>Alumnos</span>
+        </a>
+
+        <a th:href="@{/encargados}"
+           class="menu-item"
+           sec:authorize="hasRole('ADMIN')"
+           th:classappend="${paginaActiva == 'encargados'} ? ' active' : ''">
+            <span>⚙</span>
+            <span>Administración de cuentas de admin y encargados</span>
+        </a>
+
+    </nav>
+
+    <!-- MENÚ PARA ALUMNOS Y PROFESORES -->
+    <p class="menu-label"
+       sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
+        MI CUENTA
+    </p>
+
+    <nav class="menu"
+         sec:authorize="hasAnyRole('ALUMNO', 'PROFESOR')">
+
+        <a th:href="@{/inicio}"
+           class="menu-item"
+           th:classappend="${paginaActiva == 'inicio'} ? ' active' : ''">
+            <span>⌂</span>
+            <span>Inicio</span>
+        </a>
+
+        <a th:href="@{/disponibilidad}"
+           class="menu-item"
+           th:classappend="${paginaActiva == 'disponibilidad'} ? ' active' : ''">
+            <span>▦</span>
+            <span>Disponibilidad de equipos</span>
+        </a>
+
+        <a th:href="@{/mi-historial}"
+           class="menu-item"
+           th:classappend="${paginaActiva == 'historial'} ? ' active' : ''">
+            <span>◷</span>
+            <span>Mi historial de préstamos</span>
+        </a>
+
+        <a th:href="@{/cambiar-password}"
+           class="menu-item"
+           th:classappend="${paginaActiva == 'password'} ? ' active' : ''">
+            <span>⚙</span>
+            <span>Cambiar contraseña</span>
+        </a>
+
+    </nav>
+
+    <!-- CERRAR SESIÓN -->
+    <div class="sidebar-footer">
+
+        <form th:action="@{/logout}" method="post">
+
+            <button type="submit" class="btn-logout">
+                <span aria-hidden="true">⇥</span>
+                Cerrar sesión
+            </button>
+
+        </form>
+
+    </div>
+
+</aside>
+
+</body>
+</html>

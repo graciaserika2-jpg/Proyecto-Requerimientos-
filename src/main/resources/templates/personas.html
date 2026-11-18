@@ -19,67 +19,7 @@
 
     <div class="app">
 
-        <aside class="sidebar">
-
-            <div class="brand">
-                <div class="brand-icon">U</div>
-                <div>
-                    <h2>Préstamo de equipos</h2>
-                    <p>UPIICSA · IPN</p>
-                </div>
-            </div>
-
-            <p class="menu-label">MENÚ PRINCIPAL</p>
-
-            <nav class="menu">
-
-                <a th:href="@{/inicio}" class="menu-item">
-                    <span>⌂</span>
-                    <span>Inicio</span>
-                </a>
-
-                <a th:href="@{/inventario}" class="menu-item">
-                    <span>▦</span>
-                    <span>Inventario</span>
-                </a>
-
-                <a th:href="@{/prestamos}" class="menu-item">
-                    <span>⇄</span>
-                    <span>Préstamos y devoluciones</span>
-                </a>
-
-                <a th:href="@{/bloqueos}" class="menu-item">
-                    <span>⊘</span>
-                    <span>Bloqueos administrativos</span>
-                </a>
-
-                <a th:href="@{/personas}" class="menu-item active">
-                    <span>♙</span>
-                    <span>Alumnos</span>
-                </a>
-
-                <a th:href="@{/encargados}" class="menu-item"
-                    sec:authorize="hasRole('ADMIN')">
-                    <span>⚙</span>
-                    <span>Administración de cuentas de admin y encargados</span>
-                </a>
-
-            </nav>
-
-            <div class="sidebar-footer">
-
-                <form th:action="@{/logout}" method="post">
-
-                    <button type="submit" class="btn-logout">
-                        <span aria-hidden="true">⇥</span>
-                        Cerrar sesión
-                    </button>
-
-                </form>
-
-            </div>
-
-        </aside>
+        <aside th:replace="~{fragments/menu :: menu('personas')}"></aside>
 
         <main class="main-content">
 
@@ -353,6 +293,7 @@
     </div>
 
     <script th:src="@{/personas.js}" defer></script>
+    <script th:src="@{/menu.js}" defer></script>
 
 </body>
 
