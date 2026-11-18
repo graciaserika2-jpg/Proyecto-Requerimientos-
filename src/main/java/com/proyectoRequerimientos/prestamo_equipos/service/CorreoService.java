@@ -1,9 +1,8 @@
 
 package com.proyectoRequerimientos.prestamo_equipos.service;
 
-import java.nio.charset.StandardCharsets;
 import java.net.URLEncoder;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -25,11 +24,11 @@ public class CorreoService {
     @Value("${app.mail.from:}")
     private String correoRemitente;
 
-    @Value("${RESEND_API_KEY:}")
-    private String resendApiKey;
+    @Value("${APPS_SCRIPT_URL:}")
+    private String appsScriptUrl;
 
-    @Value("${RESEND_FROM:onboarding@resend.dev}")
-    private String resendFrom;
+    @Value("${APPS_SCRIPT_SECRET:}")
+    private String appsScriptSecret;
 
     public CorreoService(
             ObjectProvider<JavaMailSender> mailSenderProvider) {
@@ -104,33 +103,49 @@ public class CorreoService {
             String asunto,
             String contenido) {
 
-        // En Render se utiliza Resend.
-        if (resendApiKey != null && !resendApiKey.isBlank()) {
-            enviarConResend(destinatario, asunto, contenido);
+        // Si existe una URL de Apps Script, utilizarla.
+        if (appsScriptUrl != null && !appsScriptUrl.isBlank()) {
+            enviarConGoogleAppsScript(
+                    destinatario, asunto, contenido);
             return;
         }
 
-        // Localmente se conserva Gmail SMTP.
-        enviarConGmail(destinatario, asunto, contenido);
+        // Alternativa para el entorno local.
+        enviarConGmail(
+                destinatario, asunto, contenido);
     }
 
-    private void enviarConResend(
+    private void enviarConGoogleAppsScript(
             String destinatario,
             String asunto,
             String contenido) {
 
-        restClient.post()
-                .uri("https://api.resend.com/emails")
-                .header("Authorization", "Bearer " + resendApiKey)
+        if (appsScriptSecret == null ||
+                appsScriptSecret.isBlank()) {
+
+            throw new IllegalStateException(
+                    "No está configurada la clave secreta de Google Apps Script.");
+        }
+
+        Map<?, ?> respuesta = restClient.post()
+                .uri(appsScriptUrl)
                 .header("Content-Type", "application/json")
                 .body(Map.of(
-                        "from", resendFrom,
-                        "to", List.of(destinatario),
+                        "secret", appsScriptSecret,
+                        "to", destinatario,
                         "subject", asunto,
-                        "text", contenido
+                        "body", contenido
                 ))
                 .retrieve()
-                .toBodilessEntity();
+                .body(Map.class);
+
+        if (respuesta == null ||
+                !Boolean.TRUE.equals(respuesta.get("success"))) {
+
+            throw new IllegalStateException(
+                    "Google Apps Script no pudo enviar el correo. " +
+                    "Respuesta: " + respuesta);
+        }
     }
 
     private void enviarConGmail(
