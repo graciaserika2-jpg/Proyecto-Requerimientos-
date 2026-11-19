@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es"
       xmlns:th="http://www.thymeleaf.org"
@@ -284,8 +283,6 @@
                 </div>
 
 
-                
-
                 <button type="submit" class="btn-primary">
                     Registrar préstamo
                 </button>
@@ -318,6 +315,15 @@
                 <option value="Devuelto">Devueltos</option>
             </select>
 
+            <label for="buscarHistorial">Buscar en el historial</label>
+
+            <input
+                type="search"
+                id="buscarHistorial"
+                autocomplete="off"
+                placeholder="Nombre, boleta, equipo, número de serie o ID..."
+                style="width: 100%; max-width: 520px; box-sizing: border-box; margin-bottom: 18px;"
+            >
 
             <div class="table-container">
 
