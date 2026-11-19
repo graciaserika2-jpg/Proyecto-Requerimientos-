@@ -233,6 +233,7 @@ public class PrestamoService {
 
         actualizarPrestamosVencidos();
 
+        // Los préstamos nuevos siguen sujetos al horario de servicio.
         validarHorarioOperacion();
 
         if (entregadoPor == null || entregadoPor.isBlank()) {
@@ -342,9 +343,12 @@ public class PrestamoService {
             String detallesDanio,
             String recibidoPor) {
 
+        // Actualizamos los vencimientos antes de procesar la devolución.
         actualizarPrestamosVencidos();
 
-        validarHorarioOperacion();
+        // IMPORTANTE:
+        // Las devoluciones pueden registrarse a cualquier hora.
+        // No se valida el horario en este método.
 
         Prestamo prestamo = prestamoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -380,26 +384,26 @@ public class PrestamoService {
 
         LocalDateTime ahora = LocalDateTime.now(ZONA_HORARIA);
 
-        // Determinamos si el alumno está devolviendo tarde.
+        // La devolución es tardía si el préstamo ya fue marcado
+        // como Vencido o si ya pasó su fecha prevista.
         boolean devolucionTardia =
-                ahora.toLocalDate().isAfter(
-                        prestamo.getFechaDevolucionPrevista());
+                "Vencido".equals(prestamo.getEstado())
+                        || ahora.toLocalDate().isAfter(
+                                prestamo.getFechaDevolucionPrevista());
 
         Persona persona = prestamo.getPersona();
 
         // La suspensión temporal aplica exclusivamente a alumnos.
-        // Los préstamos históricos de profesores no generan suspensiones.
+        // Comienza el mismo día en que se registra la devolución tardía.
         if (devolucionTardia
                 && persona != null
                 && "Alumno".equalsIgnoreCase(persona.getTipo())) {
 
-            LocalDate fechaInicioSuspension =
-                    prestamo.getFechaDevolucionPrevista().plusDays(1);
-
             // La fecha final es exclusiva:
-            // se permite solicitar préstamos nuevamente ese día.
+            // se permite solicitar préstamos nuevamente ese día,
+            // siempre que no exista un bloqueo administrativo activo.
             LocalDate fechaFinSuspension =
-                    fechaInicioSuspension.plusDays(7);
+                    ahora.toLocalDate().plusDays(7);
 
             LocalDate suspensionActual =
                     persona.getFechaFinSuspension();
