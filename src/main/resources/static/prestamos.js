@@ -1,4 +1,3 @@
-
 const formularioPrestamo = document.getElementById("formPrestamo");
 
 const campoBuscarPersona = document.getElementById("buscarPersona");
@@ -18,7 +17,7 @@ const quitarEquipo = document.getElementById("quitarEquipo");
 const tablaPrestamos = document.getElementById("tablaPrestamos");
 const mensajePrestamo = document.getElementById("mensajePrestamo");
 const filtroPrestamos = document.getElementById("filtroPrestamos");
-const campoObservaciones = document.getElementById("observaciones");
+const buscarHistorial = document.getElementById("buscarHistorial");
 
 // Elementos del formulario de devolución
 const modalDevolucion = document.getElementById("modalDevolucion");
@@ -487,15 +486,44 @@ function formatearFechaHora(valor) {
 
 
 // -------------------------
-// Mostrar préstamos
+// Búsqueda y mostrar préstamos
 // -------------------------
+
+function normalizarTextoBusqueda(valor) {
+    return String(valor ?? "")
+        .toLocaleLowerCase("es-MX")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+}
 
 function mostrarPrestamos() {
     const filtro = filtroPrestamos.value;
+    const termino = normalizarTextoBusqueda(buscarHistorial.value);
 
-    const filtrados = prestamos.filter(prestamo =>
-        filtro === "Todos" || prestamo.estado === filtro
-    );
+    const filtrados = prestamos.filter(prestamo => {
+        const coincideEstado =
+            filtro === "Todos" || prestamo.estado === filtro;
+
+        const datosBusqueda = [
+            prestamo.id,
+            prestamo.persona?.nombre,
+            prestamo.persona?.identificador,
+            prestamo.persona?.tipo,
+            prestamo.equipo?.id,
+            prestamo.equipo?.nombre,
+            prestamo.equipo?.tipo,
+            prestamo.equipo?.numeroSerie
+        ];
+
+        const coincideBusqueda =
+            termino === "" ||
+            datosBusqueda.some(dato =>
+                normalizarTextoBusqueda(dato).includes(termino)
+            );
+
+        return coincideEstado && coincideBusqueda;
+    });
 
     tablaPrestamos.replaceChildren();
 
@@ -504,7 +532,9 @@ function mostrarPrestamos() {
         const celda = fila.insertCell();
 
         celda.colSpan = 8;
-        celda.textContent = "No hay préstamos para mostrar.";
+        celda.textContent = termino
+            ? "No se encontraron préstamos que coincidan con la búsqueda y el filtro seleccionado."
+            : "No hay préstamos para mostrar.";
 
         return;
     }
@@ -827,6 +857,7 @@ formularioRevision.addEventListener("submit", async evento => {
 // -------------------------
 
 filtroPrestamos.addEventListener("change", mostrarPrestamos);
+buscarHistorial.addEventListener("input", mostrarPrestamos);
 
 async function iniciarModuloPrestamos() {
     await Promise.all([
